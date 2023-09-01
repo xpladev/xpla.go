@@ -1,0 +1,36 @@
+{
+    "body": {
+        "messages": [
+            {
+                "@type": "/cosmos.bank.v1beta1.MsgSend",
+                "from_address": "xpla1l03kma4vv9qcvhgcxf2ga0rnv7dqcumaxexssh",
+                "to_address": "xpla1h4x2jlnqkzq2k8wrfzvttl9p5gcffz4xe5cj2c",
+                "amount": [
+                    {
+                        "denom": "axpla",
+                        "amount": "83622839022438227056582"
+                    }
+                ]
+            }
+        ],
+        "memo": "",
+        "timeout_height": "0",
+        "extension_options": [],
+        "non_critical_extension_options": []
+    },
+    "auth_info": {
+        "signer_infos": [],
+        "fee": {
+            "amount": [
+                {
+                    "denom": "axpla",
+                    "amount": "212500000000000000"
+                }
+            ],
+            "gas_limit": "250000",
+            "payer": "",
+            "granter": ""
+        }
+    },
+    "signatures": []
+}

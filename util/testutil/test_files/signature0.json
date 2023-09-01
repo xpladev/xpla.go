@@ -1,0 +1,17 @@
+{
+    "signatures":[
+        {
+            "public_key":{
+                "@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey",
+                "key":"A5+rNG/0BpZEQGGZKq29JH4nvDnyHYmm1D+b5NzNC7bC"
+            },
+            "data":{
+                "single":{
+                    "mode":"SIGN_MODE_DIRECT",
+                    "signature":"Oi31T6ajLatpQ6i7vMtTHktEn5jJFOFGfV76A/bqW58YBGD+9axsbcBrgBHMFu5bHYuk1s1GdwlDq37/qbTK3gE="
+                }
+            },
+            "sequence":"0"
+        }
+    ]
+}

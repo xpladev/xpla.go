@@ -1,0 +1,9 @@
+.DS_Store
+.idea/
+.vscode/
+docs
+.pytest_cache
+yarn.lock
+backup/
+coverage.out
+test.sh
