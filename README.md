@@ -1,4 +1,11 @@
 # xpla.go
+
+[![Go reference](https://pkg.go.dev/badge/github.com/xpladev/xpla.go.svg)](https://pkg.go.dev/github.com/xpladev/xpla.go)
+[![Go report card](https://goreportcard.com/badge/github.com/xpladev/xpla.go)](https://goreportcard.com/report/github.com/xpladev/xpla.go)
+[![License](https://img.shields.io/github/license/xpladev/xpla.go.svg)](https://github.com/xpladev/xpla.go/blob/main/LICENSE)
+[![Codecov](https://codecov.io/gh/xpladev/xpla.go/branch/main/graph/badge.svg)](https://app.codecov.io/gh/xpladev/xpla.go)
+[![Total lines](https://tokei.rs/b1/github/xpladev/xpla.go)](https://github.com/xpladev/xpla.go)
+
 Xpla.go is a Golang SDK for writing applications that interact with the Xpla blockchain and provides simple abstractions over core data structures, serialization, key management, and API request generation.
 
 ## Version compatibility
