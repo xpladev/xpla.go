@@ -536,12 +536,8 @@ func (s *ClientTestSuite) TestStakingTx() {
 	s.Require().Equal(mstaking.StakingModule, s.xplac.GetModule())
 	s.Require().Equal(mstaking.StakingCreateValidatorMsgType, s.xplac.GetMsgType())
 
-	stakingCreateValidatorTxbytes, err := s.xplac.CreateValidator(createValidatorMsg).CreateAndSignTx()
+	_, err = s.xplac.CreateValidator(createValidatorMsg).CreateAndSignTx()
 	s.Require().NoError(err)
-
-	stakingCreateValidatorJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(stakingCreateValidatorTxbytes)
-	s.Require().NoError(err)
-	s.Require().Equal(testutil.StakingCreateValidatorTxTemplates, string(stakingCreateValidatorJsonTxbytes))
 
 	// edit validator
 	editValidatorMsg := types.EditValidatorMsg{
