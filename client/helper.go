@@ -20,3 +20,15 @@ func ResetModuleAndMsgXplac(xplac *XplaClient) *XplaClient {
 		WithMsgType("").
 		WithMsg(nil)
 }
+
+func (xplac *XplaClient) EncodedTxbytesToJsonTx(txbytes []byte) ([]byte, error) {
+	sdkTx, err := xplac.GetEncoding().TxConfig.TxDecoder()(txbytes)
+	if err != nil {
+		return nil, err
+	}
+	jsonTx, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(sdkTx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonTx, nil
+}

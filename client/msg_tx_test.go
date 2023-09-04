@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"github.com/xpladev/xpla.go/types"
+	"github.com/xpladev/xpla.go/util/testutil"
 
 	mauthz "github.com/xpladev/xpla.go/core/authz"
 	mbank "github.com/xpladev/xpla.go/core/bank"
@@ -38,6 +39,13 @@ func (s *ClientTestSuite) TestAuthzTx() {
 	s.Require().Equal(mauthz.AuthzModule, s.xplac.GetModule())
 	s.Require().Equal(mauthz.AuthzGrantMsgType, s.xplac.GetMsgType())
 
+	authzGrantTxbytes, err := s.xplac.AuthzGrant(authzGrantMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	authzGrantjsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(authzGrantTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.AuthzGrantTxTemplates, string(authzGrantjsonTxbytes))
+
 	// authz revoke
 	authzRevokeMsg := types.AuthzRevokeMsg{
 		Granter: s.accounts[0].Address.String(),
@@ -53,6 +61,13 @@ func (s *ClientTestSuite) TestAuthzTx() {
 	s.Require().Equal(mauthz.AuthzModule, s.xplac.GetModule())
 	s.Require().Equal(mauthz.AuthzRevokeMsgType, s.xplac.GetMsgType())
 
+	authzRevokeTxbytes, err := s.xplac.AuthzRevoke(authzRevokeMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	authzRevokeJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(authzRevokeTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.AuthzRevokeTxTemplates, string(authzRevokeJsonTxbytes))
+
 	// authz exec
 	// e.g. bank send
 	bankSendMsg := types.BankSendMsg{
@@ -64,15 +79,12 @@ func (s *ClientTestSuite) TestAuthzTx() {
 	txbytesBankSend, err := s.xplac.BankSend(bankSendMsg).CreateAndSignTx()
 	s.Require().NoError(err)
 
-	sdkTx, err := s.xplac.GetEncoding().TxConfig.TxDecoder()(txbytesBankSend)
-	s.Require().NoError(err)
-
-	jsonTx, err := s.xplac.GetEncoding().TxConfig.TxJSONEncoder()(sdkTx)
+	bankSendJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(txbytesBankSend)
 	s.Require().NoError(err)
 
 	authzExecMsg := types.AuthzExecMsg{
 		Grantee:      s.accounts[1].Address.String(),
-		ExecTxString: string(jsonTx),
+		ExecTxString: string(bankSendJsonTxbytes),
 	}
 	s.xplac.AuthzExec(authzExecMsg)
 
@@ -82,6 +94,13 @@ func (s *ClientTestSuite) TestAuthzTx() {
 	s.Require().Equal(makeAuthzExecMsg, s.xplac.GetMsg())
 	s.Require().Equal(mauthz.AuthzModule, s.xplac.GetModule())
 	s.Require().Equal(mauthz.AuthzExecMsgType, s.xplac.GetMsgType())
+
+	authzExecTxbytes, err := s.xplac.AuthzExec(authzExecMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	authzExecJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(authzExecTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.AuthzExecTxTemplates, string(authzExecJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestBankTx() {
@@ -100,6 +119,13 @@ func (s *ClientTestSuite) TestBankTx() {
 	s.Require().Equal(makeBankSendMsg, s.xplac.GetMsg())
 	s.Require().Equal(mbank.BankModule, s.xplac.GetModule())
 	s.Require().Equal(mbank.BankSendMsgType, s.xplac.GetMsgType())
+
+	bankSendTxbytes, err := s.xplac.BankSend(bankSendMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	bankSendJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(bankSendTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.BankSendTxTemplates, string(bankSendJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestCrisisTx() {
@@ -117,6 +143,13 @@ func (s *ClientTestSuite) TestCrisisTx() {
 	s.Require().Equal(makeInvariantRouteMsg, s.xplac.GetMsg())
 	s.Require().Equal(mcrisis.CrisisModule, s.xplac.GetModule())
 	s.Require().Equal(mcrisis.CrisisInvariantBrokenMsgType, s.xplac.GetMsgType())
+
+	crisisInvariantBrokenTxbytes, err := s.xplac.InvariantBroken(invariantBrokenMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	crisisInvariantBrokenJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(crisisInvariantBrokenTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.CrisisInvariantBrokenTxTemplates, string(crisisInvariantBrokenJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestDistributionTx() {
@@ -133,6 +166,13 @@ func (s *ClientTestSuite) TestDistributionTx() {
 	s.Require().Equal(makeFundCommunityPoolMsg, s.xplac.GetMsg())
 	s.Require().Equal(mdist.DistributionModule, s.xplac.GetModule())
 	s.Require().Equal(mdist.DistributionFundCommunityPoolMsgType, s.xplac.GetMsgType())
+
+	distFundCommunityPoolTxbytes, err := s.xplac.FundCommunityPool(fundCommunityPoolMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	distFundCommunityPoolJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(distFundCommunityPoolTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.DistFundCommunityPoolTxTemplates, string(distFundCommunityPoolJsonTxbytes))
 
 	// community pool spend
 	communityPoolSpendMsg := types.CommunityPoolSpendMsg{
@@ -151,10 +191,17 @@ func (s *ClientTestSuite) TestDistributionTx() {
 	s.Require().Equal(mdist.DistributionModule, s.xplac.GetModule())
 	s.Require().Equal(mdist.DistributionProposalCommunityPoolSpendMsgType, s.xplac.GetMsgType())
 
+	distCommunityPoolSpendTxbytes, err := s.xplac.CommunityPoolSpend(communityPoolSpendMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	distCommunityPoolSpendJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(distCommunityPoolSpendTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.DistCommunityPoolSpendTxTemplates, string(distCommunityPoolSpendJsonTxbytes))
+
 	// withdraw rewards
 	withdrawRewardsMsg := types.WithdrawRewardsMsg{
 		DelegatorAddr: s.accounts[0].Address.String(),
-		ValidatorAddr: s.network.Validators[0].ValAddress.String(),
+		ValidatorAddr: sdk.ValAddress(s.accounts[0].Address).String(),
 		Commission:    true,
 	}
 	s.xplac.WithdrawRewards(withdrawRewardsMsg)
@@ -165,6 +212,13 @@ func (s *ClientTestSuite) TestDistributionTx() {
 	s.Require().Equal(makeWithdrawRewardsMsg, s.xplac.GetMsg())
 	s.Require().Equal(mdist.DistributionModule, s.xplac.GetModule())
 	s.Require().Equal(mdist.DistributionWithdrawRewardsMsgType, s.xplac.GetMsgType())
+
+	distWithdrawRewardsTxbytes, err := s.xplac.WithdrawRewards(withdrawRewardsMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	distWithdrawRewardsJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(distWithdrawRewardsTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.DistWithdrawRewardsTxTemplates, string(distWithdrawRewardsJsonTxbytes))
 
 	// set withdraw address
 	setWithdrawAddrMsg := types.SetWithdrawAddrMsg{
@@ -178,6 +232,13 @@ func (s *ClientTestSuite) TestDistributionTx() {
 	s.Require().Equal(makeSetWithdrawAddrMsg, s.xplac.GetMsg())
 	s.Require().Equal(mdist.DistributionModule, s.xplac.GetModule())
 	s.Require().Equal(mdist.DistributionSetWithdrawAddrMsgType, s.xplac.GetMsgType())
+
+	distSetWithdrawAddrTxbytes, err := s.xplac.SetWithdrawAddr(setWithdrawAddrMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	distSetWithdrawAddrJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(distSetWithdrawAddrTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.DistSetWithdrawAddrTxTemplates, string(distSetWithdrawAddrJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestEvmTx() {
@@ -249,6 +310,13 @@ func (s *ClientTestSuite) TestFeegrantTx() {
 	s.Require().Equal(mfeegrant.FeegrantModule, s.xplac.GetModule())
 	s.Require().Equal(mfeegrant.FeegrantGrantMsgType, s.xplac.GetMsgType())
 
+	feegrantFeegrantTxbytes, err := s.xplac.FeeGrant(feeGrantMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	feegrantFeegrantJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(feegrantFeegrantTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.FeegrantFeegrantTxTemplates, string(feegrantFeegrantJsonTxbytes))
+
 	// revoke feegrant
 	revokeFeeGrantMsg := types.RevokeFeeGrantMsg{
 		Granter: s.accounts[0].Address.String(),
@@ -262,6 +330,13 @@ func (s *ClientTestSuite) TestFeegrantTx() {
 	s.Require().Equal(makeRevokeFeeGrantMsg, s.xplac.GetMsg())
 	s.Require().Equal(mfeegrant.FeegrantModule, s.xplac.GetModule())
 	s.Require().Equal(mfeegrant.FeegrantRevokeGrantMsgType, s.xplac.GetMsgType())
+
+	feegrantRevokeFeegrantTxbytes, err := s.xplac.RevokeFeeGrant(revokeFeeGrantMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	feegrantRevokeFeegrantJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(feegrantRevokeFeegrantTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.FeegrantRevokeFeegrantTxTemplates, string(feegrantRevokeFeegrantJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestGovTx() {
@@ -282,6 +357,13 @@ func (s *ClientTestSuite) TestGovTx() {
 	s.Require().Equal(mgov.GovModule, s.xplac.GetModule())
 	s.Require().Equal(mgov.GovSubmitProposalMsgType, s.xplac.GetMsgType())
 
+	govSubmitProposalTxbytes, err := s.xplac.SubmitProposal(submitProposalMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	govSubmitProposalJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(govSubmitProposalTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.GovSubmitProposalTxTemplates, string(govSubmitProposalJsonTxbytes))
+
 	// deposit
 	govDepositMsg := types.GovDepositMsg{
 		ProposalID: "1",
@@ -296,6 +378,13 @@ func (s *ClientTestSuite) TestGovTx() {
 	s.Require().Equal(mgov.GovModule, s.xplac.GetModule())
 	s.Require().Equal(mgov.GovDepositMsgType, s.xplac.GetMsgType())
 
+	govDepositTxbytes, err := s.xplac.GovDeposit(govDepositMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	govDepositJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(govDepositTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.GovDepositTxTemplates, string(govDepositJsonTxbytes))
+
 	// vote
 	voteMsg := types.VoteMsg{
 		ProposalID: "1",
@@ -309,6 +398,13 @@ func (s *ClientTestSuite) TestGovTx() {
 	s.Require().Equal(makeVoteMsg, s.xplac.GetMsg())
 	s.Require().Equal(mgov.GovModule, s.xplac.GetModule())
 	s.Require().Equal(mgov.GovVoteMsgType, s.xplac.GetMsgType())
+
+	govVoteTxbytes, err := s.xplac.Vote(voteMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	govVoteJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(govVoteTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.GovVoteTxTemplates, string(govVoteJsonTxbytes))
 
 	// weighted vote
 	weightedVoteMsg := types.WeightedVoteMsg{
@@ -326,6 +422,13 @@ func (s *ClientTestSuite) TestGovTx() {
 	s.Require().Equal(makeWeightedVoteMsg, s.xplac.GetMsg())
 	s.Require().Equal(mgov.GovModule, s.xplac.GetModule())
 	s.Require().Equal(mgov.GovWeightedVoteMsgType, s.xplac.GetMsgType())
+
+	govWeightedVoteTxbytes, err := s.xplac.WeightedVote(weightedVoteMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	govWeightedVoteJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(govWeightedVoteTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.GovWeightedVoteTxTemplates, string(govWeightedVoteJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestParamsTx() {
@@ -351,6 +454,13 @@ func (s *ClientTestSuite) TestParamsTx() {
 	s.Require().Equal(makeProposalParamChangeMsg, s.xplac.GetMsg())
 	s.Require().Equal(mparams.ParamsModule, s.xplac.GetModule())
 	s.Require().Equal(mparams.ParamsProposalParamChangeMsgType, s.xplac.GetMsgType())
+
+	paramsParamChangeTxbytes, err := s.xplac.ParamChange(paramChangeMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	paramsParamChangeJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(paramsParamChangeTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.ParamsParamChangeTxTemplates, string(paramsParamChangeJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestRewardTx() {
@@ -368,6 +478,13 @@ func (s *ClientTestSuite) TestRewardTx() {
 	s.Require().Equal(makeFundFeeCollectorMsg, s.xplac.GetMsg())
 	s.Require().Equal(mreward.RewardModule, s.xplac.GetModule())
 	s.Require().Equal(mreward.RewardFundFeeCollectorMsgType, s.xplac.GetMsgType())
+
+	rewardFundFeeCollectorTxbytes, err := s.xplac.FundFeeCollector(fundFeeCollectorMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	rewardFundFeeCollectorJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(rewardFundFeeCollectorTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.RewardFundFeeCollectorTxTemplates, string(rewardFundFeeCollectorJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestSlashingTx() {
@@ -381,6 +498,13 @@ func (s *ClientTestSuite) TestSlashingTx() {
 	s.Require().Equal(makeUnjailMsg, s.xplac.GetMsg())
 	s.Require().Equal(mslashing.SlashingModule, s.xplac.GetModule())
 	s.Require().Equal(mslashing.SlahsingUnjailMsgType, s.xplac.GetMsgType())
+
+	slashingUnjailTxbytes, err := s.xplac.Unjail().CreateAndSignTx()
+	s.Require().NoError(err)
+
+	slashingUnjailJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(slashingUnjailTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.SlashingUnjailTxTemplates, string(slashingUnjailJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestStakingTx() {
@@ -412,6 +536,9 @@ func (s *ClientTestSuite) TestStakingTx() {
 	s.Require().Equal(mstaking.StakingModule, s.xplac.GetModule())
 	s.Require().Equal(mstaking.StakingCreateValidatorMsgType, s.xplac.GetMsgType())
 
+	_, err = s.xplac.CreateValidator(createValidatorMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
 	// edit validator
 	editValidatorMsg := types.EditValidatorMsg{
 		Moniker:           "moniker",
@@ -431,10 +558,17 @@ func (s *ClientTestSuite) TestStakingTx() {
 	s.Require().Equal(mstaking.StakingModule, s.xplac.GetModule())
 	s.Require().Equal(mstaking.StakingEditValidatorMsgType, s.xplac.GetMsgType())
 
+	stakingEditValidatorTxbytes, err := s.xplac.EditValidator(editValidatorMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	stakingEditValidatorJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(stakingEditValidatorTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.StakingEditValidatorTxTemplates, string(stakingEditValidatorJsonTxbytes))
+
 	// delegate
 	delegateMsg := types.DelegateMsg{
 		Amount:  "1000",
-		ValAddr: s.network.Validators[0].ValAddress.String(),
+		ValAddr: sdk.ValAddress(s.accounts[0].Address).String(),
 	}
 	s.xplac.Delegate(delegateMsg)
 
@@ -445,10 +579,17 @@ func (s *ClientTestSuite) TestStakingTx() {
 	s.Require().Equal(mstaking.StakingModule, s.xplac.GetModule())
 	s.Require().Equal(mstaking.StakingDelegateMsgType, s.xplac.GetMsgType())
 
+	stakingDelegateTxbytes, err := s.xplac.Delegate(delegateMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	stakingDelegateJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(stakingDelegateTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.StakingDelegateTxTemplates, string(stakingDelegateJsonTxbytes))
+
 	// unbonding
 	unbondMsg := types.UnbondMsg{
 		Amount:  "1000",
-		ValAddr: s.network.Validators[0].ValAddress.String(),
+		ValAddr: sdk.ValAddress(s.accounts[0].Address).String(),
 	}
 	s.xplac.Unbond(unbondMsg)
 
@@ -459,11 +600,18 @@ func (s *ClientTestSuite) TestStakingTx() {
 	s.Require().Equal(mstaking.StakingModule, s.xplac.GetModule())
 	s.Require().Equal(mstaking.StakingUnbondMsgType, s.xplac.GetMsgType())
 
+	stakingUnbondTxbytes, err := s.xplac.Unbond(unbondMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	stakingUnbondJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(stakingUnbondTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.StakingUnbondTxTemplates, string(stakingUnbondJsonTxbytes))
+
 	// redelegation
 	redelegateMsg := types.RedelegateMsg{
 		Amount:     "1000",
-		ValSrcAddr: s.network.Validators[0].ValAddress.String(),
-		ValDstAddr: s.network.Validators[1].ValAddress.String(),
+		ValSrcAddr: sdk.ValAddress(s.accounts[0].Address).String(),
+		ValDstAddr: sdk.ValAddress(s.accounts[1].Address).String(),
 	}
 	s.xplac.Redelegate(redelegateMsg)
 
@@ -473,6 +621,13 @@ func (s *ClientTestSuite) TestStakingTx() {
 	s.Require().Equal(makeRedelegateMsg, s.xplac.GetMsg())
 	s.Require().Equal(mstaking.StakingModule, s.xplac.GetModule())
 	s.Require().Equal(mstaking.StakingRedelegateMsgType, s.xplac.GetMsgType())
+
+	stakingRedelegateTxbytes, err := s.xplac.Redelegate(redelegateMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	stakingRedelegateJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(stakingRedelegateTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.StakingRedelegateTxTemplates, string(stakingRedelegateJsonTxbytes))
 }
 
 func (s *ClientTestSuite) TestUpgradeTx() {
@@ -495,6 +650,13 @@ func (s *ClientTestSuite) TestUpgradeTx() {
 	s.Require().Equal(mupgrade.UpgradeModule, s.xplac.GetModule())
 	s.Require().Equal(mupgrade.UpgradeProposalSoftwareUpgradeMsgType, s.xplac.GetMsgType())
 
+	upgradeSoftwareUpgradeTxbytes, err := s.xplac.SoftwareUpgrade(softwareUpgradeMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	upgradeSoftwareUpgradeJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(upgradeSoftwareUpgradeTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.UpgradeSoftwareUpgradeTxTemplates, string(upgradeSoftwareUpgradeJsonTxbytes))
+
 	// cancel software upgrade
 	cancelSoftwareUpgradeMsg := types.CancelSoftwareUpgradeMsg{
 		Title:       "Cancel software upgrade",
@@ -509,6 +671,14 @@ func (s *ClientTestSuite) TestUpgradeTx() {
 	s.Require().Equal(makeCancelSoftwareUpgradeMsg, s.xplac.GetMsg())
 	s.Require().Equal(mupgrade.UpgradeModule, s.xplac.GetModule())
 	s.Require().Equal(mupgrade.UpgradeCancelSoftwareUpgradeMsgType, s.xplac.GetMsgType())
+
+	upgradeCancelSoftwareUpgradeTxbytes, err := s.xplac.CancelSoftwareUpgrade(cancelSoftwareUpgradeMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	upgradeCancelSoftwareUpgradeJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(upgradeCancelSoftwareUpgradeTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.UpgradeCancelSoftwareUpgradeTxTemplates, string(upgradeCancelSoftwareUpgradeJsonTxbytes))
+
 }
 
 func (s *ClientTestSuite) TestWasmTx() {
@@ -527,6 +697,9 @@ func (s *ClientTestSuite) TestWasmTx() {
 	s.Require().Equal(mwasm.WasmModule, s.xplac.GetModule())
 	s.Require().Equal(mwasm.WasmStoreMsgType, s.xplac.GetMsgType())
 
+	_, err = s.xplac.StoreCode(storeMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
 	// instantiate
 	instantiateMsg := types.InstantiateMsg{
 		CodeId:  "1",
@@ -544,6 +717,13 @@ func (s *ClientTestSuite) TestWasmTx() {
 	s.Require().Equal(mwasm.WasmModule, s.xplac.GetModule())
 	s.Require().Equal(mwasm.WasmInstantiateMsgType, s.xplac.GetMsgType())
 
+	wasmInstantiateContractTxbytes, err := s.xplac.InstantiateContract(instantiateMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	wasmInstantiateContractJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(wasmInstantiateContractTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.WasmInstantiateContractTxTemplates, string(wasmInstantiateContractJsonTxbytes))
+
 	// execute
 	executeMsg := types.ExecuteMsg{
 		ContractAddress: testCWContractAddress,
@@ -559,6 +739,13 @@ func (s *ClientTestSuite) TestWasmTx() {
 	s.Require().Equal(mwasm.WasmModule, s.xplac.GetModule())
 	s.Require().Equal(mwasm.WasmExecuteMsgType, s.xplac.GetMsgType())
 
+	wasmExecuteContractTxbytes, err := s.xplac.ExecuteContract(executeMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	wasmExecuteContractJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(wasmExecuteContractTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.WasmExecuteContractTxTemplates, string(wasmExecuteContractJsonTxbytes))
+
 	// clear contract admin
 	clearContractAdminMsg := types.ClearContractAdminMsg{
 		ContractAddress: testCWContractAddress,
@@ -572,6 +759,13 @@ func (s *ClientTestSuite) TestWasmTx() {
 	s.Require().Equal(mwasm.WasmModule, s.xplac.GetModule())
 	s.Require().Equal(mwasm.WasmClearContractAdminMsgType, s.xplac.GetMsgType())
 
+	wasmClearContractAdminTxbytes, err := s.xplac.ClearContractAdmin(clearContractAdminMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	wasmClearContractAdminJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(wasmClearContractAdminTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.WasmClearContractAdminTxTemplates, string(wasmClearContractAdminJsonTxbytes))
+
 	// set contract admin
 	setContractAdminMsg := types.SetContractAdminMsg{
 		ContractAddress: testCWContractAddress,
@@ -584,6 +778,13 @@ func (s *ClientTestSuite) TestWasmTx() {
 	s.Require().Equal(makeSetContractAdmintMsg, s.xplac.GetMsg())
 	s.Require().Equal(mwasm.WasmModule, s.xplac.GetModule())
 	s.Require().Equal(mwasm.WasmSetContractAdminMsgType, s.xplac.GetMsgType())
+
+	wasmSetContractAdminTxbytes, err := s.xplac.SetContractAdmin(setContractAdminMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	wasmSetContractAdminJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(wasmSetContractAdminTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.WasmSetContractAdminTxTemplates, string(wasmSetContractAdminJsonTxbytes))
 
 	// migrate
 	migrateMsg := types.MigrateMsg{
@@ -599,4 +800,11 @@ func (s *ClientTestSuite) TestWasmTx() {
 	s.Require().Equal(makeMigrateMsg, s.xplac.GetMsg())
 	s.Require().Equal(mwasm.WasmModule, s.xplac.GetModule())
 	s.Require().Equal(mwasm.WasmMigrateMsgType, s.xplac.GetMsgType())
+
+	wasmMigrateTxbytes, err := s.xplac.Migrate(migrateMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	wasmMigrateJsonTxbytes, err := s.xplac.EncodedTxbytesToJsonTx(wasmMigrateTxbytes)
+	s.Require().NoError(err)
+	s.Require().Equal(testutil.WasmMigrateTxTemplates, string(wasmMigrateJsonTxbytes))
 }

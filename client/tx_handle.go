@@ -223,6 +223,7 @@ func convertAndSetBuilder(xplac *XplaClient, builder cmclient.TxBuilder, gasLimi
 	}
 	if types.Memo != "" {
 		builder.SetMemo(types.Memo)
+		types.Memo = ""
 	}
 	gasLimitStr, err := util.FromStringToUint64(gasLimit)
 	if err != nil {
