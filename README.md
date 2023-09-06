@@ -12,6 +12,7 @@ Xpla.go is a Golang SDK for writing applications that interact with the Xpla blo
 
 |xpla.go|XPLA|Note|
 |:---:|:---:|:---:|
+|v0.1.1|[v1.2.3](https://github.com/xpladev/xpla/tree/v1.2.3)||
 |v0.1.0|[v1.2.2](https://github.com/xpladev/xpla/tree/v1.2.2)||
 
 

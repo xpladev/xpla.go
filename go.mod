@@ -16,7 +16,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/tendermint v0.34.21
 	github.com/tendermint/tm-db v0.6.7
-	github.com/xpladev/xpla v1.2.2
+	github.com/xpladev/xpla v1.2.3
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/net v0.2.0
 	google.golang.org/grpc v1.51.0

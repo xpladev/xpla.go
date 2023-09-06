@@ -867,8 +867,8 @@ github.com/vmihailenco/tagparser v0.1.2/go.mod h1:OeAg3pn3UbLjkWt+rN9oFYB6u/cQgq
 github.com/wsddn/go-ecdh v0.0.0-20161211032359-48726bab9208/go.mod h1:IotVbo4F+mw0EzQ08zFqg7pK3FebNXpaMsRy2RT+Ees=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
-github.com/xpladev/xpla v1.2.2 h1:Mh5qE3HoL6vr17pM33QJZ3+9CcN5ReNApo6k2pWtZ+Y=
-github.com/xpladev/xpla v1.2.2/go.mod h1:bdd4gNe3uc3wFMb8gWBrS3aPJLHsrKXUBqWGYRMPVw0=
+github.com/xpladev/xpla v1.2.3 h1:KJFKLjxo7obw5WvrdfVXViMX23wJkLUvEsHRuwag8cM=
+github.com/xpladev/xpla v1.2.3/go.mod h1:bdd4gNe3uc3wFMb8gWBrS3aPJLHsrKXUBqWGYRMPVw0=
 github.com/ybbus/jsonrpc v2.1.2+incompatible/go.mod h1:XJrh1eMSzdIYFbM08flv0wp5G35eRniyeGut1z+LSiE=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
