@@ -110,7 +110,6 @@ func (suite *TestSuite) TestSimulateSignTx() {
 		UnsignedFileName: unsignedTxPath,
 		SignatureOnly:    false,
 		MultisigAddress:  "",
-		FromAddress:      from.Address.String(),
 		Overwrite:        false,
 		Amino:            false,
 	}
@@ -158,7 +157,6 @@ func (suite *TestSuite) TestSimulateSignatureOnly() {
 			UnsignedFileName: unsignedTxPath,
 			SignatureOnly:    true,
 			MultisigAddress:  "",
-			FromAddress:      acc.Address.String(),
 			Overwrite:        false,
 			Amino:            false,
 		}
