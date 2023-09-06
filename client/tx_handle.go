@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"math/big"
 	"os"
@@ -424,4 +425,33 @@ func getGasLimitFeeAmount(xplac *XplaClient, builder cmclient.TxBuilder) (string
 	}
 
 	return gasLimit, feeAmount, nil
+}
+
+// check user = signer
+func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
+	for _, s := range signers {
+		if bytes.Equal(user.Bytes(), s.Bytes()) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Get account number and sequence
+func GetAccNumAndSeq(xplac *XplaClient) (*XplaClient, error) {
+	if xplac.GetAccountNumber() == "" || xplac.GetSequence() == "" {
+		if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
+			xplac.WithAccountNumber(util.FromUint64ToString(types.DefaultAccNum))
+			xplac.WithSequence(util.FromUint64ToString(types.DefaultAccSeq))
+		} else {
+			account, err := xplac.LoadAccount(sdk.AccAddress(xplac.GetPrivateKey().PubKey().Address()))
+			if err != nil {
+				return nil, err
+			}
+			xplac.WithAccountNumber(util.FromUint64ToString(account.GetAccountNumber()))
+			xplac.WithSequence(util.FromUint64ToString(account.GetSequence()))
+		}
+	}
+	return xplac, nil
 }

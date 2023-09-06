@@ -18,9 +18,9 @@ type SignTxMsg struct {
 	UnsignedFileName string
 	SignatureOnly    bool
 	MultisigAddress  string
-	FromAddress      string
 	Overwrite        bool
 	Amino            bool
+	Offline          bool
 }
 
 type TxMultiSignMsg struct {
@@ -29,9 +29,10 @@ type TxMultiSignMsg struct {
 	FromName       string
 	Offline        bool
 	SignatureFiles []string
-	OutputDocument string
 	SignatureOnly  bool
 	Amino          bool
+	KeyringPath    string
+	KeyringBackend string
 }
 
 type QueryAccAddressMsg struct {
