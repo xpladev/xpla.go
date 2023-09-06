@@ -1,4 +1,4 @@
-package auth
+package evidence
 
 import (
 	"github.com/xpladev/xpla.go/core"
@@ -15,13 +15,13 @@ func NewCoreModule() core.CoreModule {
 }
 
 func (c *coreModule) Name() string {
-	return AuthModule
+	return EvidenceModule
 }
 
-func (c *coreModule) NewTxRouter(txBuiler cmclient.TxBuilder, msgType string) (cmclient.TxBuilder, error) {
+func (c *coreModule) NewTxRouter(_ cmclient.TxBuilder, _ string, _ interface{}) (cmclient.TxBuilder, error) {
 	return nil, util.LogErr(errors.ErrInvalidRequest, c.Name(), "module has not tx")
 }
 
 func (c *coreModule) NewQueryRouter(q core.QueryClient) (string, error) {
-	return QueryAuth(q)
+	return QueryEvidence(q)
 }

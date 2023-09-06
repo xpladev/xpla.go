@@ -5,6 +5,23 @@ import (
 
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/core/auth"
+	"github.com/xpladev/xpla.go/core/authz"
+	"github.com/xpladev/xpla.go/core/bank"
+	"github.com/xpladev/xpla.go/core/base"
+	"github.com/xpladev/xpla.go/core/crisis"
+	"github.com/xpladev/xpla.go/core/distribution"
+	"github.com/xpladev/xpla.go/core/evidence"
+	"github.com/xpladev/xpla.go/core/evm"
+	"github.com/xpladev/xpla.go/core/feegrant"
+	"github.com/xpladev/xpla.go/core/gov"
+	"github.com/xpladev/xpla.go/core/ibc"
+	"github.com/xpladev/xpla.go/core/mint"
+	"github.com/xpladev/xpla.go/core/params"
+	"github.com/xpladev/xpla.go/core/reward"
+	"github.com/xpladev/xpla.go/core/slashing"
+	"github.com/xpladev/xpla.go/core/staking"
+	"github.com/xpladev/xpla.go/core/upgrade"
+	"github.com/xpladev/xpla.go/core/wasm"
 )
 
 var once sync.Once
@@ -27,6 +44,23 @@ func Controller() *coreController {
 		func() {
 			cc = NewCoreController(
 				auth.NewCoreModule(),
+				authz.NewCoreModule(),
+				bank.NewCoreModule(),
+				base.NewCoreModule(),
+				crisis.NewCoreModule(),
+				distribution.NewCoreModule(),
+				evidence.NewCoreModule(),
+				evm.NewCoreModule(),
+				feegrant.NewCoreModule(),
+				gov.NewCoreModule(),
+				ibc.NewCoreModule(),
+				mint.NewCoreModule(),
+				params.NewCoreModule(),
+				reward.NewCoreModule(),
+				slashing.NewCoreModule(),
+				staking.NewCoreModule(),
+				upgrade.NewCoreModule(),
+				wasm.NewCoreModule(),
 			)
 		})
 	return cc

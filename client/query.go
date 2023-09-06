@@ -31,62 +31,6 @@ func (xplac *XplaClient) Query() (string, error) {
 	queryClient := core.NewIXplaClient(xplac, setQueryType(xplac))
 
 	return controller.Controller().Get(xplac.GetModule()).NewQueryRouter(*queryClient)
-
-	// switch {
-	// case xplac.GetModule() == mauth.AuthModule:
-	// 	return mauth.QueryAuth(*queryClient)
-
-	// case xplac.GetModule() == mauthz.AuthzModule:
-	// 	return mauthz.QueryAuthz(*queryClient)
-
-	// case xplac.GetModule() == mbank.BankModule:
-	// 	return mbank.QueryBank(*queryClient)
-
-	// case xplac.GetModule() == mbase.Base:
-	// 	return mbase.QueryBase(*queryClient)
-
-	// case xplac.GetModule() == mdist.DistributionModule:
-	// 	return mdist.QueryDistribution(*queryClient)
-
-	// case xplac.GetModule() == mevidence.EvidenceModule:
-	// 	return mevidence.QueryEvidence(*queryClient)
-
-	// case xplac.GetModule() == mevm.EvmModule:
-	// 	return mevm.QueryEvm(*queryClient)
-
-	// case xplac.GetModule() == mfeegrant.FeegrantModule:
-	// 	return mfeegrant.QueryFeegrant(*queryClient)
-
-	// case xplac.GetModule() == mgov.GovModule:
-	// 	return mgov.QueryGov(*queryClient)
-
-	// case xplac.GetModule() == mibc.IbcModule:
-	// 	return mibc.QueryIbc(*queryClient)
-
-	// case xplac.GetModule() == mmint.MintModule:
-	// 	return mmint.QueryMint(*queryClient)
-
-	// case xplac.GetModule() == mparams.ParamsModule:
-	// 	return mparams.QueryParams(*queryClient)
-
-	// case xplac.GetModule() == mreward.RewardModule:
-	// 	return mreward.QueryReward(*queryClient)
-
-	// case xplac.GetModule() == mslashing.SlashingModule:
-	// 	return mslashing.QuerySlashing(*queryClient)
-
-	// case xplac.GetModule() == mstaking.StakingModule:
-	// 	return mstaking.QueryStaking(*queryClient)
-
-	// case xplac.GetModule() == mupgrade.UpgradeModule:
-	// 	return mupgrade.QueryUpgrade(*queryClient)
-
-	// case xplac.GetModule() == mwasm.WasmModule:
-	// 	return mwasm.QueryWasm(*queryClient)
-
-	// default:
-	// 	return "", util.LogErr(errors.ErrInvalidRequest, "invalid module")
-	// }
 }
 
 func setQueryType(xplac *XplaClient) uint8 {
