@@ -22,6 +22,7 @@ import (
 const (
 	BackendFile   = "file"
 	BackendMemory = "memory"
+	BackendTest   = "test"
 )
 
 // Provide cosmos sdk client.
@@ -82,7 +83,8 @@ func NewEvmClient(evmRpcUrl string, ctx context.Context) (*EvmClient, error) {
 
 // Provide cosmos sdk keyring
 func NewKeyring(backendType string, keyringPath string) (keyring.Keyring, error) {
-	if backendType == BackendMemory {
+	switch {
+	case backendType == BackendMemory:
 		k, err := keyring.New(
 			types.XplaToolDefaultName,
 			keyring.BackendMemory,
@@ -96,7 +98,7 @@ func NewKeyring(backendType string, keyringPath string) (keyring.Keyring, error)
 
 		return k, nil
 
-	} else if backendType == BackendFile {
+	case backendType == BackendFile:
 		k, err := keyring.New(
 			types.XplaToolDefaultName,
 			keyring.BackendFile,
@@ -109,7 +111,22 @@ func NewKeyring(backendType string, keyringPath string) (keyring.Keyring, error)
 		}
 
 		return k, nil
-	} else {
+
+	case backendType == BackendTest:
+		k, err := keyring.New(
+			types.XplaToolDefaultName,
+			keyring.BackendTest,
+			keyringPath,
+			nil,
+			hd.EthSecp256k1Option(),
+		)
+		if err != nil {
+			return nil, LogErr(errors.ErrKeyNotFound, err)
+		}
+
+		return k, nil
+
+	default:
 		return nil, LogErr(errors.ErrInvalidMsgType, "invalid keyring backend type")
 	}
 }

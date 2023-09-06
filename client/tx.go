@@ -3,6 +3,8 @@ package client
 import (
 	"encoding/base64"
 	"encoding/json"
+	"os"
+	"path/filepath"
 
 	mevm "github.com/xpladev/xpla.go/core/evm"
 	"github.com/xpladev/xpla.go/key"
@@ -10,8 +12,8 @@ import (
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
-	cmclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -26,22 +28,14 @@ import (
 // Options required for create and sign are stored in the xpla client and reflected when the values of those options exist.
 // Create and sign transaction must be needed in order to send transaction to the chain.
 func (xplac *XplaClient) CreateAndSignTx() ([]byte, error) {
+	var err error
 	if xplac.GetErr() != nil {
 		return nil, xplac.GetErr()
 	}
 
-	if xplac.GetAccountNumber() == "" || xplac.GetSequence() == "" {
-		if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
-			xplac.WithAccountNumber(util.FromUint64ToString(types.DefaultAccNum))
-			xplac.WithSequence(util.FromUint64ToString(types.DefaultAccSeq))
-		} else {
-			account, err := xplac.LoadAccount(sdk.AccAddress(xplac.GetPrivateKey().PubKey().Address()))
-			if err != nil {
-				return nil, err
-			}
-			xplac.WithAccountNumber(util.FromUint64ToString(account.GetAccountNumber()))
-			xplac.WithSequence(util.FromUint64ToString(account.GetSequence()))
-		}
+	xplac, err = GetAccNumAndSeq(xplac)
+	if err != nil {
+		return nil, err
 	}
 
 	if xplac.GetGasAdjustment() == "" {
@@ -166,6 +160,8 @@ func (xplac *XplaClient) CreateUnsignedTx() ([]byte, error) {
 
 // Sign created unsigned transaction.
 func (xplac *XplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
+	var err error
+
 	if xplac.GetErr() != nil {
 		return nil, xplac.GetErr()
 	}
@@ -174,11 +170,20 @@ func (xplac *XplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 		return nil, util.LogErr(errors.ErrNotSatisfiedOptions, "need sign tx message of xpla client's option")
 	}
 
+	if !signTxMsg.Offline {
+		xplac, err = GetAccNumAndSeq(xplac)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	clientCtx, err := util.NewClient()
 	if err != nil {
 		return nil, err
 	}
-	err = clientCtx.Keyring.ImportPrivKey(types.XplaToolDefaultName, key.EncryptArmorPrivKey(xplac.GetPrivateKey(), key.DefaultEncryptPassphrase), key.DefaultEncryptPassphrase)
+
+	fromName := types.XplaToolDefaultName
+	err = clientCtx.Keyring.ImportPrivKey(fromName, key.EncryptArmorPrivKey(xplac.GetPrivateKey(), key.DefaultEncryptPassphrase), key.DefaultEncryptPassphrase)
 	if err != nil {
 		return nil, util.LogErr(errors.ErrKeyNotFound, err)
 	}
@@ -198,26 +203,36 @@ func (xplac *XplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 
 	signatureOnly := signTxMsg.SignatureOnly
 	multisig := signTxMsg.MultisigAddress
-	from := signTxMsg.FromAddress
-	generateOnly := false
-	offline := true
-
-	_, fromName, _, err := cmclient.GetFromFields(txFactory.Keybase(), from, generateOnly)
-	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
-	}
-
 	if multisig != "" {
 		multisigAddr, err := sdk.AccAddressFromBech32(multisig)
 		if err != nil {
-			multisigAddr, _, _, err = cmclient.GetFromFields(txFactory.Keybase(), multisig, generateOnly)
+			return nil, util.LogErr(errors.ErrParse, err)
+		}
+
+		multisigAccNum := uint64(types.DefaultAccNum)
+		multisigAccSeq := uint64(types.DefaultAccSeq)
+		if !signTxMsg.Offline {
+			if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
+				return nil, util.LogErr(errors.ErrInvalidRequest, "need LCD or gRPC URL when not offline mode")
+			}
+			signerAcc, err := xplac.LoadAccount(multisigAddr)
 			if err != nil {
 				return nil, util.LogErr(errors.ErrParse, err)
 			}
+			multisigAccNum = signerAcc.GetAccountNumber()
+			multisigAccSeq = signerAcc.GetSequence()
 		}
-		err = authclient.SignTxWithSignerAddress(
-			txFactory, clientCtx, multisigAddr, fromName, txBuilder, offline, signTxMsg.Overwrite,
-		)
+
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).
+			WithChainID(xplac.GetChainId()).
+			WithAccountNumber(multisigAccNum).
+			WithSequence(multisigAccSeq)
+
+		if !isTxSigner(multisigAddr, txBuilder.GetTx().GetSigners()) {
+			return nil, util.LogErr(errors.ErrParse, err)
+		}
+
+		err = tx.Sign(txFactory, fromName, txBuilder, signTxMsg.Overwrite)
 		if err != nil {
 			return nil, util.LogErr(errors.ErrParse, err)
 		}
@@ -228,7 +243,6 @@ func (xplac *XplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 			xplac.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 		}
 
-		privs := []cryptotypes.PrivKey{xplac.GetPrivateKey()}
 		accNumU64, err := util.FromStringToUint64(xplac.GetAccountNumber())
 		if err != nil {
 			return nil, err
@@ -237,6 +251,8 @@ func (xplac *XplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		privs := []cryptotypes.PrivKey{xplac.GetPrivateKey()}
 		accNums := []uint64{accNumU64}
 		accSeqs := []uint64{accSeqU64}
 
@@ -292,6 +308,30 @@ func (xplac *XplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 		return nil, err
 	}
 
+	if txMultiSignMsg.KeyringBackend != keyring.BackendFile &&
+		txMultiSignMsg.KeyringBackend != keyring.BackendMemory &&
+		txMultiSignMsg.KeyringBackend != keyring.BackendTest {
+		return nil, util.LogErr(errors.ErrParse, "invalid keyring backend, must be "+util.BackendFile+", "+util.BackendTest+" or "+util.BackendMemory)
+	}
+
+	keyringPath := txMultiSignMsg.KeyringPath
+	if (txMultiSignMsg.KeyringBackend == keyring.BackendFile ||
+		txMultiSignMsg.KeyringBackend == keyring.BackendTest) && txMultiSignMsg.KeyringPath == "" {
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, util.LogErr(errors.ErrParse, err)
+		}
+
+		keyringPath = filepath.Join(userHomeDir, ".xpla")
+	}
+
+	newKeyring, err := util.NewKeyring(txMultiSignMsg.KeyringBackend, keyringPath)
+	if err != nil {
+		return nil, util.LogErr(errors.ErrParse, err)
+	}
+
+	clientCtx = clientCtx.WithKeyring(newKeyring)
+
 	parseTx, err := authclient.ReadTxFromFile(clientCtx, txMultiSignMsg.FileName)
 	if err != nil {
 		return nil, util.LogErr(errors.ErrParse, err)
@@ -301,7 +341,8 @@ func (xplac *XplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
-	txFactory = txFactory.WithChainID(xplac.GetChainId()).
+	txFactory = txFactory.
+		WithChainID(xplac.GetChainId()).
 		WithAccountNumber(uint64(types.DefaultAccNum)).
 		WithSequence(uint64(types.DefaultAccSeq))
 
@@ -318,13 +359,17 @@ func (xplac *XplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 
 	multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 	multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-	clientCtx = clientCtx.WithOffline(txMultiSignMsg.Offline)
-	if !clientCtx.Offline {
-		accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+	if !txMultiSignMsg.Offline {
+		if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
+			return nil, util.LogErr(errors.ErrInvalidRequest, "need LCD or gRPC URL when not offline mode")
+		}
+		multisigAccount, err := xplac.LoadAccount(multisigInfo.GetAddress())
 		if err != nil {
 			return nil, util.LogErr(errors.ErrParse, err)
 		}
-		txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
+		txFactory = txFactory.
+			WithAccountNumber(multisigAccount.GetAccountNumber()).
+			WithSequence(multisigAccount.GetSequence())
 	}
 
 	for _, sigFile := range txMultiSignMsg.SignatureFiles {
@@ -333,20 +378,31 @@ func (xplac *XplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 			return nil, util.LogErr(errors.ErrFailedToUnmarshal, err)
 		}
 
-		signingData := authsigning.SignerData{
-			ChainID:       txFactory.ChainID(),
-			AccountNumber: txFactory.AccountNumber(),
-			Sequence:      txFactory.Sequence(),
-		}
-
 		for _, sig := range sigs {
+			data, ok := sig.Data.(*signing.SingleSignatureData)
+			if !ok {
+				return nil, util.LogErr(errors.ErrParse, "signature data is not single signature")
+			}
+
+			if data.SignMode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+				continue
+			}
+
+			addr, err := sdk.AccAddressFromHex(sig.PubKey.Address().String())
+			if err != nil {
+				return nil, util.LogErr(errors.ErrParse, err)
+			}
+
+			signingData := authsigning.SignerData{
+				ChainID:       txFactory.ChainID(),
+				AccountNumber: txFactory.AccountNumber(),
+				Sequence:      txFactory.Sequence(),
+			}
+
 			err = authsigning.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 			if err != nil {
-				addr, err := sdk.AccAddressFromHex(sig.PubKey.Address().String())
-				if err != nil {
-					return nil, util.LogErr(errors.ErrParse, err)
-				}
-				return nil, util.LogErr(errors.ErrInvalidRequest, "couldn't verify signature for address", addr)
+
+				return nil, util.LogErr(errors.ErrInvalidRequest, "couldn't verify signature for address", addr.String())
 			}
 
 			if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.GetPubKeys()); err != nil {
@@ -392,14 +448,13 @@ func (xplac *XplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 		}
 	}
 
-	if txMultiSignMsg.OutputDocument == "" {
-		return json, nil
+	if xplac.GetOutputDocument() != "" {
+		err = util.SaveJsonPretty(json, xplac.GetOutputDocument())
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	err = util.SaveJsonPretty(json, xplac.GetOutputDocument())
-	if err != nil {
-		return nil, err
-	}
 	return json, nil
 }
 
