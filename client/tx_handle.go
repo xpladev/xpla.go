@@ -6,24 +6,12 @@ import (
 	"math/big"
 	"os"
 
-	mauthz "github.com/xpladev/xpla.go/core/authz"
-	mbank "github.com/xpladev/xpla.go/core/bank"
-	mcrisis "github.com/xpladev/xpla.go/core/crisis"
-	mdist "github.com/xpladev/xpla.go/core/distribution"
-	mfeegrant "github.com/xpladev/xpla.go/core/feegrant"
-	mgov "github.com/xpladev/xpla.go/core/gov"
-	mparams "github.com/xpladev/xpla.go/core/params"
-	mreward "github.com/xpladev/xpla.go/core/reward"
-	mslashing "github.com/xpladev/xpla.go/core/slashing"
-	mstaking "github.com/xpladev/xpla.go/core/staking"
-	mupgrade "github.com/xpladev/xpla.go/core/upgrade"
-	mwasm "github.com/xpladev/xpla.go/core/wasm"
+	"github.com/xpladev/xpla.go/controller"
 	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	cmclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -32,18 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/ethereum/go-ethereum/core/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	rewardtypes "github.com/xpladev/xpla/x/reward/types"
 )
 
 // Set message for transaction builder.
@@ -55,152 +34,8 @@ func setTxBuilderMsg(xplac *XplaClient) (cmclient.TxBuilder, error) {
 
 	builder := xplac.GetEncoding().TxConfig.NewTxBuilder()
 
-	switch {
-	// Authz module
-	case xplac.GetMsgType() == mauthz.AuthzGrantMsgType:
-		convertMsg := xplac.GetMsg().(authz.MsgGrant)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mauthz.AuthzRevokeMsgType:
-		convertMsg := xplac.GetMsg().(authz.MsgRevoke)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mauthz.AuthzExecMsgType:
-		convertMsg := xplac.GetMsg().(authz.MsgExec)
-		builder.SetMsgs(&convertMsg)
-
-		// Bank module
-	case xplac.GetMsgType() == mbank.BankSendMsgType:
-		convertMsg := xplac.GetMsg().(banktypes.MsgSend)
-		builder.SetMsgs(&convertMsg)
-
-		// Crisis module
-	case xplac.GetMsgType() == mcrisis.CrisisInvariantBrokenMsgType:
-		convertMsg := xplac.GetMsg().(crisistypes.MsgVerifyInvariant)
-		builder.SetMsgs(&convertMsg)
-
-		// Distribution module
-	case xplac.GetMsgType() == mdist.DistributionFundCommunityPoolMsgType:
-		convertMsg := xplac.GetMsg().(disttypes.MsgFundCommunityPool)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mdist.DistributionProposalCommunityPoolSpendMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgSubmitProposal)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mdist.DistributionWithdrawRewardsMsgType:
-		convertMsg := xplac.GetMsg().([]sdk.Msg)
-		builder.SetMsgs(convertMsg...)
-
-	case xplac.GetMsgType() == mdist.DistributionWithdrawAllRewardsMsgType:
-		convertMsg := xplac.GetMsg().([]sdk.Msg)
-		builder.SetMsgs(convertMsg...)
-
-	case xplac.GetMsgType() == mdist.DistributionSetWithdrawAddrMsgType:
-		convertMsg := xplac.GetMsg().(disttypes.MsgSetWithdrawAddress)
-		builder.SetMsgs(&convertMsg)
-
-		// Feegrant module
-	case xplac.GetMsgType() == mfeegrant.FeegrantGrantMsgType:
-		convertMsg := xplac.GetMsg().(feegrant.MsgGrantAllowance)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mfeegrant.FeegrantRevokeGrantMsgType:
-		convertMsg := xplac.GetMsg().(feegrant.MsgRevokeAllowance)
-		builder.SetMsgs(&convertMsg)
-
-		// Gov module
-	case xplac.GetMsgType() == mgov.GovSubmitProposalMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgSubmitProposal)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mgov.GovDepositMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgDeposit)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mgov.GovVoteMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgVote)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mgov.GovWeightedVoteMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgVoteWeighted)
-		builder.SetMsgs(&convertMsg)
-
-		// Params module
-	case xplac.GetMsgType() == mparams.ParamsProposalParamChangeMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgSubmitProposal)
-		builder.SetMsgs(&convertMsg)
-
-		// Reward module
-	case xplac.GetMsgType() == mreward.RewardFundFeeCollectorMsgType:
-		convertMsg := xplac.GetMsg().(rewardtypes.MsgFundFeeCollector)
-		builder.SetMsgs(&convertMsg)
-
-		// slashing module
-	case xplac.GetMsgType() == mslashing.SlahsingUnjailMsgType:
-		convertMsg := xplac.GetMsg().(slashingtypes.MsgUnjail)
-		builder.SetMsgs(&convertMsg)
-
-		// Staking module
-	case xplac.GetMsgType() == mstaking.StakingCreateValidatorMsgType:
-		convertMsg := xplac.GetMsg().(sdk.Msg)
-		builder.SetMsgs(convertMsg)
-
-	case xplac.GetMsgType() == mstaking.StakingEditValidatorMsgType:
-		convertMsg := xplac.GetMsg().(stakingtypes.MsgEditValidator)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mstaking.StakingDelegateMsgType:
-		convertMsg := xplac.GetMsg().(stakingtypes.MsgDelegate)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mstaking.StakingUnbondMsgType:
-		convertMsg := xplac.GetMsg().(stakingtypes.MsgUndelegate)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mstaking.StakingRedelegateMsgType:
-		convertMsg := xplac.GetMsg().(stakingtypes.MsgBeginRedelegate)
-		builder.SetMsgs(&convertMsg)
-
-		// Upgrade module
-	case xplac.GetMsgType() == mupgrade.UpgradeProposalSoftwareUpgradeMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgSubmitProposal)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mupgrade.UpgradeCancelSoftwareUpgradeMsgType:
-		convertMsg := xplac.GetMsg().(govtypes.MsgSubmitProposal)
-		builder.SetMsgs(&convertMsg)
-
-		// Wasm module
-	case xplac.GetMsgType() == mwasm.WasmStoreMsgType:
-		convertMsg := xplac.GetMsg().(wasm.MsgStoreCode)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mwasm.WasmInstantiateMsgType:
-		convertMsg := xplac.GetMsg().(wasm.MsgInstantiateContract)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mwasm.WasmExecuteMsgType:
-		convertMsg := xplac.GetMsg().(wasm.MsgExecuteContract)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mwasm.WasmClearContractAdminMsgType:
-		convertMsg := xplac.GetMsg().(wasm.MsgClearAdmin)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mwasm.WasmSetContractAdminMsgType:
-		convertMsg := xplac.GetMsg().(wasm.MsgUpdateAdmin)
-		builder.SetMsgs(&convertMsg)
-
-	case xplac.GetMsgType() == mwasm.WasmMigrateMsgType:
-		convertMsg := xplac.GetMsg().(wasm.MsgMigrateContract)
-		builder.SetMsgs(&convertMsg)
-
-	default:
-		return nil, util.LogErr(errors.ErrInvalidMsgType, xplac.GetMsgType())
-	}
-
-	return builder, nil
+	return controller.Controller().Get(xplac.GetModule()).
+		NewTxRouter(builder, xplac.GetMsgType(), xplac.GetMsg())
 }
 
 // Set information for transaction builder.
