@@ -17,6 +17,35 @@ import (
 )
 
 // The standard form of XPLA client is interface type.
+// XplaClient is endpoint in order to access xpla.go from external packages.
+// If new modules are implemeted, external functions that are used to send tx or query state should be
+// enrolled in XplaClient interface.
+//
+// e.g. - enroll bank module
+//
+//	  type TxMsgProvider interface {
+//		...
+//		BankSend(types.BankSendMsg) XplaClient
+//		...
+//	  }
+//
+//	  type QueryMsgProvider interface {
+//		...
+//		BankBalances(types.BankBalancesMsg) XplaClient
+//		DenomMetadata(...types.DenomMetadataMsg) XplaClient
+//		Total(...types.TotalMsg) XplaClient
+//		...
+//	  }
+//
+// The return type of these methods must be always the XplaClient because the client uses mehod chaining.
+//
+// e.g. - create and sign transaction
+//
+//	txbytes, err := xplac.BankSend(bankSendMsg).CreateAndSignTx()
+//
+// e.g. - query
+//
+//	res, err := xplac.BankBalances(bankBalancesMsg).Query()
 type XplaClient interface {
 	WithProvider
 	GetProvider
@@ -29,7 +58,7 @@ type XplaClient interface {
 	HelperProvider
 }
 
-// Optional parameters of xpla client.
+// Optional parameters of client.xplaClient.
 type Options struct {
 	PrivateKey     key.PrivateKey
 	AccountNumber  string
@@ -50,6 +79,7 @@ type Options struct {
 	OutputDocument string
 }
 
+// Methods set params of client.xplaClient.
 type WithProvider interface {
 	UpdateXplacInCoreModule() XplaClient
 	WithOptions(Options) XplaClient
@@ -79,6 +109,7 @@ type WithProvider interface {
 	WithErr(err error) XplaClient
 }
 
+// Methods get params of client.xplaClient.
 type GetProvider interface {
 	GetChainId() string
 	GetPrivateKey() key.PrivateKey
@@ -107,6 +138,7 @@ type GetProvider interface {
 	GetErr() error
 }
 
+// Methods handle transaction.
 type TxProvider interface {
 	CreateAndSignTx() ([]byte, error)
 	CreateUnsignedTx() ([]byte, error)
@@ -117,21 +149,25 @@ type TxProvider interface {
 	ValidateSignatures(types.ValidateSignaturesMsg) (string, error)
 }
 
+// Method handles query functions.
 type QueryProvider interface {
 	Query() (string, error)
 }
 
+// Methods handle functions of broadcasting.
 type BroadcastProvider interface {
 	Broadcast([]byte) (*types.TxRes, error)
 	BroadcastBlock([]byte) (*types.TxRes, error)
 	BroadcastAsync([]byte) (*types.TxRes, error)
 }
 
+// Methods get information from XPLA chain.
 type InfoRequestProvider interface {
 	LoadAccount(sdk.AccAddress) (authtypes.AccountI, error)
 	Simulate(cmclient.TxBuilder) (*sdktx.SimulateResponse, error)
 }
 
+// Methods are external functions of each module for sending transaction.
 type TxMsgProvider interface {
 	// authz
 	AuthzGrant(types.AuthzGrantMsg) XplaClient
@@ -195,6 +231,7 @@ type TxMsgProvider interface {
 	Migrate(types.MigrateMsg) XplaClient
 }
 
+// Methods are external functions of each module for querying.
 type QueryMsgProvider interface {
 	// auth
 	AuthParams() XplaClient
@@ -339,6 +376,7 @@ type QueryMsgProvider interface {
 	LibwasmvmVersion() XplaClient
 }
 
+// Method of helper.
 type HelperProvider interface {
 	EncodedTxbytesToJsonTx([]byte) ([]byte, error)
 }
