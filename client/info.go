@@ -19,7 +19,7 @@ const (
 
 // LoadAccount gets the account info by AccAddress
 // If xpla client has gRPC client, query account information by using gRPC
-func (xplac *XplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.AccountI, err error) {
+func (xplac *xplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.AccountI, err error) {
 
 	if xplac.GetGrpcUrl() == "" {
 
@@ -57,7 +57,7 @@ func (xplac *XplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.Acco
 
 // Simulate tx and get response
 // If xpla client has gRPC client, query simulation by using gRPC
-func (xplac *XplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.SimulateResponse, error) {
+func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.SimulateResponse, error) {
 	seq, err := util.FromStringToUint64(xplac.GetSequence())
 	if err != nil {
 		return nil, err

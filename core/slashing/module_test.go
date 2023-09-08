@@ -3,8 +3,8 @@ package slashing_test
 import (
 	"math/rand"
 
-	"github.com/xpladev/xpla.go/client"
 	"github.com/xpladev/xpla.go/core/slashing"
+	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/util/testutil"
 )
 
@@ -38,5 +38,5 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	_, err = c.NewTxRouter(nil, "invalid message type", nil)
 	s.Require().Error(err)
 
-	s.xplac = client.ResetXplac(s.xplac)
+	s.xplac = provider.ResetXplac(s.xplac)
 }

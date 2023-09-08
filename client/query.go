@@ -13,7 +13,7 @@ import (
 // Query transactions and xpla blockchain information.
 // Execute a query of functions for all modules.
 // After module query messages are generated, it receives query messages/information to the xpla client receiver and transmits a query message.
-func (xplac *XplaClient) Query() (string, error) {
+func (xplac *xplaClient) Query() (string, error) {
 	if xplac.GetErr() != nil {
 		return "", xplac.GetErr()
 	}
@@ -28,12 +28,12 @@ func (xplac *XplaClient) Query() (string, error) {
 			return "", util.LogErr(errors.ErrNotSatisfiedOptions, "at least one of the gRPC URL or LCD URL must exist for query")
 		}
 	}
-	queryClient := core.NewIXplaClient(xplac, setQueryType(xplac))
+	queryClient := core.NewIxplaClient(xplac, setQueryType(xplac))
 
 	return controller.Controller().Get(xplac.GetModule()).NewQueryRouter(*queryClient)
 }
 
-func setQueryType(xplac *XplaClient) uint8 {
+func setQueryType(xplac *xplaClient) uint8 {
 	// Default query type is gRPC, not LCD.
 	if xplac.GetGrpcUrl() != "" {
 		return types.QueryGrpc

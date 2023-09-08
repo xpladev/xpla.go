@@ -18,7 +18,7 @@ import (
 // Broadcast generated transactions.
 // Broadcast responses, excluding evm, are delivered as "TxResponse" of the entire response structure of the xpla client.
 // Support broadcast by using LCD and gRPC at the same time. Default method is gRPC.
-func broadcastTx(xplac *XplaClient, txBytes []byte, mode txtypes.BroadcastMode) (*types.TxRes, error) {
+func broadcastTx(xplac *xplaClient, txBytes []byte, mode txtypes.BroadcastMode) (*types.TxRes, error) {
 	broadcastReq := txtypes.BroadcastTxRequest{
 		TxBytes: txBytes,
 		Mode:    mode,
@@ -61,7 +61,7 @@ func broadcastTx(xplac *XplaClient, txBytes []byte, mode txtypes.BroadcastMode) 
 
 // Broadcast generated transactions of ethereum type.
 // Broadcast responses, including evm, are delivered as "TxResponse".
-func broadcastTxEvm(xplac *XplaClient, txBytes []byte, broadcastMode string, evmClient *util.EvmClient) (*types.TxRes, error) {
+func broadcastTxEvm(xplac *xplaClient, txBytes []byte, broadcastMode string, evmClient *util.EvmClient) (*types.TxRes, error) {
 	switch {
 	case xplac.GetMsgType() == mevm.EvmSendCoinMsgType ||
 		xplac.GetMsgType() == mevm.EvmInvokeSolContractMsgType:
