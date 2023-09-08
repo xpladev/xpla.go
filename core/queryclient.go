@@ -1,55 +1,21 @@
 package core
 
 import (
-	"context"
-
-	"github.com/xpladev/xpla.go/key"
+	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
-	"github.com/xpladev/xpla/app/params"
 )
 
 // Query internal XPLA client
 type QueryClient struct {
-	Ixplac    ModuleClient
+	Ixplac    provider.XplaClient
 	QueryType uint8
 }
 
-type ModuleClient interface {
-	GetChainId() string
-	GetPrivateKey() key.PrivateKey
-	GetEncoding() params.EncodingConfig
-	GetContext() context.Context
-	GetLcdURL() string
-	GetGrpcUrl() string
-	GetGrpcClient() grpc.ClientConn
-	GetRpc() string
-	GetEvmRpc() string
-	GetBroadcastMode() string
-	GetAccountNumber() string
-	GetSequence() string
-	GetGasLimit() string
-	GetGasPrice() string
-	GetGasAdjustment() string
-	GetFeeAmount() string
-	GetSignMode() signing.SignMode
-	GetFeeGranter() sdk.AccAddress
-	GetTimeoutHeight() string
-	GetPagination() *query.PageRequest
-	GetOutputDocument() string
-	GetModule() string
-	GetMsg() interface{}
-	GetMsgType() string
-}
-
-func NewIXplaClient(moduleClient ModuleClient, qt uint8) *QueryClient {
+func NewIxplaClient(moduleClient provider.XplaClient, qt uint8) *QueryClient {
 	return &QueryClient{Ixplac: moduleClient, QueryType: qt}
 }
 

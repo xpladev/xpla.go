@@ -4,7 +4,26 @@ import (
 	"context"
 
 	"github.com/xpladev/xpla.go/core"
+	"github.com/xpladev/xpla.go/core/auth"
+	"github.com/xpladev/xpla.go/core/authz"
+	"github.com/xpladev/xpla.go/core/bank"
+	"github.com/xpladev/xpla.go/core/base"
+	"github.com/xpladev/xpla.go/core/crisis"
+	"github.com/xpladev/xpla.go/core/distribution"
+	"github.com/xpladev/xpla.go/core/evidence"
+	"github.com/xpladev/xpla.go/core/evm"
+	"github.com/xpladev/xpla.go/core/feegrant"
+	"github.com/xpladev/xpla.go/core/gov"
+	"github.com/xpladev/xpla.go/core/ibc"
+	"github.com/xpladev/xpla.go/core/mint"
+	"github.com/xpladev/xpla.go/core/params"
+	"github.com/xpladev/xpla.go/core/reward"
+	"github.com/xpladev/xpla.go/core/slashing"
+	"github.com/xpladev/xpla.go/core/staking"
+	"github.com/xpladev/xpla.go/core/upgrade"
+	"github.com/xpladev/xpla.go/core/wasm"
 	"github.com/xpladev/xpla.go/key"
+	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util"
 
@@ -12,62 +31,46 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	grpc1 "github.com/gogo/protobuf/grpc"
-	"github.com/xpladev/xpla/app/params"
+	paramsapp "github.com/xpladev/xpla/app/params"
 	"google.golang.org/grpc"
 )
 
+var _ provider.XplaClient = &xplaClient{}
+
 // The xpla client is a client for performing all functions within the xpla.go library.
 // The user mandatorily inputs chain ID.
-type XplaClient struct {
+type xplaClient struct {
 	chainId        string
-	encodingConfig params.EncodingConfig
+	encodingConfig paramsapp.EncodingConfig
 	grpc           grpc1.ClientConn
 	context        context.Context
 
-	opts Options
+	opts provider.Options
 
 	module  string
 	msgType string
 	msg     interface{}
 	err     error
-}
 
-// Optional parameters of xpla client.
-type Options struct {
-	PrivateKey     key.PrivateKey
-	AccountNumber  string
-	Sequence       string
-	BroadcastMode  string
-	GasLimit       string
-	GasPrice       string
-	GasAdjustment  string
-	FeeAmount      string
-	SignMode       signing.SignMode
-	FeeGranter     sdk.AccAddress
-	TimeoutHeight  string
-	LcdURL         string
-	GrpcURL        string
-	RpcURL         string
-	EvmRpcURL      string
-	Pagination     types.Pagination
-	OutputDocument string
+	externalCoreModule
 }
 
 // Make new xpla client.
 func NewXplaClient(
 	chainId string,
-) *XplaClient {
-	var xplac XplaClient
+) provider.XplaClient {
+	var xplac xplaClient
 	return xplac.
 		WithChainId(chainId).
 		WithEncoding(util.MakeEncodingConfig()).
-		WithContext(context.Background())
+		WithContext(context.Background()).
+		UpdateXplacInCoreModule()
 }
 
 // Set options of xpla client.
-func (xplac *XplaClient) WithOptions(
-	options Options,
-) *XplaClient {
+func (xplac *xplaClient) WithOptions(
+	options provider.Options,
+) provider.XplaClient {
 	return xplac.
 		WithPrivateKey(options.PrivateKey).
 		WithAccountNumber(options.AccountNumber).
@@ -85,128 +88,176 @@ func (xplac *XplaClient) WithOptions(
 		WithRpc(options.RpcURL).
 		WithEvmRpc(options.EvmRpcURL).
 		WithPagination(options.Pagination).
-		WithOutputDocument(options.OutputDocument)
+		WithOutputDocument(options.OutputDocument).
+		UpdateXplacInCoreModule()
+}
+
+// List of core modules.
+type externalCoreModule struct {
+	auth.AuthExternal
+	authz.AuthzExternal
+	bank.BankExternal
+	base.BaseExternal
+	crisis.CrisisExternal
+	distribution.DistributionExternal
+	evidence.EvidenceExternal
+	evm.EvmExternal
+	feegrant.FeegrantExternal
+	gov.GovExternal
+	ibc.IbcExternal
+	mint.MintExternal
+	params.ParamsExternal
+	reward.RewardExternal
+	slashing.SlashingExternal
+	staking.StakingExternal
+	upgrade.UpgradeExternal
+	wasm.WasmExternal
+}
+
+// Update xpla client if data in the client are changed.
+func (xplac *xplaClient) UpdateXplacInCoreModule() provider.XplaClient {
+	xplac.externalCoreModule = externalCoreModule{
+		auth.NewAuthExternal(xplac),
+		authz.NewAuthzExternal(xplac),
+		bank.NewBankExternal(xplac),
+		base.NewBaseExternal(xplac),
+		crisis.NewCrisisExternal(xplac),
+		distribution.NewDistributionExternal(xplac),
+		evidence.NewEvidenceExternal(xplac),
+		evm.NewEvmExternal(xplac),
+		feegrant.NewFeegrantExternal(xplac),
+		gov.NewGovExternal(xplac),
+		ibc.NewIbcExternal(xplac),
+		mint.NewMintExternal(xplac),
+		params.NewParamsExternal(xplac),
+		reward.NewRewardExternal(xplac),
+		slashing.NewSlashingExternal(xplac),
+		staking.NewStakingExternal(xplac),
+		upgrade.NewUpgradeExternal(xplac),
+		wasm.NewWasmExternal(xplac),
+	}
+	return xplac
 }
 
 // Set chain ID
-func (xplac *XplaClient) WithChainId(chainId string) *XplaClient {
+func (xplac *xplaClient) WithChainId(chainId string) provider.XplaClient {
 	xplac.chainId = chainId
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set encoding configuration
-func (xplac *XplaClient) WithEncoding(encodingConfig params.EncodingConfig) *XplaClient {
+func (xplac *xplaClient) WithEncoding(encodingConfig paramsapp.EncodingConfig) provider.XplaClient {
 	xplac.encodingConfig = encodingConfig
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set xpla client context
-func (xplac *XplaClient) WithContext(ctx context.Context) *XplaClient {
+func (xplac *xplaClient) WithContext(ctx context.Context) provider.XplaClient {
 	xplac.context = ctx
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set private key
-func (xplac *XplaClient) WithPrivateKey(privateKey key.PrivateKey) *XplaClient {
+func (xplac *xplaClient) WithPrivateKey(privateKey key.PrivateKey) provider.XplaClient {
 	xplac.opts.PrivateKey = privateKey
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set LCD URL
-func (xplac *XplaClient) WithURL(lcdURL string) *XplaClient {
+func (xplac *xplaClient) WithURL(lcdURL string) provider.XplaClient {
 	xplac.opts.LcdURL = lcdURL
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set GRPC URL to query or broadcast tx
-func (xplac *XplaClient) WithGrpc(grpcUrl string) *XplaClient {
+func (xplac *xplaClient) WithGrpc(grpcUrl string) provider.XplaClient {
 	connUrl := util.GrpcUrlParsing(grpcUrl)
 	c, err := grpc.Dial(
 		connUrl, grpc.WithInsecure(),
 	)
 	if err != nil {
 		xplac.err = err
-		return xplac
+		return xplac.UpdateXplacInCoreModule()
 	}
 	xplac.grpc = c
 	xplac.opts.GrpcURL = grpcUrl
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set RPC URL of tendermint core
-func (xplac *XplaClient) WithRpc(rpcUrl string) *XplaClient {
+func (xplac *xplaClient) WithRpc(rpcUrl string) provider.XplaClient {
 	xplac.opts.RpcURL = rpcUrl
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set RPC URL for evm module
-func (xplac *XplaClient) WithEvmRpc(evmRpcUrl string) *XplaClient {
+func (xplac *xplaClient) WithEvmRpc(evmRpcUrl string) provider.XplaClient {
 	xplac.opts.EvmRpcURL = evmRpcUrl
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set broadcast mode
-func (xplac *XplaClient) WithBroadcastMode(broadcastMode string) *XplaClient {
+func (xplac *xplaClient) WithBroadcastMode(broadcastMode string) provider.XplaClient {
 	xplac.opts.BroadcastMode = broadcastMode
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set account number
-func (xplac *XplaClient) WithAccountNumber(accountNumber string) *XplaClient {
+func (xplac *xplaClient) WithAccountNumber(accountNumber string) provider.XplaClient {
 	xplac.opts.AccountNumber = accountNumber
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set account sequence
-func (xplac *XplaClient) WithSequence(sequence string) *XplaClient {
+func (xplac *xplaClient) WithSequence(sequence string) provider.XplaClient {
 	xplac.opts.Sequence = sequence
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set gas limit
-func (xplac *XplaClient) WithGasLimit(gasLimit string) *XplaClient {
+func (xplac *xplaClient) WithGasLimit(gasLimit string) provider.XplaClient {
 	xplac.opts.GasLimit = gasLimit
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set Gas price
-func (xplac *XplaClient) WithGasPrice(gasPrice string) *XplaClient {
+func (xplac *xplaClient) WithGasPrice(gasPrice string) provider.XplaClient {
 	xplac.opts.GasPrice = gasPrice
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set Gas adjustment
-func (xplac *XplaClient) WithGasAdjustment(gasAdjustment string) *XplaClient {
+func (xplac *xplaClient) WithGasAdjustment(gasAdjustment string) provider.XplaClient {
 	xplac.opts.GasAdjustment = gasAdjustment
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set fee amount
-func (xplac *XplaClient) WithFeeAmount(feeAmount string) *XplaClient {
+func (xplac *xplaClient) WithFeeAmount(feeAmount string) provider.XplaClient {
 	xplac.opts.FeeAmount = feeAmount
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set transaction sign mode
-func (xplac *XplaClient) WithSignMode(signMode signing.SignMode) *XplaClient {
+func (xplac *xplaClient) WithSignMode(signMode signing.SignMode) provider.XplaClient {
 	xplac.opts.SignMode = signMode
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set fee granter
-func (xplac *XplaClient) WithFeeGranter(feeGranter sdk.AccAddress) *XplaClient {
+func (xplac *xplaClient) WithFeeGranter(feeGranter sdk.AccAddress) provider.XplaClient {
 	xplac.opts.FeeGranter = feeGranter
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set timeout block height
-func (xplac *XplaClient) WithTimeoutHeight(timeoutHeight string) *XplaClient {
+func (xplac *xplaClient) WithTimeoutHeight(timeoutHeight string) provider.XplaClient {
 	xplac.opts.TimeoutHeight = timeoutHeight
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set pagination
-func (xplac *XplaClient) WithPagination(pagination types.Pagination) *XplaClient {
+func (xplac *xplaClient) WithPagination(pagination types.Pagination) provider.XplaClient {
 	emptyPagination := types.Pagination{}
 	if pagination != emptyPagination {
 		pageReq, err := core.ReadPageRequest(pagination)
@@ -218,160 +269,160 @@ func (xplac *XplaClient) WithPagination(pagination types.Pagination) *XplaClient
 		core.PageRequest = core.DefaultPagination()
 	}
 
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set output document name
-func (xplac *XplaClient) WithOutputDocument(outputDocument string) *XplaClient {
+func (xplac *xplaClient) WithOutputDocument(outputDocument string) provider.XplaClient {
 	xplac.opts.OutputDocument = outputDocument
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set module name
-func (xplac *XplaClient) WithModule(module string) *XplaClient {
+func (xplac *xplaClient) WithModule(module string) provider.XplaClient {
 	xplac.module = module
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set message type of modules
-func (xplac *XplaClient) WithMsgType(msgType string) *XplaClient {
+func (xplac *xplaClient) WithMsgType(msgType string) provider.XplaClient {
 	xplac.msgType = msgType
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set message
-func (xplac *XplaClient) WithMsg(msg interface{}) *XplaClient {
+func (xplac *xplaClient) WithMsg(msg interface{}) provider.XplaClient {
 	xplac.msg = msg
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Set error
-func (xplac *XplaClient) WithErr(err error) *XplaClient {
+func (xplac *xplaClient) WithErr(err error) provider.XplaClient {
 	xplac.err = err
-	return xplac
+	return xplac.UpdateXplacInCoreModule()
 }
 
 // Get chain ID
-func (xplac *XplaClient) GetChainId() string {
+func (xplac *xplaClient) GetChainId() string {
 	return xplac.chainId
 }
 
 // Get private key
-func (xplac *XplaClient) GetPrivateKey() key.PrivateKey {
+func (xplac *xplaClient) GetPrivateKey() key.PrivateKey {
 	return xplac.opts.PrivateKey
 }
 
 // Get encoding configuration
-func (xplac *XplaClient) GetEncoding() params.EncodingConfig {
+func (xplac *xplaClient) GetEncoding() paramsapp.EncodingConfig {
 	return xplac.encodingConfig
 }
 
 // Get xpla client context
-func (xplac *XplaClient) GetContext() context.Context {
+func (xplac *xplaClient) GetContext() context.Context {
 	return xplac.context
 }
 
 // Get LCD URL
-func (xplac *XplaClient) GetLcdURL() string {
+func (xplac *xplaClient) GetLcdURL() string {
 	return xplac.opts.LcdURL
 }
 
 // Get GRPC URL to query or broadcast tx
-func (xplac *XplaClient) GetGrpcUrl() string {
+func (xplac *xplaClient) GetGrpcUrl() string {
 	return xplac.opts.GrpcURL
 }
 
 // Get GRPC client connector
-func (xplac *XplaClient) GetGrpcClient() grpc1.ClientConn {
+func (xplac *xplaClient) GetGrpcClient() grpc1.ClientConn {
 	return xplac.grpc
 }
 
 // Get RPC URL of tendermint core
-func (xplac *XplaClient) GetRpc() string {
+func (xplac *xplaClient) GetRpc() string {
 	return xplac.opts.RpcURL
 }
 
 // Get RPC URL for evm module
-func (xplac *XplaClient) GetEvmRpc() string {
+func (xplac *xplaClient) GetEvmRpc() string {
 	return xplac.opts.EvmRpcURL
 }
 
 // Get broadcast mode
-func (xplac *XplaClient) GetBroadcastMode() string {
+func (xplac *xplaClient) GetBroadcastMode() string {
 	return xplac.opts.BroadcastMode
 }
 
 // Get account number
-func (xplac *XplaClient) GetAccountNumber() string {
+func (xplac *xplaClient) GetAccountNumber() string {
 	return xplac.opts.AccountNumber
 }
 
 // Get account sequence
-func (xplac *XplaClient) GetSequence() string {
+func (xplac *xplaClient) GetSequence() string {
 	return xplac.opts.Sequence
 }
 
 // Get gas limit
-func (xplac *XplaClient) GetGasLimit() string {
+func (xplac *xplaClient) GetGasLimit() string {
 	return xplac.opts.GasLimit
 }
 
 // Get Gas price
-func (xplac *XplaClient) GetGasPrice() string {
+func (xplac *xplaClient) GetGasPrice() string {
 	return xplac.opts.GasPrice
 }
 
 // Get Gas adjustment
-func (xplac *XplaClient) GetGasAdjustment() string {
+func (xplac *xplaClient) GetGasAdjustment() string {
 	return xplac.opts.GasAdjustment
 }
 
 // Get fee amount
-func (xplac *XplaClient) GetFeeAmount() string {
+func (xplac *xplaClient) GetFeeAmount() string {
 	return xplac.opts.FeeAmount
 }
 
 // Get transaction sign mode
-func (xplac *XplaClient) GetSignMode() signing.SignMode {
+func (xplac *xplaClient) GetSignMode() signing.SignMode {
 	return xplac.opts.SignMode
 }
 
 // Get fee granter
-func (xplac *XplaClient) GetFeeGranter() sdk.AccAddress {
+func (xplac *xplaClient) GetFeeGranter() sdk.AccAddress {
 	return xplac.opts.FeeGranter
 }
 
 // Get timeout block height
-func (xplac *XplaClient) GetTimeoutHeight() string {
+func (xplac *xplaClient) GetTimeoutHeight() string {
 	return xplac.opts.TimeoutHeight
 }
 
 // Get pagination
-func (xplac *XplaClient) GetPagination() *query.PageRequest {
+func (xplac *xplaClient) GetPagination() *query.PageRequest {
 	return core.PageRequest
 }
 
 // Get output document name
-func (xplac *XplaClient) GetOutputDocument() string {
+func (xplac *xplaClient) GetOutputDocument() string {
 	return xplac.opts.OutputDocument
 }
 
 // Get module name
-func (xplac *XplaClient) GetModule() string {
+func (xplac *xplaClient) GetModule() string {
 	return xplac.module
 }
 
 // Get message type of modules
-func (xplac *XplaClient) GetMsgType() string {
+func (xplac *xplaClient) GetMsgType() string {
 	return xplac.msgType
 }
 
 // Get message
-func (xplac *XplaClient) GetMsg() interface{} {
+func (xplac *xplaClient) GetMsg() interface{} {
 	return xplac.msg
 }
 
 // Get error
-func (xplac *XplaClient) GetErr() error {
+func (xplac *xplaClient) GetErr() error {
 	return xplac.err
 }

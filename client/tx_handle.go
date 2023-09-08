@@ -27,7 +27,7 @@ import (
 
 // Set message for transaction builder.
 // Interface type messages are converted to correct type.
-func setTxBuilderMsg(xplac *XplaClient) (cmclient.TxBuilder, error) {
+func setTxBuilderMsg(xplac *xplaClient) (cmclient.TxBuilder, error) {
 	if xplac.GetErr() != nil {
 		return nil, xplac.GetErr()
 	}
@@ -39,7 +39,7 @@ func setTxBuilderMsg(xplac *XplaClient) (cmclient.TxBuilder, error) {
 }
 
 // Set information for transaction builder.
-func convertAndSetBuilder(xplac *XplaClient, builder cmclient.TxBuilder, gasLimit string, feeAmount string) (cmclient.TxBuilder, error) {
+func convertAndSetBuilder(xplac *xplaClient, builder cmclient.TxBuilder, gasLimit string, feeAmount string) (cmclient.TxBuilder, error) {
 	feeAmountDenomRemove, err := util.FromStringToBigInt(util.DenomRemove(feeAmount))
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func convertAndSetBuilder(xplac *XplaClient, builder cmclient.TxBuilder, gasLimi
 }
 
 // Sign transaction by using given private key.
-func txSignRound(xplac *XplaClient,
+func txSignRound(xplac *xplaClient,
 	sigsV2 []signing.SignatureV2,
 	privs []cryptotypes.PrivKey,
 	accSeqs []uint64,
@@ -129,7 +129,7 @@ func txSignRound(xplac *XplaClient,
 }
 
 // Sign evm transaction by using given private key.
-func evmTxSignRound(xplac *XplaClient,
+func evmTxSignRound(xplac *xplaClient,
 	toAddr common.Address,
 	gasPrice *big.Int,
 	gasLimit string,
@@ -225,7 +225,7 @@ func getMultisigInfo(clientCtx cmclient.Context, name string) (keyring.Info, err
 }
 
 // Calculate gas limit and fee amount
-func getGasLimitFeeAmount(xplac *XplaClient, builder cmclient.TxBuilder) (string, string, error) {
+func getGasLimitFeeAmount(xplac *xplaClient, builder cmclient.TxBuilder) (string, string, error) {
 	gasLimit := xplac.GetGasLimit()
 	if xplac.GetGasLimit() == "" {
 		if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
@@ -274,7 +274,7 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 }
 
 // Get account number and sequence
-func GetAccNumAndSeq(xplac *XplaClient) (*XplaClient, error) {
+func GetAccNumAndSeq(xplac *xplaClient) (*xplaClient, error) {
 	if xplac.GetAccountNumber() == "" || xplac.GetSequence() == "" {
 		if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
 			xplac.WithAccountNumber(util.FromUint64ToString(types.DefaultAccNum))

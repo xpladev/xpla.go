@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util"
 	"github.com/xpladev/xpla.go/util/testutil"
@@ -65,7 +66,7 @@ func (suite *TestSuite) TestSimulateCreateUnsignedTx() {
 
 	xplac := NewXplaClient(testutil.TestChainId)
 	xplac.WithOptions(
-		Options{
+		provider.Options{
 			GasLimit:  types.DefaultGasLimit,
 			FeeAmount: fee,
 		},
@@ -99,7 +100,7 @@ func (suite *TestSuite) TestSimulateSignTx() {
 
 	xplac := NewXplaClient(testutil.TestChainId)
 	xplac.WithOptions(
-		Options{
+		provider.Options{
 			GasLimit:   types.DefaultGasLimit,
 			GasPrice:   types.DefaultGasPrice,
 			PrivateKey: from.PrivKey,
@@ -140,7 +141,7 @@ func (suite *TestSuite) TestSimulateSignatureOnly() {
 	accList := []simtypes.Account{from, to, m1, m2}
 	xplac := NewXplaClient(testutil.TestChainId)
 	xplac.WithOptions(
-		Options{
+		provider.Options{
 			GasLimit: types.DefaultGasLimit,
 			GasPrice: types.DefaultGasPrice,
 		},
@@ -148,7 +149,7 @@ func (suite *TestSuite) TestSimulateSignatureOnly() {
 
 	for i, acc := range accList {
 		xplac.WithOptions(
-			Options{
+			provider.Options{
 				PrivateKey: acc.PrivKey,
 			},
 		)

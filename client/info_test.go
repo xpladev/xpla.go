@@ -1,7 +1,7 @@
 package client_test
 
 import (
-	"github.com/xpladev/xpla.go/client"
+	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util"
 
@@ -23,7 +23,7 @@ func (s *ClientTestSuite) TestLoadAccount() {
 		s.Require().NoError(err)
 		s.Require().Equal(val.String(), res.GetAddress().String())
 	}
-	s.xplac = client.ResetXplac(s.xplac)
+	s.xplac = provider.ResetXplac(s.xplac)
 }
 
 func (s *ClientTestSuite) TestSimulate() {
@@ -64,5 +64,5 @@ func (s *ClientTestSuite) TestSimulate() {
 		s.Require().NoError(err)
 
 	}
-	s.xplac = client.ResetXplac(s.xplac)
+	s.xplac = provider.ResetXplac(s.xplac)
 }

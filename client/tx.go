@@ -27,7 +27,7 @@ import (
 // Create and sign a transaction before it is broadcasted to xpla chain.
 // Options required for create and sign are stored in the xpla client and reflected when the values of those options exist.
 // Create and sign transaction must be needed in order to send transaction to the chain.
-func (xplac *XplaClient) CreateAndSignTx() ([]byte, error) {
+func (xplac *xplaClient) CreateAndSignTx() ([]byte, error) {
 	var err error
 	if xplac.GetErr() != nil {
 		return nil, xplac.GetErr()
@@ -117,7 +117,7 @@ func (xplac *XplaClient) CreateAndSignTx() ([]byte, error) {
 // Create transaction with unsigning.
 // It returns txbytes of byte type when output document options is nil.
 // If not, save the unsigned transaction file which name is "outputDocument"
-func (xplac *XplaClient) CreateUnsignedTx() ([]byte, error) {
+func (xplac *xplaClient) CreateUnsignedTx() ([]byte, error) {
 	if xplac.GetErr() != nil {
 		return nil, xplac.GetErr()
 	}
@@ -159,7 +159,7 @@ func (xplac *XplaClient) CreateUnsignedTx() ([]byte, error) {
 }
 
 // Sign created unsigned transaction.
-func (xplac *XplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
+func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 	var err error
 
 	if xplac.GetErr() != nil {
@@ -298,7 +298,7 @@ func (xplac *XplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 }
 
 // Sign created unsigned transaction with multi signatures.
-func (xplac *XplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte, error) {
+func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte, error) {
 	if xplac.GetErr() != nil {
 		return nil, xplac.GetErr()
 	}
@@ -459,7 +459,7 @@ func (xplac *XplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 }
 
 // Create and sign transaction of evm.
-func (xplac *XplaClient) createAndSignEvmTx() ([]byte, error) {
+func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 	ethPrivKey, err := toECDSA(xplac.GetPrivateKey())
 	if err != nil {
 		return nil, util.LogErr(errors.ErrParse, err)
@@ -591,7 +591,7 @@ func (xplac *XplaClient) createAndSignEvmTx() ([]byte, error) {
 }
 
 // Encode transaction by using base64.
-func (xplac *XplaClient) EncodeTx(encodeTxMsg types.EncodeTxMsg) (string, error) {
+func (xplac *xplaClient) EncodeTx(encodeTxMsg types.EncodeTxMsg) (string, error) {
 	if xplac.GetErr() != nil {
 		return "", xplac.GetErr()
 	}
@@ -616,7 +616,7 @@ func (xplac *XplaClient) EncodeTx(encodeTxMsg types.EncodeTxMsg) (string, error)
 }
 
 // Decode transaction which encoded by base64
-func (xplac *XplaClient) DecodeTx(decodeTxMsg types.DecodeTxMsg) (string, error) {
+func (xplac *xplaClient) DecodeTx(decodeTxMsg types.DecodeTxMsg) (string, error) {
 	if xplac.GetErr() != nil {
 		return "", xplac.GetErr()
 	}
@@ -639,7 +639,7 @@ func (xplac *XplaClient) DecodeTx(decodeTxMsg types.DecodeTxMsg) (string, error)
 }
 
 // Validate signature
-func (xplac *XplaClient) ValidateSignatures(validateSignaturesMsg types.ValidateSignaturesMsg) (string, error) {
+func (xplac *xplaClient) ValidateSignatures(validateSignaturesMsg types.ValidateSignaturesMsg) (string, error) {
 	if xplac.GetErr() != nil {
 		return "", xplac.GetErr()
 	}
@@ -706,4 +706,17 @@ func (xplac *XplaClient) ValidateSignatures(validateSignaturesMsg types.Validate
 	} else {
 		return "signature validation failed", nil
 	}
+}
+
+// Convert type from encoded transaction bytes to json encoded byte
+func (xplac *xplaClient) EncodedTxbytesToJsonTx(txbytes []byte) ([]byte, error) {
+	sdkTx, err := xplac.GetEncoding().TxConfig.TxDecoder()(txbytes)
+	if err != nil {
+		return nil, err
+	}
+	jsonTx, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(sdkTx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonTx, nil
 }

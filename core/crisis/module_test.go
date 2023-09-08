@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/xpladev/xpla.go/client"
 	"github.com/xpladev/xpla.go/core/crisis"
+	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util/testutil"
 	"github.com/xpladev/xpla.go/util/testutil/network"
@@ -17,7 +18,7 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	xplac *client.XplaClient
+	xplac provider.XplaClient
 	apis  []string
 
 	cfg     network.Config
@@ -43,7 +44,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.xplac = client.NewTestXplaClient()
+	s.xplac = client.NewXplaClient(testutil.TestChainId)
 	s.apis = []string{
 		s.network.Validators[0].APIAddress,
 		s.network.Validators[0].AppConfig.GRPC.Address,
@@ -89,7 +90,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	_, err = c.NewTxRouter(nil, "invalid message type", nil)
 	s.Require().Error(err)
 
-	s.xplac = client.ResetXplac(s.xplac)
+	s.xplac = provider.ResetXplac(s.xplac)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
