@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.2 - 2023-09-08
+
+### 🔬 Others
+
+- refactor: remove unused functions and add some comments @Moonyongjung (#7)
+- refactor: modular design - Tx and Query message @Moonyongjung (#6)
+- refactor: change to modular design for tx/query routing @Moonyongjung (#5)
+
 ## v0.1.1 - 2023-09-06
 
 ### 🐛 Bug Fixes
