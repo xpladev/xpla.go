@@ -93,6 +93,8 @@ func (xplac *xplaClient) WithOptions(
 }
 
 // List of core modules.
+// If new modules are implemented, regist ModuleExternal structure with
+// receiver method in externalCoreModule.
 type externalCoreModule struct {
 	auth.AuthExternal
 	authz.AuthzExternal
@@ -114,7 +116,7 @@ type externalCoreModule struct {
 	wasm.WasmExternal
 }
 
-// Update xpla client if data in the client are changed.
+// Update xpla client if data in the xplaClient are changed.
 func (xplac *xplaClient) UpdateXplacInCoreModule() provider.XplaClient {
 	xplac.externalCoreModule = externalCoreModule{
 		auth.NewAuthExternal(xplac),
@@ -302,127 +304,29 @@ func (xplac *xplaClient) WithErr(err error) provider.XplaClient {
 	return xplac.UpdateXplacInCoreModule()
 }
 
-// Get chain ID
-func (xplac *xplaClient) GetChainId() string {
-	return xplac.chainId
-}
-
-// Get private key
-func (xplac *xplaClient) GetPrivateKey() key.PrivateKey {
-	return xplac.opts.PrivateKey
-}
-
-// Get encoding configuration
-func (xplac *xplaClient) GetEncoding() paramsapp.EncodingConfig {
-	return xplac.encodingConfig
-}
-
-// Get xpla client context
-func (xplac *xplaClient) GetContext() context.Context {
-	return xplac.context
-}
-
-// Get LCD URL
-func (xplac *xplaClient) GetLcdURL() string {
-	return xplac.opts.LcdURL
-}
-
-// Get GRPC URL to query or broadcast tx
-func (xplac *xplaClient) GetGrpcUrl() string {
-	return xplac.opts.GrpcURL
-}
-
-// Get GRPC client connector
-func (xplac *xplaClient) GetGrpcClient() grpc1.ClientConn {
-	return xplac.grpc
-}
-
-// Get RPC URL of tendermint core
-func (xplac *xplaClient) GetRpc() string {
-	return xplac.opts.RpcURL
-}
-
-// Get RPC URL for evm module
-func (xplac *xplaClient) GetEvmRpc() string {
-	return xplac.opts.EvmRpcURL
-}
-
-// Get broadcast mode
-func (xplac *xplaClient) GetBroadcastMode() string {
-	return xplac.opts.BroadcastMode
-}
-
-// Get account number
-func (xplac *xplaClient) GetAccountNumber() string {
-	return xplac.opts.AccountNumber
-}
-
-// Get account sequence
-func (xplac *xplaClient) GetSequence() string {
-	return xplac.opts.Sequence
-}
-
-// Get gas limit
-func (xplac *xplaClient) GetGasLimit() string {
-	return xplac.opts.GasLimit
-}
-
-// Get Gas price
-func (xplac *xplaClient) GetGasPrice() string {
-	return xplac.opts.GasPrice
-}
-
-// Get Gas adjustment
-func (xplac *xplaClient) GetGasAdjustment() string {
-	return xplac.opts.GasAdjustment
-}
-
-// Get fee amount
-func (xplac *xplaClient) GetFeeAmount() string {
-	return xplac.opts.FeeAmount
-}
-
-// Get transaction sign mode
-func (xplac *xplaClient) GetSignMode() signing.SignMode {
-	return xplac.opts.SignMode
-}
-
-// Get fee granter
-func (xplac *xplaClient) GetFeeGranter() sdk.AccAddress {
-	return xplac.opts.FeeGranter
-}
-
-// Get timeout block height
-func (xplac *xplaClient) GetTimeoutHeight() string {
-	return xplac.opts.TimeoutHeight
-}
-
-// Get pagination
-func (xplac *xplaClient) GetPagination() *query.PageRequest {
-	return core.PageRequest
-}
-
-// Get output document name
-func (xplac *xplaClient) GetOutputDocument() string {
-	return xplac.opts.OutputDocument
-}
-
-// Get module name
-func (xplac *xplaClient) GetModule() string {
-	return xplac.module
-}
-
-// Get message type of modules
-func (xplac *xplaClient) GetMsgType() string {
-	return xplac.msgType
-}
-
-// Get message
-func (xplac *xplaClient) GetMsg() interface{} {
-	return xplac.msg
-}
-
-// Get error
-func (xplac *xplaClient) GetErr() error {
-	return xplac.err
-}
+// Get parameters of the xpla client
+func (xplac *xplaClient) GetChainId() string                    { return xplac.chainId }
+func (xplac *xplaClient) GetPrivateKey() key.PrivateKey         { return xplac.opts.PrivateKey }
+func (xplac *xplaClient) GetEncoding() paramsapp.EncodingConfig { return xplac.encodingConfig }
+func (xplac *xplaClient) GetContext() context.Context           { return xplac.context }
+func (xplac *xplaClient) GetLcdURL() string                     { return xplac.opts.LcdURL }
+func (xplac *xplaClient) GetGrpcUrl() string                    { return xplac.opts.GrpcURL }
+func (xplac *xplaClient) GetGrpcClient() grpc1.ClientConn       { return xplac.grpc }
+func (xplac *xplaClient) GetRpc() string                        { return xplac.opts.RpcURL }
+func (xplac *xplaClient) GetEvmRpc() string                     { return xplac.opts.EvmRpcURL }
+func (xplac *xplaClient) GetBroadcastMode() string              { return xplac.opts.BroadcastMode }
+func (xplac *xplaClient) GetAccountNumber() string              { return xplac.opts.AccountNumber }
+func (xplac *xplaClient) GetSequence() string                   { return xplac.opts.Sequence }
+func (xplac *xplaClient) GetGasLimit() string                   { return xplac.opts.GasLimit }
+func (xplac *xplaClient) GetGasPrice() string                   { return xplac.opts.GasPrice }
+func (xplac *xplaClient) GetGasAdjustment() string              { return xplac.opts.GasAdjustment }
+func (xplac *xplaClient) GetFeeAmount() string                  { return xplac.opts.FeeAmount }
+func (xplac *xplaClient) GetSignMode() signing.SignMode         { return xplac.opts.SignMode }
+func (xplac *xplaClient) GetFeeGranter() sdk.AccAddress         { return xplac.opts.FeeGranter }
+func (xplac *xplaClient) GetTimeoutHeight() string              { return xplac.opts.TimeoutHeight }
+func (xplac *xplaClient) GetPagination() *query.PageRequest     { return core.PageRequest }
+func (xplac *xplaClient) GetOutputDocument() string             { return xplac.opts.OutputDocument }
+func (xplac *xplaClient) GetModule() string                     { return xplac.module }
+func (xplac *xplaClient) GetMsgType() string                    { return xplac.msgType }
+func (xplac *xplaClient) GetMsg() interface{}                   { return xplac.msg }
+func (xplac *xplaClient) GetErr() error                         { return xplac.err }

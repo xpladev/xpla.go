@@ -8,7 +8,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// RandomAccounts generates n random accounts
+// RandomAccounts generates n random accounts.
 func RandomAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accs := make([]simtypes.Account, n)
 
@@ -30,6 +30,7 @@ func RandomAccounts(r *rand.Rand, n int) []simtypes.Account {
 	return accs
 }
 
+// RandomSecp256k1Accounts is prepared func for test.
 func RandomSecp256k1Accounts(r *rand.Rand, n int) []simtypes.Account {
 	accs := make([]simtypes.Account, n)
 
