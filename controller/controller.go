@@ -40,32 +40,32 @@ func init() {
 
 // Set core controller only once as singleton, and get core controller.
 func Controller() *coreController {
-	once.Do(
-		func() {
-			cc = NewCoreController(
-				auth.NewCoreModule(),
-				authz.NewCoreModule(),
-				bank.NewCoreModule(),
-				base.NewCoreModule(),
-				crisis.NewCoreModule(),
-				distribution.NewCoreModule(),
-				evidence.NewCoreModule(),
-				evm.NewCoreModule(),
-				feegrant.NewCoreModule(),
-				gov.NewCoreModule(),
-				ibc.NewCoreModule(),
-				mint.NewCoreModule(),
-				params.NewCoreModule(),
-				reward.NewCoreModule(),
-				slashing.NewCoreModule(),
-				staking.NewCoreModule(),
-				upgrade.NewCoreModule(),
-				wasm.NewCoreModule(),
-			)
-		})
+	once.Do(func() {
+		cc = NewCoreController(
+			auth.NewCoreModule(),
+			authz.NewCoreModule(),
+			bank.NewCoreModule(),
+			base.NewCoreModule(),
+			crisis.NewCoreModule(),
+			distribution.NewCoreModule(),
+			evidence.NewCoreModule(),
+			evm.NewCoreModule(),
+			feegrant.NewCoreModule(),
+			gov.NewCoreModule(),
+			ibc.NewCoreModule(),
+			mint.NewCoreModule(),
+			params.NewCoreModule(),
+			reward.NewCoreModule(),
+			slashing.NewCoreModule(),
+			staking.NewCoreModule(),
+			upgrade.NewCoreModule(),
+			wasm.NewCoreModule(),
+		)
+	})
 	return cc
 }
 
+// Register routing info of core modules in the hash map.
 func NewCoreController(coreModules ...core.CoreModule) *coreController {
 	m := make(map[string]core.CoreModule)
 	for _, coreModule := range coreModules {
@@ -77,6 +77,7 @@ func NewCoreController(coreModules ...core.CoreModule) *coreController {
 	}
 }
 
+// Get info of each module by its name.
 func (c coreController) Get(moduleName string) core.CoreModule {
 	return c.cores[moduleName]
 }
