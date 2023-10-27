@@ -1,9 +1,10 @@
 package distribution
 
 import (
+	"context"
+
 	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
-	"golang.org/x/net/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
