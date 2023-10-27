@@ -27,7 +27,7 @@ import (
 var once sync.Once
 var cc *coreController
 
-// Controller is able to contol modules in the core package.
+// Controller is able to control modules in the core package.
 // Route Tx & Query logic by message type.
 // If need to add new modules of XPLA, insert NewCoreModule in the core controller.
 type coreController struct {
