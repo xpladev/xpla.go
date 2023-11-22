@@ -21,7 +21,7 @@ func (s *IntegrationTestSuite) TestCrisisTx() {
 	}
 	s.xplac.InvariantBroken(invariantBrokenMsg)
 
-	makeInvariantRouteMsg, err := mcrisis.MakeInvariantRouteMsg(invariantBrokenMsg, s.xplac.GetPrivateKey())
+	makeInvariantRouteMsg, err := mcrisis.MakeInvariantRouteMsg(invariantBrokenMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeInvariantRouteMsg, s.xplac.GetMsg())

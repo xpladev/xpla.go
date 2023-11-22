@@ -2,34 +2,35 @@ package gov
 
 import (
 	"context"
+	"sync"
 
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/gogo/protobuf/grpc"
 )
 
 // (Tx) make msg - submit proposal
-func MakeSubmitProposalMsg(submitProposalMsg types.SubmitProposalMsg, privKey key.PrivateKey) (govtypes.MsgSubmitProposal, error) {
-	return parseSubmitProposalArgs(submitProposalMsg, privKey)
+func MakeSubmitProposalMsg(submitProposalMsg types.SubmitProposalMsg, proposer sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
+	return parseSubmitProposalArgs(submitProposalMsg, proposer)
 }
 
 // (Tx) make msg - deposit
-func MakeGovDepositMsg(govDepositMsg types.GovDepositMsg, privKey key.PrivateKey) (govtypes.MsgDeposit, error) {
-	return parseGovDepositArgs(govDepositMsg, privKey)
+func MakeGovDepositMsg(govDepositMsg types.GovDepositMsg, from sdk.AccAddress) (govtypes.MsgDeposit, error) {
+	return parseGovDepositArgs(govDepositMsg, from)
 }
 
 // (Tx) make msg - vote
-func MakeVoteMsg(voteMsg types.VoteMsg, privKey key.PrivateKey) (govtypes.MsgVote, error) {
-	return parseVoteArgs(voteMsg, privKey)
+func MakeVoteMsg(voteMsg types.VoteMsg, from sdk.AccAddress) (govtypes.MsgVote, error) {
+	return parseVoteArgs(voteMsg, from)
 }
 
 // (Tx) make msg - weighted vote
-func MakeWeightedVoteMsg(weightedVoteMsg types.WeightedVoteMsg, privKey key.PrivateKey) (govtypes.MsgVoteWeighted, error) {
-	return parseWeightedVoteArgs(weightedVoteMsg, privKey)
+func MakeWeightedVoteMsg(weightedVoteMsg types.WeightedVoteMsg, from sdk.AccAddress) (govtypes.MsgVoteWeighted, error) {
+	return parseWeightedVoteArgs(weightedVoteMsg, from)
 }
 
 // (Query) make msg - proposal
@@ -49,18 +50,18 @@ func MakeQueryProposalsMsg(queryProposalsMsg types.QueryProposalsMsg) (govtypes.
 }
 
 // (Query) make msg - query deposit
-func MakeQueryDepositMsg(queryDepositMsg types.QueryDepositMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
-	return parseQueryDepositArgs(queryDepositMsg, grpcConn, ctx, lcdUrl, queryType)
+func MakeQueryDepositMsg(queryDepositMsg types.QueryDepositMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
+	return parseQueryDepositArgs(queryDepositMsg, httpMutex, grpcConn, ctx, lcdUrl, queryType)
 }
 
 // (Query) make msg - query deposits
-func MakeQueryDepositsMsg(queryDepositMsg types.QueryDepositMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
-	return parseQueryDepositsArgs(queryDepositMsg, grpcConn, ctx, lcdUrl, queryType)
+func MakeQueryDepositsMsg(queryDepositMsg types.QueryDepositMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
+	return parseQueryDepositsArgs(queryDepositMsg, httpMutex, grpcConn, ctx, lcdUrl, queryType)
 }
 
 // (Query) make msg - tally
-func MakeGovTallyMsg(tallyMsg types.TallyMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, error) {
-	return parseGovTallyArgs(tallyMsg, grpcConn, ctx, lcdUrl, queryType)
+func MakeGovTallyMsg(tallyMsg types.TallyMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, error) {
+	return parseGovTallyArgs(tallyMsg, httpMutex, grpcConn, ctx, lcdUrl, queryType)
 }
 
 // (Query) make msg - gov params
@@ -69,11 +70,11 @@ func MakeGovParamsMsg(govParamsMsg types.GovParamsMsg) (govtypes.QueryParamsRequ
 }
 
 // (Query) make msg - query vote
-func MakeQueryVoteMsg(queryVoteMsg types.QueryVoteMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryVoteRequest, error) {
-	return parseQueryVoteArgs(queryVoteMsg, grpcConn, ctx, lcdUrl, queryType)
+func MakeQueryVoteMsg(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryVoteRequest, error) {
+	return parseQueryVoteArgs(queryVoteMsg, httpMutex, grpcConn, ctx, lcdUrl, queryType)
 }
 
 // (Query) make msg - query votes
-func MakeQueryVotesMsg(queryVoteMsg types.QueryVoteMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
-	return parseQueryVotesArgs(queryVoteMsg, grpcConn, ctx, lcdUrl, queryType)
+func MakeQueryVotesMsg(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
+	return parseQueryVotesArgs(queryVoteMsg, httpMutex, grpcConn, ctx, lcdUrl, queryType)
 }

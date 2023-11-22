@@ -20,7 +20,7 @@ func NewEvmExternal(xplac provider.XplaClient) (e EvmExternal) {
 
 // Send coind by using evm client.
 func (e EvmExternal) EvmSendCoin(sendCoinMsg types.SendCoinMsg) provider.XplaClient {
-	msg, err := MakeSendCoinMsg(sendCoinMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeSendCoinMsg(sendCoinMsg)
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

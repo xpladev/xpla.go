@@ -1,21 +1,21 @@
 package upgrade
 
 import (
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // (Tx) make msg - software upgrade
-func MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg types.SoftwareUpgradeMsg, privKey key.PrivateKey) (govtypes.MsgSubmitProposal, error) {
-	return parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg, privKey)
+func MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg types.SoftwareUpgradeMsg, from sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
+	return parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg, from)
 }
 
 // (Tx) make msg - cancel software upgrade
-func MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg types.CancelSoftwareUpgradeMsg, privKey key.PrivateKey) (govtypes.MsgSubmitProposal, error) {
-	return parseCancelSoftwareUpgradeArgs(cancelSoftwareUpgradeMsg, privKey)
+func MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg types.CancelSoftwareUpgradeMsg, from sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
+	return parseCancelSoftwareUpgradeArgs(cancelSoftwareUpgradeMsg, from)
 }
 
 // (Query) make msg - applied

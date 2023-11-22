@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -186,12 +185,7 @@ func parseExecuteArgs(executeMsgData types.ExecuteMsg,
 }
 
 // Parsing - clear contract admin
-func parseClearContractAdminArgs(clearContractAdminMsg types.ClearContractAdminMsg, privKey key.PrivateKey) (wasmtypes.MsgClearAdmin, error) {
-	sender, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return wasmtypes.MsgClearAdmin{}, util.LogErr(errors.ErrParse, err)
-	}
-
+func parseClearContractAdminArgs(clearContractAdminMsg types.ClearContractAdminMsg, sender sdk.AccAddress) (wasmtypes.MsgClearAdmin, error) {
 	return wasmtypes.MsgClearAdmin{
 		Sender:   sender.String(),
 		Contract: clearContractAdminMsg.ContractAddress,
@@ -199,12 +193,7 @@ func parseClearContractAdminArgs(clearContractAdminMsg types.ClearContractAdminM
 }
 
 // Parsing - set contract admin
-func parseSetContractAdmintArgs(setContractAdminMsg types.SetContractAdminMsg, privKey key.PrivateKey) (wasmtypes.MsgUpdateAdmin, error) {
-	sender, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return wasmtypes.MsgUpdateAdmin{}, util.LogErr(errors.ErrParse, err)
-	}
-
+func parseSetContractAdmintArgs(setContractAdminMsg types.SetContractAdminMsg, sender sdk.AccAddress) (wasmtypes.MsgUpdateAdmin, error) {
 	return wasmtypes.MsgUpdateAdmin{
 		Sender:   sender.String(),
 		Contract: setContractAdminMsg.ContractAddress,
@@ -213,12 +202,7 @@ func parseSetContractAdmintArgs(setContractAdminMsg types.SetContractAdminMsg, p
 }
 
 // Parsing - migrate
-func parseMigrateArgs(migrateMsg types.MigrateMsg, privKey key.PrivateKey) (wasmtypes.MsgMigrateContract, error) {
-	sender, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return wasmtypes.MsgMigrateContract{}, util.LogErr(errors.ErrParse, err)
-	}
-
+func parseMigrateArgs(migrateMsg types.MigrateMsg, sender sdk.AccAddress) (wasmtypes.MsgMigrateContract, error) {
 	codeIdU64, err := util.FromStringToUint64(migrateMsg.CodeId)
 	if err != nil {
 		return wasmtypes.MsgMigrateContract{}, util.LogErr(errors.ErrParse, err)

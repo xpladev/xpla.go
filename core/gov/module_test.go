@@ -32,7 +32,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Deposit:     "1000",
 	}
 
-	makeSubmitProposalMsg, err := gov.MakeSubmitProposalMsg(submitProposalMsg, s.xplac.GetPrivateKey())
+	makeSubmitProposalMsg, err := gov.MakeSubmitProposalMsg(submitProposalMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeSubmitProposalMsg
@@ -46,7 +46,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Deposit:    "1000",
 	}
 
-	makeGovDepositMsg, err := gov.MakeGovDepositMsg(govDepositMsg, s.xplac.GetPrivateKey())
+	makeGovDepositMsg, err := gov.MakeGovDepositMsg(govDepositMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeGovDepositMsg
@@ -60,7 +60,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Option:     "yes",
 	}
 
-	makeVoteMsg, err := gov.MakeVoteMsg(voteMsg, s.xplac.GetPrivateKey())
+	makeVoteMsg, err := gov.MakeVoteMsg(voteMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeVoteMsg
@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		NoWithVeto: "0.05",
 	}
 
-	makeWeightedVoteMsg, err := gov.MakeWeightedVoteMsg(weightedVoteMsg, s.xplac.GetPrivateKey())
+	makeWeightedVoteMsg, err := gov.MakeWeightedVoteMsg(weightedVoteMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeWeightedVoteMsg

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"sync"
 
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/core/auth"
@@ -44,6 +45,7 @@ type xplaClient struct {
 	encodingConfig paramsapp.EncodingConfig
 	grpc           grpc1.ClientConn
 	context        context.Context
+	httpMutex      *sync.Mutex
 
 	opts provider.Options
 
@@ -60,6 +62,7 @@ func NewXplaClient(
 	chainId string,
 ) provider.XplaClient {
 	var xplac xplaClient
+	xplac.httpMutex = new(sync.Mutex)
 	return xplac.
 		WithChainId(chainId).
 		WithEncoding(util.MakeEncodingConfig()).
@@ -89,6 +92,7 @@ func (xplac *xplaClient) WithOptions(
 		WithEvmRpc(options.EvmRpcURL).
 		WithPagination(options.Pagination).
 		WithOutputDocument(options.OutputDocument).
+		WithFromAddress(options.FromAddress).
 		UpdateXplacInCoreModule()
 }
 
@@ -162,6 +166,15 @@ func (xplac *xplaClient) WithContext(ctx context.Context) provider.XplaClient {
 // Set private key
 func (xplac *xplaClient) WithPrivateKey(privateKey key.PrivateKey) provider.XplaClient {
 	xplac.opts.PrivateKey = privateKey
+	if privateKey != nil {
+		addr, err := util.GetAddrByPrivKey(privateKey)
+		if err != nil {
+			xplac.err = err
+			return xplac.UpdateXplacInCoreModule()
+		}
+		// Automatically setting FromAddress when xpla client has the private key
+		xplac.opts.FromAddress = addr
+	}
 	return xplac.UpdateXplacInCoreModule()
 }
 
@@ -265,6 +278,7 @@ func (xplac *xplaClient) WithPagination(pagination types.Pagination) provider.Xp
 		pageReq, err := core.ReadPageRequest(pagination)
 		if err != nil {
 			xplac.err = err
+			return xplac.UpdateXplacInCoreModule()
 		}
 		core.PageRequest = pageReq
 	} else {
@@ -277,6 +291,12 @@ func (xplac *xplaClient) WithPagination(pagination types.Pagination) provider.Xp
 // Set output document name
 func (xplac *xplaClient) WithOutputDocument(outputDocument string) provider.XplaClient {
 	xplac.opts.OutputDocument = outputDocument
+	return xplac.UpdateXplacInCoreModule()
+}
+
+// Set from address manually
+func (xplac *xplaClient) WithFromAddress(fromAddress sdk.AccAddress) provider.XplaClient {
+	xplac.opts.FromAddress = fromAddress
 	return xplac.UpdateXplacInCoreModule()
 }
 
@@ -326,6 +346,8 @@ func (xplac *xplaClient) GetFeeGranter() sdk.AccAddress         { return xplac.o
 func (xplac *xplaClient) GetTimeoutHeight() string              { return xplac.opts.TimeoutHeight }
 func (xplac *xplaClient) GetPagination() *query.PageRequest     { return core.PageRequest }
 func (xplac *xplaClient) GetOutputDocument() string             { return xplac.opts.OutputDocument }
+func (xplac *xplaClient) GetFromAddress() sdk.AccAddress        { return xplac.opts.FromAddress }
+func (xplac *xplaClient) GetHttpMutex() *sync.Mutex             { return xplac.httpMutex }
 func (xplac *xplaClient) GetModule() string                     { return xplac.module }
 func (xplac *xplaClient) GetMsgType() string                    { return xplac.msgType }
 func (xplac *xplaClient) GetMsg() interface{}                   { return xplac.msg }

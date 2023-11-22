@@ -18,7 +18,7 @@ func NewRewardExternal(xplac provider.XplaClient) (e RewardExternal) {
 
 // Funds the fee collector with the specified amount
 func (e RewardExternal) FundFeeCollector(fundFeeCollectorMsg types.FundFeeCollectorMsg) provider.XplaClient {
-	msg, err := MakeFundFeeCollectorMsg(fundFeeCollectorMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeFundFeeCollectorMsg(fundFeeCollectorMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

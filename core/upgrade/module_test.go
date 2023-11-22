@@ -34,7 +34,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Deposit:       "1000",
 	}
 
-	makeProposalSoftwareUpgradeMsg, err := upgrade.MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg, s.xplac.GetPrivateKey())
+	makeProposalSoftwareUpgradeMsg, err := upgrade.MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeProposalSoftwareUpgradeMsg
@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Deposit:     "1000",
 	}
 
-	makeCancelSoftwareUpgradeMsg, err := upgrade.MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg, s.xplac.GetPrivateKey())
+	makeCancelSoftwareUpgradeMsg, err := upgrade.MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeCancelSoftwareUpgradeMsg

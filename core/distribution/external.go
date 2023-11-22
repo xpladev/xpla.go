@@ -20,7 +20,7 @@ func NewDistributionExternal(xplac provider.XplaClient) (e DistributionExternal)
 
 // Funds the community pool with the specified amount.
 func (e DistributionExternal) FundCommunityPool(fundCommunityPoolMsg types.FundCommunityPoolMsg) provider.XplaClient {
-	msg, err := MakeFundCommunityPoolMsg(fundCommunityPoolMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeFundCommunityPoolMsg(fundCommunityPoolMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -32,7 +32,7 @@ func (e DistributionExternal) FundCommunityPool(fundCommunityPoolMsg types.FundC
 
 // Submit a community pool spend proposal.
 func (e DistributionExternal) CommunityPoolSpend(communityPoolSpendMsg types.CommunityPoolSpendMsg) provider.XplaClient {
-	msg, err := MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg, e.Xplac.GetPrivateKey(), e.Xplac.GetEncoding())
+	msg, err := MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg, e.Xplac.GetFromAddress(), e.Xplac.GetEncoding())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -44,7 +44,7 @@ func (e DistributionExternal) CommunityPoolSpend(communityPoolSpendMsg types.Com
 
 // Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator.
 func (e DistributionExternal) WithdrawRewards(withdrawRewardsMsg types.WithdrawRewardsMsg) provider.XplaClient {
-	msg, err := MakeWithdrawRewardsMsg(withdrawRewardsMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeWithdrawRewardsMsg(withdrawRewardsMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -56,7 +56,7 @@ func (e DistributionExternal) WithdrawRewards(withdrawRewardsMsg types.WithdrawR
 
 // Withdraw all delegations rewards for a delegator.
 func (e DistributionExternal) WithdrawAllRewards() provider.XplaClient {
-	msg, err := MakeWithdrawAllRewardsMsg(e.Xplac.GetPrivateKey(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext())
+	msg, err := MakeWithdrawAllRewardsMsg(e.Xplac.GetFromAddress(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -68,7 +68,7 @@ func (e DistributionExternal) WithdrawAllRewards() provider.XplaClient {
 
 // Change the default withdraw address for rewards associated with an address.
 func (e DistributionExternal) SetWithdrawAddr(setWithdrawAddrMsg types.SetWithdrawAddrMsg) provider.XplaClient {
-	msg, err := MakeSetWithdrawAddrMsg(setWithdrawAddrMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeSetWithdrawAddrMsg(setWithdrawAddrMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

@@ -38,7 +38,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Deposit: "1000",
 	}
 
-	makeProposalParamChangeMsg, err := params.MakeProposalParamChangeMsg(paramChangeMsg, s.xplac.GetPrivateKey(), s.xplac.GetEncoding())
+	makeProposalParamChangeMsg, err := params.MakeProposalParamChangeMsg(paramChangeMsg, s.xplac.GetFromAddress(), s.xplac.GetEncoding())
 	s.Require().NoError(err)
 
 	testMsg = makeProposalParamChangeMsg

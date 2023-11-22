@@ -1,20 +1,20 @@
 package authz
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla/app/params"
 )
 
 // (Tx) make msg - authz grant
-func MakeAuthzGrantMsg(authzGrantMsg types.AuthzGrantMsg, privKey key.PrivateKey) (authz.MsgGrant, error) {
-	return parseAuthzGrantArgs(authzGrantMsg, privKey)
+func MakeAuthzGrantMsg(authzGrantMsg types.AuthzGrantMsg, granter sdk.AccAddress) (authz.MsgGrant, error) {
+	return parseAuthzGrantArgs(authzGrantMsg, granter)
 }
 
 // (Tx) make msg - revoke
-func MakeAuthzRevokeMsg(authzRevokeMsg types.AuthzRevokeMsg, privKey key.PrivateKey) (authz.MsgRevoke, error) {
-	return parseAuthzRevokeArgs(authzRevokeMsg, privKey)
+func MakeAuthzRevokeMsg(authzRevokeMsg types.AuthzRevokeMsg, granter sdk.AccAddress) (authz.MsgRevoke, error) {
+	return parseAuthzRevokeArgs(authzRevokeMsg, granter)
 }
 
 // (Tx) make msg - authz execute

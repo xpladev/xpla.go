@@ -32,7 +32,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		SpendLimit:        "1000",
 	}
 
-	makeAuthzGrantMsg, err := authz.MakeAuthzGrantMsg(authzGrantMsg, s.xplac.GetPrivateKey())
+	makeAuthzGrantMsg, err := authz.MakeAuthzGrantMsg(authzGrantMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeAuthzGrantMsg
@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		MsgType: "/cosmos.bank.v1beta1.MsgSend",
 	}
 
-	makeAuthzRevokeMsg, err := authz.MakeAuthzRevokeMsg(authzRevokeMsg, s.xplac.GetPrivateKey())
+	makeAuthzRevokeMsg, err := authz.MakeAuthzRevokeMsg(authzRevokeMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeAuthzRevokeMsg

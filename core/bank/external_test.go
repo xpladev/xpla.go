@@ -16,7 +16,7 @@ func (s *IntegrationTestSuite) TestBankTx() {
 	}
 	s.xplac.BankSend(bankSendMsg)
 
-	makeBankSendMsg, err := mbank.MakeBankSendMsg(bankSendMsg, s.xplac.GetPrivateKey())
+	makeBankSendMsg, err := mbank.MakeBankSendMsg(bankSendMsg)
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeBankSendMsg, s.xplac.GetMsg())

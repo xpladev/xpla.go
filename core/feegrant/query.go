@@ -103,10 +103,13 @@ func queryByLcdFeegrant(i core.QueryClient) (string, error) {
 		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
 	}
 
+	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
+		i.Ixplac.GetHttpMutex().Unlock()
 		return "", err
 	}
+	i.Ixplac.GetHttpMutex().Unlock()
 
 	return string(out), nil
 

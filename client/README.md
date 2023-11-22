@@ -102,7 +102,9 @@ type Options struct {
     Pagination     types.Pagination
     // Set output document name when created transaction with json file
     // "Generate only" is same that OutputDocument is not empty string 
-    OutputDocument string	
+    OutputDocument string
+    // Set from address manually
+    FromAddress    sdk.AccAddress	
 }
 ```
 

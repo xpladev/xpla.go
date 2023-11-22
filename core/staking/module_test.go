@@ -43,7 +43,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		MinSelfDelegation:       "",
 	}
 
-	makeCreateValidatorMsg, err := staking.MakeCreateValidatorMsg(createValidatorMsg, s.xplac.GetPrivateKey(), s.xplac.GetOutputDocument())
+	makeCreateValidatorMsg, err := staking.MakeCreateValidatorMsg(createValidatorMsg, s.xplac.GetFromAddress(), s.xplac.GetOutputDocument())
 	s.Require().NoError(err)
 
 	testMsg = makeCreateValidatorMsg
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		MinSelfDelegation: "",
 	}
 
-	makeEditValidatorMsg, err := staking.MakeEditValidatorMsg(editValidatorMsg, s.xplac.GetPrivateKey())
+	makeEditValidatorMsg, err := staking.MakeEditValidatorMsg(editValidatorMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeEditValidatorMsg
@@ -75,7 +75,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		ValAddr: sdk.ValAddress(accounts[0].Address).String(),
 	}
 
-	makeDelegateMsg, err := staking.MakeDelegateMsg(delegateMsg, s.xplac.GetPrivateKey())
+	makeDelegateMsg, err := staking.MakeDelegateMsg(delegateMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeDelegateMsg
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		ValAddr: sdk.ValAddress(accounts[0].Address).String(),
 	}
 
-	makeUnbondMsg, err := staking.MakeUnbondMsg(unbondMsg, s.xplac.GetPrivateKey())
+	makeUnbondMsg, err := staking.MakeUnbondMsg(unbondMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeUnbondMsg
@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		ValDstAddr: sdk.ValAddress(accounts[1].Address).String(),
 	}
 
-	makeRedelegateMsg, err := staking.MakeRedelegateMsg(redelegateMsg, s.xplac.GetPrivateKey())
+	makeRedelegateMsg, err := staking.MakeRedelegateMsg(redelegateMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeRedelegateMsg

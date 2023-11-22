@@ -1,19 +1,20 @@
 package feegrant
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // (Tx) make msg - fee grant
-func MakeFeeGrantMsg(feeGrantMsg types.FeeGrantMsg, privKey key.PrivateKey) (feegrant.MsgGrantAllowance, error) {
-	return parseFeeGrantArgs(feeGrantMsg, privKey)
+func MakeFeeGrantMsg(feeGrantMsg types.FeeGrantMsg, granter sdk.AccAddress) (feegrant.MsgGrantAllowance, error) {
+	return parseFeeGrantArgs(feeGrantMsg, granter)
 }
 
 // (Tx) make msg - fee grant revoke
-func MakeRevokeFeeGrantMsg(revokeFeeGrantMsg types.RevokeFeeGrantMsg, privKey key.PrivateKey) (feegrant.MsgRevokeAllowance, error) {
-	return parseRevokeFeeGrantArgs(revokeFeeGrantMsg, privKey)
+func MakeRevokeFeeGrantMsg(revokeFeeGrantMsg types.RevokeFeeGrantMsg, granter sdk.AccAddress) (feegrant.MsgRevokeAllowance, error) {
+	return parseRevokeFeeGrantArgs(revokeFeeGrantMsg, granter)
 }
 
 // (Query) make msg - query fee grants

@@ -17,7 +17,7 @@ func (s *IntegrationTestSuite) TestAuthzTx() {
 	}
 	s.xplac.AuthzGrant(authzGrantMsg)
 
-	makeAuthzGrantMsg, err := mauthz.MakeAuthzGrantMsg(authzGrantMsg, s.xplac.GetPrivateKey())
+	makeAuthzGrantMsg, err := mauthz.MakeAuthzGrantMsg(authzGrantMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeAuthzGrantMsg, s.xplac.GetMsg())
@@ -39,7 +39,7 @@ func (s *IntegrationTestSuite) TestAuthzTx() {
 	}
 	s.xplac.AuthzRevoke(authzRevokeMsg)
 
-	makeAuthzRevokeMsg, err := mauthz.MakeAuthzRevokeMsg(authzRevokeMsg, s.xplac.GetPrivateKey())
+	makeAuthzRevokeMsg, err := mauthz.MakeAuthzRevokeMsg(authzRevokeMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeAuthzRevokeMsg, s.xplac.GetMsg())

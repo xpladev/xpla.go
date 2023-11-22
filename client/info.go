@@ -23,10 +23,13 @@ func (xplac *xplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.Acco
 
 	if xplac.GetGrpcUrl() == "" {
 
+		xplac.GetHttpMutex().Lock()
 		out, err := util.CtxHttpClient("GET", xplac.GetLcdURL()+userInfoUrl+address.String(), nil, xplac.GetContext())
 		if err != nil {
+			xplac.GetHttpMutex().Unlock()
 			return nil, err
 		}
+		xplac.GetHttpMutex().Unlock()
 
 		var response authtypes.QueryAccountResponse
 		err = xplac.GetEncoding().Marshaler.UnmarshalJSON(out, &response)
@@ -89,10 +92,13 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 			return nil, util.LogErr(errors.ErrFailedToMarshal, err)
 		}
 
+		xplac.GetHttpMutex().Lock()
 		out, err := util.CtxHttpClient("POST", xplac.GetLcdURL()+simulateUrl, reqBytes, xplac.GetContext())
 		if err != nil {
+			xplac.GetHttpMutex().Unlock()
 			return nil, err
 		}
+		xplac.GetHttpMutex().Unlock()
 
 		var response sdktx.SimulateResponse
 		err = xplac.GetEncoding().Marshaler.UnmarshalJSON(out, &response)

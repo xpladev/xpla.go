@@ -20,7 +20,7 @@ func NewGovExternal(xplac provider.XplaClient) (e GovExternal) {
 
 // Submit a proposal along with an initial deposit.
 func (e GovExternal) SubmitProposal(submitProposalMsg types.SubmitProposalMsg) provider.XplaClient {
-	msg, err := MakeSubmitProposalMsg(submitProposalMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeSubmitProposalMsg(submitProposalMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -32,7 +32,7 @@ func (e GovExternal) SubmitProposal(submitProposalMsg types.SubmitProposalMsg) p
 
 // Deposit tokens for an active proposal.
 func (e GovExternal) GovDeposit(govDepositMsg types.GovDepositMsg) provider.XplaClient {
-	msg, err := MakeGovDepositMsg(govDepositMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeGovDepositMsg(govDepositMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -44,7 +44,7 @@ func (e GovExternal) GovDeposit(govDepositMsg types.GovDepositMsg) provider.Xpla
 
 // Vote for an active proposal, options: yes/no/no_with_veto/abstain.
 func (e GovExternal) Vote(voteMsg types.VoteMsg) provider.XplaClient {
-	msg, err := MakeVoteMsg(voteMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeVoteMsg(voteMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -56,7 +56,7 @@ func (e GovExternal) Vote(voteMsg types.VoteMsg) provider.XplaClient {
 
 // Vote for an active proposal, options: yes/no/no_with_veto/abstain.
 func (e GovExternal) WeightedVote(weightedVoteMsg types.WeightedVoteMsg) provider.XplaClient {
-	msg, err := MakeWeightedVoteMsg(weightedVoteMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeWeightedVoteMsg(weightedVoteMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -102,7 +102,7 @@ func (e GovExternal) QueryDeposit(queryDepositMsg types.QueryDepositMsg) provide
 	}
 
 	if queryDepositMsg.Depositor != "" {
-		msg, argsType, err := MakeQueryDepositMsg(queryDepositMsg, e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
+		msg, argsType, err := MakeQueryDepositMsg(queryDepositMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
 			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 		}
@@ -116,7 +116,7 @@ func (e GovExternal) QueryDeposit(queryDepositMsg types.QueryDepositMsg) provide
 				WithMsg(msg)
 		}
 	} else {
-		msg, argsType, err := MakeQueryDepositsMsg(queryDepositMsg, e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
+		msg, argsType, err := MakeQueryDepositsMsg(queryDepositMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
 			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 		}
@@ -143,7 +143,7 @@ func (e GovExternal) QueryVote(queryVoteMsg types.QueryVoteMsg) provider.XplaCli
 	}
 
 	if queryVoteMsg.VoterAddr != "" {
-		msg, err := MakeQueryVoteMsg(queryVoteMsg, e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
+		msg, err := MakeQueryVoteMsg(queryVoteMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
 			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 		}
@@ -152,7 +152,7 @@ func (e GovExternal) QueryVote(queryVoteMsg types.QueryVoteMsg) provider.XplaCli
 			WithMsg(msg)
 
 	} else {
-		msg, status, err := MakeQueryVotesMsg(queryVoteMsg, e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
+		msg, status, err := MakeQueryVotesMsg(queryVoteMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
 			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 		}
@@ -178,7 +178,7 @@ func (e GovExternal) Tally(tallyMsg types.TallyMsg) provider.XplaClient {
 		queryType = types.QueryLcd
 	}
 
-	msg, err := MakeGovTallyMsg(tallyMsg, e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
+	msg, err := MakeGovTallyMsg(tallyMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

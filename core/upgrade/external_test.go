@@ -25,7 +25,7 @@ func (s *IntegrationTestSuite) TestUpgradeTx() {
 	}
 	s.xplac.SoftwareUpgrade(softwareUpgradeMsg)
 
-	makeProposalSoftwareUpgradeMsg, err := mupgrade.MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg, s.xplac.GetPrivateKey())
+	makeProposalSoftwareUpgradeMsg, err := mupgrade.MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeProposalSoftwareUpgradeMsg, s.xplac.GetMsg())
@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) TestUpgradeTx() {
 	}
 	s.xplac.CancelSoftwareUpgrade(cancelSoftwareUpgradeMsg)
 
-	makeCancelSoftwareUpgradeMsg, err := mupgrade.MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg, s.xplac.GetPrivateKey())
+	makeCancelSoftwareUpgradeMsg, err := mupgrade.MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeCancelSoftwareUpgradeMsg, s.xplac.GetMsg())

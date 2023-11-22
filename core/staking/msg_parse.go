@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -24,7 +23,7 @@ import (
 // Parsing - create validator
 func parseCreateValidatorArgs(
 	createValidatorMsg types.CreateValidatorMsg,
-	privKey key.PrivateKey,
+	from sdk.AccAddress,
 	output string,
 ) (sdk.Msg, error) {
 
@@ -32,12 +31,7 @@ func parseCreateValidatorArgs(
 	var valPubKey cryptotypes.PubKey
 	var err error
 
-	privKeyAddr, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
-	}
-
-	privKeyValAddr := sdk.ValAddress(privKeyAddr)
+	privKeyValAddr := sdk.ValAddress(from)
 
 	addrStr := createValidatorMsg.ValidatorAddress
 	addr, err := sdk.ValAddressFromBech32(addrStr)
@@ -139,7 +133,7 @@ func parseCreateValidatorArgs(
 }
 
 // Parsing - edit validator
-func parseEditValidatorArgs(editValidatorMsg types.EditValidatorMsg, privKey key.PrivateKey) (stakingtypes.MsgEditValidator, error) {
+func parseEditValidatorArgs(editValidatorMsg types.EditValidatorMsg, addr sdk.AccAddress) (stakingtypes.MsgEditValidator, error) {
 	moniker := editValidatorMsg.Moniker
 	identity := editValidatorMsg.Identity
 	website := editValidatorMsg.Website
@@ -169,23 +163,14 @@ func parseEditValidatorArgs(editValidatorMsg types.EditValidatorMsg, privKey key
 		newMinSelfDelegation = &msb
 	}
 
-	addr, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return stakingtypes.MsgEditValidator{}, util.LogErr(errors.ErrParse, err)
-	}
-
 	msg := stakingtypes.NewMsgEditValidator(sdk.ValAddress(addr), description, newRate, newMinSelfDelegation)
 
 	return *msg, nil
 }
 
 // Parsing - delegate
-func parseDelegateArgs(delegateMsg types.DelegateMsg, privKey key.PrivateKey) (stakingtypes.MsgDelegate, error) {
+func parseDelegateArgs(delegateMsg types.DelegateMsg, delAddr sdk.AccAddress) (stakingtypes.MsgDelegate, error) {
 	amount, err := sdk.ParseCoinNormalized(util.DenomAdd(delegateMsg.Amount))
-	if err != nil {
-		return stakingtypes.MsgDelegate{}, util.LogErr(errors.ErrParse, err)
-	}
-	delAddr, err := util.GetAddrByPrivKey(privKey)
 	if err != nil {
 		return stakingtypes.MsgDelegate{}, util.LogErr(errors.ErrParse, err)
 	}
@@ -201,12 +186,8 @@ func parseDelegateArgs(delegateMsg types.DelegateMsg, privKey key.PrivateKey) (s
 }
 
 // Parsing - unbond
-func parseUnbondArgs(unbondMsg types.UnbondMsg, privKey key.PrivateKey) (stakingtypes.MsgUndelegate, error) {
+func parseUnbondArgs(unbondMsg types.UnbondMsg, delAddr sdk.AccAddress) (stakingtypes.MsgUndelegate, error) {
 	amount, err := sdk.ParseCoinNormalized(util.DenomAdd(unbondMsg.Amount))
-	if err != nil {
-		return stakingtypes.MsgUndelegate{}, util.LogErr(errors.ErrParse, err)
-	}
-	delAddr, err := util.GetAddrByPrivKey(privKey)
 	if err != nil {
 		return stakingtypes.MsgUndelegate{}, util.LogErr(errors.ErrParse, err)
 	}
@@ -222,12 +203,8 @@ func parseUnbondArgs(unbondMsg types.UnbondMsg, privKey key.PrivateKey) (staking
 }
 
 // Parsing - redelegate
-func parseRedelegateArgs(redelegateMsg types.RedelegateMsg, privKey key.PrivateKey) (stakingtypes.MsgBeginRedelegate, error) {
+func parseRedelegateArgs(redelegateMsg types.RedelegateMsg, delAddr sdk.AccAddress) (stakingtypes.MsgBeginRedelegate, error) {
 	amount, err := sdk.ParseCoinNormalized(util.DenomAdd(redelegateMsg.Amount))
-	if err != nil {
-		return stakingtypes.MsgBeginRedelegate{}, util.LogErr(errors.ErrParse, err)
-	}
-	delAddr, err := util.GetAddrByPrivKey(privKey)
 	if err != nil {
 		return stakingtypes.MsgBeginRedelegate{}, util.LogErr(errors.ErrParse, err)
 	}

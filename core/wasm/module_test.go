@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		ContractAddress: testCWContractAddress,
 	}
 
-	makeClearContractAdminMsg, err := wasm.MakeClearContractAdminMsg(clearContractAdminMsg, s.xplac.GetPrivateKey())
+	makeClearContractAdminMsg, err := wasm.MakeClearContractAdminMsg(clearContractAdminMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeClearContractAdminMsg
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		ContractAddress: testCWContractAddress,
 	}
 
-	makeSetContractAdmintMsg, err := wasm.MakeSetContractAdmintMsg(setContractAdminMsg, s.xplac.GetPrivateKey())
+	makeSetContractAdmintMsg, err := wasm.MakeSetContractAdmintMsg(setContractAdminMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeSetContractAdmintMsg
@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		MigrateMsg:      `{}`,
 	}
 
-	makeMigrateMsg, err := wasm.MakeMigrateMsg(migrateMsg, s.xplac.GetPrivateKey())
+	makeMigrateMsg, err := wasm.MakeMigrateMsg(migrateMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeMigrateMsg

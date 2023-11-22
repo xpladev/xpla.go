@@ -20,7 +20,7 @@ func NewSlashingExternal(xplac provider.XplaClient) (e SlashingExternal) {
 
 // Unjail validator previously jailed for downtime.
 func (e SlashingExternal) Unjail() provider.XplaClient {
-	msg, err := MakeUnjailMsg(e.Xplac.GetPrivateKey())
+	msg, err := MakeUnjailMsg(e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

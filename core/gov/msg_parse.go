@@ -2,9 +2,9 @@ package gov
 
 import (
 	"context"
+	"sync"
 
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -17,11 +17,7 @@ import (
 )
 
 // Parsing - submit proposal
-func parseSubmitProposalArgs(submitProposalMsg types.SubmitProposalMsg, privKey key.PrivateKey) (govtypes.MsgSubmitProposal, error) {
-	proposer, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
-	}
+func parseSubmitProposalArgs(submitProposalMsg types.SubmitProposalMsg, proposer sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
 	amount, err := sdk.ParseCoinsNormalized(util.DenomAdd(submitProposalMsg.Deposit))
 	if err != nil {
 		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
@@ -42,15 +38,12 @@ func parseSubmitProposalArgs(submitProposalMsg types.SubmitProposalMsg, privKey 
 }
 
 // Parsing - deposit
-func parseGovDepositArgs(govDepositMsg types.GovDepositMsg, privKey key.PrivateKey) (govtypes.MsgDeposit, error) {
+func parseGovDepositArgs(govDepositMsg types.GovDepositMsg, from sdk.AccAddress) (govtypes.MsgDeposit, error) {
 	proposalId, err := util.FromStringToUint64(govDepositMsg.ProposalID)
 	if err != nil {
 		return govtypes.MsgDeposit{}, util.LogErr(errors.ErrParse, err)
 	}
-	from, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return govtypes.MsgDeposit{}, util.LogErr(errors.ErrParse, err)
-	}
+
 	amount, err := sdk.ParseCoinsNormalized(util.DenomAdd(govDepositMsg.Deposit))
 	if err != nil {
 		return govtypes.MsgDeposit{}, util.LogErr(errors.ErrParse, err)
@@ -62,12 +55,8 @@ func parseGovDepositArgs(govDepositMsg types.GovDepositMsg, privKey key.PrivateK
 }
 
 // Parsing - vote
-func parseVoteArgs(voteMsg types.VoteMsg, privKey key.PrivateKey) (govtypes.MsgVote, error) {
+func parseVoteArgs(voteMsg types.VoteMsg, from sdk.AccAddress) (govtypes.MsgVote, error) {
 	proposalId, err := util.FromStringToUint64(voteMsg.ProposalID)
-	if err != nil {
-		return govtypes.MsgVote{}, util.LogErr(errors.ErrParse, err)
-	}
-	from, err := util.GetAddrByPrivKey(privKey)
 	if err != nil {
 		return govtypes.MsgVote{}, util.LogErr(errors.ErrParse, err)
 	}
@@ -82,12 +71,8 @@ func parseVoteArgs(voteMsg types.VoteMsg, privKey key.PrivateKey) (govtypes.MsgV
 }
 
 // Parsing - weighted vote
-func parseWeightedVoteArgs(weightedVoteMsg types.WeightedVoteMsg, privKey key.PrivateKey) (govtypes.MsgVoteWeighted, error) {
+func parseWeightedVoteArgs(weightedVoteMsg types.WeightedVoteMsg, from sdk.AccAddress) (govtypes.MsgVoteWeighted, error) {
 	proposalId, err := util.FromStringToUint64(weightedVoteMsg.ProposalID)
-	if err != nil {
-		return govtypes.MsgVoteWeighted{}, util.LogErr(errors.ErrParse, err)
-	}
-	from, err := util.GetAddrByPrivKey(privKey)
 	if err != nil {
 		return govtypes.MsgVoteWeighted{}, util.LogErr(errors.ErrParse, err)
 	}
@@ -142,7 +127,7 @@ func parseQueryProposalsArgs(queryProposalsMsg types.QueryProposalsMsg) (govtype
 }
 
 // Parsing - query deposit
-func parseQueryDepositArgs(queryDepositMsg types.QueryDepositMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
+func parseQueryDepositArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
 	var propStatus govtypes.ProposalStatus
 
 	proposalId, err := util.FromStringToUint64(queryDepositMsg.ProposalID)
@@ -171,10 +156,13 @@ func parseQueryDepositArgs(queryDepositMsg types.QueryDepositMsg, grpcConn grpc.
 		url := util.MakeQueryLcdUrl(govv1beta1.Query_ServiceDesc.Metadata.(string))
 		url = url + util.MakeQueryLabels("proposals", queryDepositMsg.ProposalID)
 
+		httpMutex.Lock()
 		out, err := util.CtxHttpClient("GET", lcdUrl+url, nil, ctx)
 		if err != nil {
+			httpMutex.Unlock()
 			return nil, "", err
 		}
+		httpMutex.Unlock()
 
 		var response govtypes.QueryProposalResponse
 		responseData := util.JsonUnmarshalData(response, out)
@@ -195,7 +183,7 @@ func parseQueryDepositArgs(queryDepositMsg types.QueryDepositMsg, grpcConn grpc.
 }
 
 // Parsing - query deposits
-func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
+func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
 	var propStatus govtypes.ProposalStatus
 	proposalId, err := util.FromStringToUint64(queryDepositMsg.ProposalID)
 	if err != nil {
@@ -219,10 +207,13 @@ func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, grpcConn grpc
 		url := util.MakeQueryLcdUrl(govv1beta1.Query_ServiceDesc.Metadata.(string))
 		url = url + util.MakeQueryLabels("proposals", queryDepositMsg.ProposalID)
 
+		httpMutex.Lock()
 		out, err := util.CtxHttpClient("GET", lcdUrl+url, nil, ctx)
 		if err != nil {
+			httpMutex.Unlock()
 			return nil, "", err
 		}
+		httpMutex.Unlock()
 
 		var response govtypes.QueryProposalResponse
 		responseData := util.JsonUnmarshalData(response, out)
@@ -243,7 +234,7 @@ func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, grpcConn grpc
 }
 
 // Parsing - tally
-func parseGovTallyArgs(tallyMsg types.TallyMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryTallyResultRequest, error) {
+func parseGovTallyArgs(tallyMsg types.TallyMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryTallyResultRequest, error) {
 	proposalId, err := util.FromStringToUint64(tallyMsg.ProposalID)
 	if err != nil {
 		return govtypes.QueryTallyResultRequest{}, util.LogErr(errors.ErrParse, err)
@@ -264,10 +255,13 @@ func parseGovTallyArgs(tallyMsg types.TallyMsg, grpcConn grpc.ClientConn, ctx co
 		url := util.MakeQueryLcdUrl(govv1beta1.Query_ServiceDesc.Metadata.(string))
 		url = url + util.MakeQueryLabels("proposals", tallyMsg.ProposalID)
 
+		httpMutex.Lock()
 		_, err := util.CtxHttpClient("GET", lcdUrl+url, nil, ctx)
 		if err != nil {
+			httpMutex.Unlock()
 			return govtypes.QueryTallyResultRequest{}, err
 		}
+		httpMutex.Unlock()
 	}
 
 	return govtypes.QueryTallyResultRequest{
@@ -289,7 +283,7 @@ func parseGovParamArgs(govParamsMsg types.GovParamsMsg) (govtypes.QueryParamsReq
 }
 
 // Parsing - query vote
-func parseQueryVoteArgs(queryVoteMsg types.QueryVoteMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryVoteRequest, error) {
+func parseQueryVoteArgs(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryVoteRequest, error) {
 	proposalId, err := util.FromStringToUint64(queryVoteMsg.ProposalID)
 	if err != nil {
 		return govtypes.QueryVoteRequest{}, util.LogErr(errors.ErrParse, err)
@@ -310,10 +304,13 @@ func parseQueryVoteArgs(queryVoteMsg types.QueryVoteMsg, grpcConn grpc.ClientCon
 		url := util.MakeQueryLcdUrl(govv1beta1.Query_ServiceDesc.Metadata.(string))
 		url = url + util.MakeQueryLabels("proposals", queryVoteMsg.ProposalID)
 
+		httpMutex.Lock()
 		_, err := util.CtxHttpClient("GET", lcdUrl+url, nil, ctx)
 		if err != nil {
+			httpMutex.Unlock()
 			return govtypes.QueryVoteRequest{}, err
 		}
+		httpMutex.Unlock()
 	}
 
 	return govtypes.QueryVoteRequest{
@@ -323,7 +320,7 @@ func parseQueryVoteArgs(queryVoteMsg types.QueryVoteMsg, grpcConn grpc.ClientCon
 }
 
 // Parsing - query votes
-func parseQueryVotesArgs(queryVoteMsg types.QueryVoteMsg, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
+func parseQueryVotesArgs(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (interface{}, string, error) {
 	var propStatus govtypes.ProposalStatus
 	proposalId, err := util.FromStringToUint64(queryVoteMsg.ProposalID)
 	if err != nil {
@@ -347,10 +344,13 @@ func parseQueryVotesArgs(queryVoteMsg types.QueryVoteMsg, grpcConn grpc.ClientCo
 		url := util.MakeQueryLcdUrl(govv1beta1.Query_ServiceDesc.Metadata.(string))
 		url = url + util.MakeQueryLabels("proposals", queryVoteMsg.ProposalID)
 
+		httpMutex.Lock()
 		out, err := util.CtxHttpClient("GET", lcdUrl+url, nil, ctx)
 		if err != nil {
+			httpMutex.Unlock()
 			return nil, "", err
 		}
+		httpMutex.Unlock()
 
 		var response govtypes.QueryProposalResponse
 		responseData := util.JsonUnmarshalData(response, out)

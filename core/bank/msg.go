@@ -2,7 +2,6 @@ package bank
 
 import (
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -11,8 +10,8 @@ import (
 )
 
 // (Tx) make msg - bank send
-func MakeBankSendMsg(bankSendMsg types.BankSendMsg, privKey key.PrivateKey) (banktypes.MsgSend, error) {
-	return parseBankSendArgs(bankSendMsg, privKey)
+func MakeBankSendMsg(bankSendMsg types.BankSendMsg) (banktypes.MsgSend, error) {
+	return parseBankSendArgs(bankSendMsg)
 }
 
 // (Query) make msg - all balances

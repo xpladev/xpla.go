@@ -3,7 +3,6 @@ package wasm
 import (
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/util"
 )
 
 type WasmExternal struct {
@@ -19,11 +18,7 @@ func NewWasmExternal(xplac provider.XplaClient) (e WasmExternal) {
 
 // Upload a wasm binary.
 func (e WasmExternal) StoreCode(storeMsg types.StoreMsg) provider.XplaClient {
-	addr, err := util.GetAddrByPrivKey(e.Xplac.GetPrivateKey())
-	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
-	}
-	msg, err := MakeStoreCodeMsg(storeMsg, addr)
+	msg, err := MakeStoreCodeMsg(storeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -35,11 +30,7 @@ func (e WasmExternal) StoreCode(storeMsg types.StoreMsg) provider.XplaClient {
 
 // Instantiate a wasm contract.
 func (e WasmExternal) InstantiateContract(instantiageMsg types.InstantiateMsg) provider.XplaClient {
-	addr, err := util.GetAddrByPrivKey(e.Xplac.GetPrivateKey())
-	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
-	}
-	msg, err := MakeInstantiateMsg(instantiageMsg, addr)
+	msg, err := MakeInstantiateMsg(instantiageMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -51,11 +42,7 @@ func (e WasmExternal) InstantiateContract(instantiageMsg types.InstantiateMsg) p
 
 // Execute a wasm contract.
 func (e WasmExternal) ExecuteContract(executeMsg types.ExecuteMsg) provider.XplaClient {
-	addr, err := util.GetAddrByPrivKey(e.Xplac.GetPrivateKey())
-	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
-	}
-	msg, err := MakeExecuteMsg(executeMsg, addr)
+	msg, err := MakeExecuteMsg(executeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -67,7 +54,7 @@ func (e WasmExternal) ExecuteContract(executeMsg types.ExecuteMsg) provider.Xpla
 
 // Clears admin for a contract to prevent further migrations.
 func (e WasmExternal) ClearContractAdmin(clearContractAdminMsg types.ClearContractAdminMsg) provider.XplaClient {
-	msg, err := MakeClearContractAdminMsg(clearContractAdminMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeClearContractAdminMsg(clearContractAdminMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -79,7 +66,7 @@ func (e WasmExternal) ClearContractAdmin(clearContractAdminMsg types.ClearContra
 
 // Set new admin for a contract.
 func (e WasmExternal) SetContractAdmin(setContractAdminMsg types.SetContractAdminMsg) provider.XplaClient {
-	msg, err := MakeSetContractAdmintMsg(setContractAdminMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeSetContractAdmintMsg(setContractAdminMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -91,7 +78,7 @@ func (e WasmExternal) SetContractAdmin(setContractAdminMsg types.SetContractAdmi
 
 // Migrate a wasm contract to a new code version.
 func (e WasmExternal) Migrate(migrateMsg types.MigrateMsg) provider.XplaClient {
-	msg, err := MakeMigrateMsg(migrateMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeMigrateMsg(migrateMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

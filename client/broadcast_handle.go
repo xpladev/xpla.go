@@ -30,10 +30,13 @@ func broadcastTx(xplac *xplaClient, txBytes []byte, mode txtypes.BroadcastMode) 
 			return nil, util.LogErr(errors.ErrFailedToMarshal, err)
 		}
 
+		xplac.GetHttpMutex().Lock()
 		out, err := util.CtxHttpClient("POST", xplac.GetLcdURL()+broadcastUrl, reqBytes, xplac.GetContext())
 		if err != nil {
+			xplac.GetHttpMutex().Unlock()
 			return nil, err
 		}
+		xplac.GetHttpMutex().Unlock()
 
 		var broadcastTxResponse txtypes.BroadcastTxResponse
 		err = xplac.GetEncoding().Marshaler.UnmarshalJSON(out, &broadcastTxResponse)

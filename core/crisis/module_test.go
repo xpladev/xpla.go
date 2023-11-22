@@ -78,7 +78,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	}
 	s.xplac.InvariantBroken(invariantBrokenMsg)
 
-	makeInvariantRouteMsg, err := crisis.MakeInvariantRouteMsg(invariantBrokenMsg, s.xplac.GetPrivateKey())
+	makeInvariantRouteMsg, err := crisis.MakeInvariantRouteMsg(invariantBrokenMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeInvariantRouteMsg

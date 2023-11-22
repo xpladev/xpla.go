@@ -20,7 +20,7 @@ func NewStakingExternal(xplac provider.XplaClient) (e StakingExternal) {
 
 // Create new validator initialized with a self-delegation to it.
 func (e StakingExternal) CreateValidator(createValidatorMsg types.CreateValidatorMsg) provider.XplaClient {
-	msg, err := MakeCreateValidatorMsg(createValidatorMsg, e.Xplac.GetPrivateKey(), e.Xplac.GetOutputDocument())
+	msg, err := MakeCreateValidatorMsg(createValidatorMsg, e.Xplac.GetFromAddress(), e.Xplac.GetOutputDocument())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -32,7 +32,7 @@ func (e StakingExternal) CreateValidator(createValidatorMsg types.CreateValidato
 
 // Edit an existing validator account.
 func (e StakingExternal) EditValidator(editValidatorMsg types.EditValidatorMsg) provider.XplaClient {
-	msg, err := MakeEditValidatorMsg(editValidatorMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeEditValidatorMsg(editValidatorMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -44,7 +44,7 @@ func (e StakingExternal) EditValidator(editValidatorMsg types.EditValidatorMsg) 
 
 // Delegate liquid tokens to a validator.
 func (e StakingExternal) Delegate(delegateMsg types.DelegateMsg) provider.XplaClient {
-	msg, err := MakeDelegateMsg(delegateMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeDelegateMsg(delegateMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -56,7 +56,7 @@ func (e StakingExternal) Delegate(delegateMsg types.DelegateMsg) provider.XplaCl
 
 // Unbond shares from a validator.
 func (e StakingExternal) Unbond(unbondMsg types.UnbondMsg) provider.XplaClient {
-	msg, err := MakeUnbondMsg(unbondMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeUnbondMsg(unbondMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -68,7 +68,7 @@ func (e StakingExternal) Unbond(unbondMsg types.UnbondMsg) provider.XplaClient {
 
 // Redelegate illiquid tokens from one validator to another.
 func (e StakingExternal) Redelegate(redelegateMsg types.RedelegateMsg) provider.XplaClient {
-	msg, err := MakeRedelegateMsg(redelegateMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeRedelegateMsg(redelegateMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

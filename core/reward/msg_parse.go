@@ -1,7 +1,6 @@
 package reward
 
 import (
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -11,13 +10,8 @@ import (
 )
 
 // parsing - fund fee collector
-func parseFundFeeCollectorArgs(fundFeeCollectorMsg types.FundFeeCollectorMsg, privKey key.PrivateKey) (rewardtypes.MsgFundFeeCollector, error) {
-	addrByPrivKey, err := key.Bech32AddrString(privKey)
-	if err != nil {
-		return rewardtypes.MsgFundFeeCollector{}, util.LogErr(errors.ErrParse, err)
-	}
-
-	if fundFeeCollectorMsg.DepositorAddr != addrByPrivKey {
+func parseFundFeeCollectorArgs(fundFeeCollectorMsg types.FundFeeCollectorMsg, from sdk.AccAddress) (rewardtypes.MsgFundFeeCollector, error) {
+	if fundFeeCollectorMsg.DepositorAddr != from.String() {
 		return rewardtypes.MsgFundFeeCollector{}, util.LogErr(errors.ErrAccountNotMatch, "wrong depositor address, not match private key")
 	}
 

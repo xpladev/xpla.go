@@ -18,7 +18,7 @@ func NewCrisisExternal(xplac provider.XplaClient) (e CrisisExternal) {
 
 // Submit proof that an invariant broken to halt the chain.
 func (e CrisisExternal) InvariantBroken(invariantBrokenMsg types.InvariantBrokenMsg) provider.XplaClient {
-	msg, err := MakeInvariantRouteMsg(invariantBrokenMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeInvariantRouteMsg(invariantBrokenMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

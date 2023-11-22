@@ -2,7 +2,6 @@ package bank
 
 import (
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -12,7 +11,7 @@ import (
 )
 
 // Parsing - bank send
-func parseBankSendArgs(bankSendMsg types.BankSendMsg, privKey key.PrivateKey) (banktypes.MsgSend, error) {
+func parseBankSendArgs(bankSendMsg types.BankSendMsg) (banktypes.MsgSend, error) {
 	denom := types.XplaDenom
 
 	if bankSendMsg.FromAddress == "" || bankSendMsg.ToAddress == "" || bankSendMsg.Amount == "" {
