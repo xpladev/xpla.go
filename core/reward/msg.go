@@ -1,15 +1,15 @@
 package reward
 
 import (
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	rewardtypes "github.com/xpladev/xpla/x/reward/types"
 )
 
 // (Tx) make msg - Fund fee collector
-func MakeFundFeeCollectorMsg(fundFeeCollectorMsg types.FundFeeCollectorMsg, privKey key.PrivateKey) (rewardtypes.MsgFundFeeCollector, error) {
-	return parseFundFeeCollectorArgs(fundFeeCollectorMsg, privKey)
+func MakeFundFeeCollectorMsg(fundFeeCollectorMsg types.FundFeeCollectorMsg, from sdk.AccAddress) (rewardtypes.MsgFundFeeCollector, error) {
+	return parseFundFeeCollectorArgs(fundFeeCollectorMsg, from)
 }
 
 // (Query) make msg - query reward params

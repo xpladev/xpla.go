@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"sync"
 
 	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
@@ -77,6 +78,7 @@ type Options struct {
 	EvmRpcURL      string
 	Pagination     types.Pagination
 	OutputDocument string
+	FromAddress    sdk.AccAddress
 }
 
 // Methods set params of client.xplaClient.
@@ -103,10 +105,11 @@ type WithProvider interface {
 	WithEvmRpc(string) XplaClient
 	WithPagination(types.Pagination) XplaClient
 	WithOutputDocument(string) XplaClient
-	WithModule(module string) XplaClient
-	WithMsgType(msgType string) XplaClient
-	WithMsg(msg interface{}) XplaClient
-	WithErr(err error) XplaClient
+	WithFromAddress(sdk.AccAddress) XplaClient
+	WithModule(string) XplaClient
+	WithMsgType(string) XplaClient
+	WithMsg(interface{}) XplaClient
+	WithErr(error) XplaClient
 }
 
 // Methods get params of client.xplaClient.
@@ -132,6 +135,8 @@ type GetProvider interface {
 	GetTimeoutHeight() string
 	GetPagination() *query.PageRequest
 	GetOutputDocument() string
+	GetFromAddress() sdk.AccAddress
+	GetHttpMutex() *sync.Mutex
 	GetModule() string
 	GetMsg() interface{}
 	GetMsgType() string

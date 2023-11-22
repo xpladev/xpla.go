@@ -1,7 +1,6 @@
 package params
 
 import (
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -14,7 +13,7 @@ import (
 )
 
 // Parsing - param change
-func parseProposalParamChangeArgs(paramChangeMsg types.ParamChangeMsg, privKey key.PrivateKey, encodingConfig params.EncodingConfig) (govtypes.MsgSubmitProposal, error) {
+func parseProposalParamChangeArgs(paramChangeMsg types.ParamChangeMsg, from sdk.AccAddress, encodingConfig params.EncodingConfig) (govtypes.MsgSubmitProposal, error) {
 	var proposal paramscutils.ParamChangeProposalJSON
 	var err error
 
@@ -45,10 +44,6 @@ func parseProposalParamChangeArgs(paramChangeMsg types.ParamChangeMsg, privKey k
 		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
 	}
 
-	from, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
-	}
 	content := paramsproposal.NewParameterChangeProposal(
 		proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 	)

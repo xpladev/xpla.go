@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -18,12 +17,7 @@ import (
 )
 
 // Parsing - fund community pool
-func parseFundCommunityPoolArgs(fundCommunityPoolMsg types.FundCommunityPoolMsg, privKey key.PrivateKey) (disttypes.MsgFundCommunityPool, error) {
-	depositorAddr, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return disttypes.MsgFundCommunityPool{}, util.LogErr(errors.ErrParse, err)
-	}
-
+func parseFundCommunityPoolArgs(fundCommunityPoolMsg types.FundCommunityPoolMsg, depositorAddr sdk.AccAddress) (disttypes.MsgFundCommunityPool, error) {
 	amount, err := sdk.ParseCoinsNormalized(util.DenomAdd(fundCommunityPoolMsg.Amount))
 	if err != nil {
 		return disttypes.MsgFundCommunityPool{}, util.LogErr(errors.ErrParse, err)
@@ -34,7 +28,7 @@ func parseFundCommunityPoolArgs(fundCommunityPoolMsg types.FundCommunityPoolMsg,
 }
 
 // Parsing - proposal community pool
-func parseProposalCommunityPoolSpendArgs(communityPoolSpendMsg types.CommunityPoolSpendMsg, privKey key.PrivateKey, encodingConfig params.EncodingConfig) (govtypes.MsgSubmitProposal, error) {
+func parseProposalCommunityPoolSpendArgs(communityPoolSpendMsg types.CommunityPoolSpendMsg, from sdk.AccAddress, encodingConfig params.EncodingConfig) (govtypes.MsgSubmitProposal, error) {
 	var proposal disttypes.CommunityPoolSpendProposalWithDeposit
 	var err error
 
@@ -61,10 +55,6 @@ func parseProposalCommunityPoolSpendArgs(communityPoolSpendMsg types.CommunityPo
 		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
 	}
 
-	from, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
-	}
 	recpAddr, err := sdk.AccAddressFromBech32(proposal.Recipient)
 	if err != nil {
 		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
@@ -81,12 +71,7 @@ func parseProposalCommunityPoolSpendArgs(communityPoolSpendMsg types.CommunityPo
 }
 
 // Parsing - withdraw rewards
-func parseWithdrawRewardsArgs(withdrawRewardsMsg types.WithdrawRewardsMsg, privKey key.PrivateKey) ([]sdk.Msg, error) {
-	delAddr, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
-	}
-
+func parseWithdrawRewardsArgs(withdrawRewardsMsg types.WithdrawRewardsMsg, delAddr sdk.AccAddress) ([]sdk.Msg, error) {
 	valAddr, err := sdk.ValAddressFromBech32(withdrawRewardsMsg.ValidatorAddr)
 	if err != nil {
 		return nil, util.LogErr(errors.ErrParse, err)
@@ -107,11 +92,7 @@ func parseWithdrawRewardsArgs(withdrawRewardsMsg types.WithdrawRewardsMsg, privK
 }
 
 // Parsing - withdraw all rewards
-func parseWithdrawAllRewardsArgs(privKey key.PrivateKey, grpcConn grpc.ClientConn, ctx context.Context) ([]sdk.Msg, error) {
-	delAddr, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
-	}
+func parseWithdrawAllRewardsArgs(delAddr sdk.AccAddress, grpcConn grpc.ClientConn, ctx context.Context) ([]sdk.Msg, error) {
 	queryClient := disttypes.NewQueryClient(grpcConn)
 	delValsRes, err := queryClient.DelegatorValidators(
 		ctx,
@@ -142,11 +123,7 @@ func parseWithdrawAllRewardsArgs(privKey key.PrivateKey, grpcConn grpc.ClientCon
 }
 
 // Parsing - set withdraw addr
-func parseSetWithdrawAddrArgs(setWithdrawAddrMsg types.SetWithdrawAddrMsg, privKey key.PrivateKey) (disttypes.MsgSetWithdrawAddress, error) {
-	delAddr, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return disttypes.MsgSetWithdrawAddress{}, util.LogErr(errors.ErrParse, err)
-	}
+func parseSetWithdrawAddrArgs(setWithdrawAddrMsg types.SetWithdrawAddrMsg, delAddr sdk.AccAddress) (disttypes.MsgSetWithdrawAddress, error) {
 	withdrawAddr, err := sdk.AccAddressFromBech32(setWithdrawAddrMsg.WithdrawAddr)
 	if err != nil {
 		return disttypes.MsgSetWithdrawAddress{}, util.LogErr(errors.ErrParse, err)

@@ -34,7 +34,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Expiration: "2100-01-01T23:59:59+00:00",
 	}
 
-	makeFeeGrantMsg, err := feegrant.MakeFeeGrantMsg(feeGrantMsg, s.xplac.GetPrivateKey())
+	makeFeeGrantMsg, err := feegrant.MakeFeeGrantMsg(feeGrantMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeFeeGrantMsg
@@ -48,7 +48,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Grantee: accounts[1].Address.String(),
 	}
 
-	makeRevokeFeeGrantMsg, err := feegrant.MakeRevokeFeeGrantMsg(revokeFeeGrantMsg, s.xplac.GetPrivateKey())
+	makeRevokeFeeGrantMsg, err := feegrant.MakeRevokeFeeGrantMsg(revokeFeeGrantMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeRevokeFeeGrantMsg

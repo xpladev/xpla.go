@@ -1,9 +1,9 @@
 package distribution
 
 import (
-	"github.com/xpladev/xpla.go/key"
+	"context"
+
 	"github.com/xpladev/xpla.go/types"
-	"golang.org/x/net/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -13,28 +13,28 @@ import (
 )
 
 // (Tx) make msg - fund community pool
-func MakeFundCommunityPoolMsg(fundCommunityPoolMsg types.FundCommunityPoolMsg, privKey key.PrivateKey) (disttypes.MsgFundCommunityPool, error) {
-	return parseFundCommunityPoolArgs(fundCommunityPoolMsg, privKey)
+func MakeFundCommunityPoolMsg(fundCommunityPoolMsg types.FundCommunityPoolMsg, depositorAddr sdk.AccAddress) (disttypes.MsgFundCommunityPool, error) {
+	return parseFundCommunityPoolArgs(fundCommunityPoolMsg, depositorAddr)
 }
 
 // (Tx) make msg - proposal community pool
-func MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg types.CommunityPoolSpendMsg, privKey key.PrivateKey, encodingConfig params.EncodingConfig) (govtypes.MsgSubmitProposal, error) {
-	return parseProposalCommunityPoolSpendArgs(communityPoolSpendMsg, privKey, encodingConfig)
+func MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg types.CommunityPoolSpendMsg, from sdk.AccAddress, encodingConfig params.EncodingConfig) (govtypes.MsgSubmitProposal, error) {
+	return parseProposalCommunityPoolSpendArgs(communityPoolSpendMsg, from, encodingConfig)
 }
 
 // (Tx) make msg - withdraw rewards
-func MakeWithdrawRewardsMsg(withdrawRewardsMsg types.WithdrawRewardsMsg, privKey key.PrivateKey) ([]sdk.Msg, error) {
-	return parseWithdrawRewardsArgs(withdrawRewardsMsg, privKey)
+func MakeWithdrawRewardsMsg(withdrawRewardsMsg types.WithdrawRewardsMsg, delAddr sdk.AccAddress) ([]sdk.Msg, error) {
+	return parseWithdrawRewardsArgs(withdrawRewardsMsg, delAddr)
 }
 
 // (Tx) make msg - withdraw all rewards
-func MakeWithdrawAllRewardsMsg(privKey key.PrivateKey, grpcConn grpc.ClientConn, ctx context.Context) ([]sdk.Msg, error) {
-	return parseWithdrawAllRewardsArgs(privKey, grpcConn, ctx)
+func MakeWithdrawAllRewardsMsg(delAddr sdk.AccAddress, grpcConn grpc.ClientConn, ctx context.Context) ([]sdk.Msg, error) {
+	return parseWithdrawAllRewardsArgs(delAddr, grpcConn, ctx)
 }
 
 // (Tx) make msg - withdraw address
-func MakeSetWithdrawAddrMsg(setWithdrawAddrMsg types.SetWithdrawAddrMsg, privKey key.PrivateKey) (disttypes.MsgSetWithdrawAddress, error) {
-	return parseSetWithdrawAddrArgs(setWithdrawAddrMsg, privKey)
+func MakeSetWithdrawAddrMsg(setWithdrawAddrMsg types.SetWithdrawAddrMsg, delAddr sdk.AccAddress) (disttypes.MsgSetWithdrawAddress, error) {
+	return parseSetWithdrawAddrArgs(setWithdrawAddrMsg, delAddr)
 }
 
 // (Query) make msg - distribution params

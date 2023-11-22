@@ -18,7 +18,7 @@ func NewParamsExternal(xplac provider.XplaClient) (e ParamsExternal) {
 
 // Submit a parameter change proposal.
 func (e ParamsExternal) ParamChange(paramChangeMsg types.ParamChangeMsg) provider.XplaClient {
-	msg, err := MakeProposalParamChangeMsg(paramChangeMsg, e.Xplac.GetPrivateKey(), e.Xplac.GetEncoding())
+	msg, err := MakeProposalParamChangeMsg(paramChangeMsg, e.Xplac.GetFromAddress(), e.Xplac.GetEncoding())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

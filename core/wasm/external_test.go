@@ -81,7 +81,7 @@ func (s *IntegrationTestSuite) TestWasmTx() {
 	}
 	s.xplac.ClearContractAdmin(clearContractAdminMsg)
 
-	makeClearContractAdminMsg, err := mwasm.MakeClearContractAdminMsg(clearContractAdminMsg, s.xplac.GetPrivateKey())
+	makeClearContractAdminMsg, err := mwasm.MakeClearContractAdminMsg(clearContractAdminMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeClearContractAdminMsg, s.xplac.GetMsg())
@@ -101,7 +101,7 @@ func (s *IntegrationTestSuite) TestWasmTx() {
 	}
 	s.xplac.SetContractAdmin(setContractAdminMsg)
 
-	makeSetContractAdmintMsg, err := mwasm.MakeSetContractAdmintMsg(setContractAdminMsg, s.xplac.GetPrivateKey())
+	makeSetContractAdmintMsg, err := mwasm.MakeSetContractAdmintMsg(setContractAdminMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeSetContractAdmintMsg, s.xplac.GetMsg())
@@ -123,7 +123,7 @@ func (s *IntegrationTestSuite) TestWasmTx() {
 	}
 	s.xplac.Migrate(migrateMsg)
 
-	makeMigrateMsg, err := mwasm.MakeMigrateMsg(migrateMsg, s.xplac.GetPrivateKey())
+	makeMigrateMsg, err := mwasm.MakeMigrateMsg(migrateMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeMigrateMsg, s.xplac.GetMsg())

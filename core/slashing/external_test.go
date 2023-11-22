@@ -17,7 +17,7 @@ func (s *IntegrationTestSuite) TestSlashingTx() {
 	// unjail
 	s.xplac.Unjail()
 
-	makeUnjailMsg, err := mslashing.MakeUnjailMsg(s.xplac.GetPrivateKey())
+	makeUnjailMsg, err := mslashing.MakeUnjailMsg(s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeUnjailMsg, s.xplac.GetMsg())

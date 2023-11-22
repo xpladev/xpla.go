@@ -121,6 +121,15 @@ func (xplac *xplaClient) CreateUnsignedTx() ([]byte, error) {
 	if xplac.GetErr() != nil {
 		return nil, xplac.GetErr()
 	}
+
+	if xplac.GetGasAdjustment() == "" {
+		xplac.WithGasAdjustment(types.DefaultGasAdjustment)
+	}
+
+	if xplac.GetGasPrice() == "" {
+		xplac.WithGasPrice(types.DefaultGasPrice)
+	}
+
 	builder, err := setTxBuilderMsg(xplac)
 	if err != nil {
 		return nil, err

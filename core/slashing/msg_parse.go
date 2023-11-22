@@ -1,7 +1,6 @@
 package slashing
 
 import (
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -13,12 +12,7 @@ import (
 )
 
 // Parsing - unjail
-func parseUnjailArgs(privKey key.PrivateKey) (slashingtypes.MsgUnjail, error) {
-	addr, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return slashingtypes.MsgUnjail{}, util.LogErr(errors.ErrParse, err)
-	}
-
+func parseUnjailArgs(addr sdk.AccAddress) (slashingtypes.MsgUnjail, error) {
 	msg := slashingtypes.NewMsgUnjail(sdk.ValAddress(addr))
 
 	return *msg, nil

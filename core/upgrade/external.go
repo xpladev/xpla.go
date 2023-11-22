@@ -20,7 +20,7 @@ func NewUpgradeExternal(xplac provider.XplaClient) (e UpgradeExternal) {
 
 // Submit a software upgrade proposal.
 func (e UpgradeExternal) SoftwareUpgrade(softwareUpgradeMsg types.SoftwareUpgradeMsg) provider.XplaClient {
-	msg, err := MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -32,7 +32,7 @@ func (e UpgradeExternal) SoftwareUpgrade(softwareUpgradeMsg types.SoftwareUpgrad
 
 // Cancel the current software upgrade proposal.
 func (e UpgradeExternal) CancelSoftwareUpgrade(cancelSoftwareUpgradeMsg types.CancelSoftwareUpgradeMsg) provider.XplaClient {
-	msg, err := MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

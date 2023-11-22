@@ -30,7 +30,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Amount: "1000",
 	}
 
-	makeFundCommunityPoolMsg, err := distribution.MakeFundCommunityPoolMsg(fundCommunityPoolMsg, s.xplac.GetPrivateKey())
+	makeFundCommunityPoolMsg, err := distribution.MakeFundCommunityPoolMsg(fundCommunityPoolMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeFundCommunityPoolMsg
@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Deposit:     "1000",
 	}
 
-	makeProposalCommunityPoolSpendMsg, err := distribution.MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg, s.xplac.GetPrivateKey(), s.xplac.GetEncoding())
+	makeProposalCommunityPoolSpendMsg, err := distribution.MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg, s.xplac.GetFromAddress(), s.xplac.GetEncoding())
 	s.Require().NoError(err)
 
 	testMsg = makeProposalCommunityPoolSpendMsg
@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Commission:    true,
 	}
 
-	makeWithdrawRewardsMsg, err := distribution.MakeWithdrawRewardsMsg(withdrawRewardsMsg, s.xplac.GetPrivateKey())
+	makeWithdrawRewardsMsg, err := distribution.MakeWithdrawRewardsMsg(withdrawRewardsMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeWithdrawRewardsMsg
@@ -74,7 +74,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		WithdrawAddr: accounts[0].Address.String(),
 	}
 
-	makeSetWithdrawAddrMsg, err := distribution.MakeSetWithdrawAddrMsg(setWithdrawAddrMsg, s.xplac.GetPrivateKey())
+	makeSetWithdrawAddrMsg, err := distribution.MakeSetWithdrawAddrMsg(setWithdrawAddrMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeSetWithdrawAddrMsg

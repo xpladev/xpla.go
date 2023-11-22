@@ -19,7 +19,7 @@ func (s *IntegrationTestSuite) TestFeegrantTx() {
 	}
 	s.xplac.FeeGrant(feeGrantMsg)
 
-	makeFeeGrantMsg, err := mfeegrant.MakeFeeGrantMsg(feeGrantMsg, s.xplac.GetPrivateKey())
+	makeFeeGrantMsg, err := mfeegrant.MakeFeeGrantMsg(feeGrantMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeFeeGrantMsg, s.xplac.GetMsg())
@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) TestFeegrantTx() {
 	}
 	s.xplac.RevokeFeeGrant(revokeFeeGrantMsg)
 
-	makeRevokeFeeGrantMsg, err := mfeegrant.MakeRevokeFeeGrantMsg(revokeFeeGrantMsg, s.xplac.GetPrivateKey())
+	makeRevokeFeeGrantMsg, err := mfeegrant.MakeRevokeFeeGrantMsg(revokeFeeGrantMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeRevokeFeeGrantMsg, s.xplac.GetMsg())

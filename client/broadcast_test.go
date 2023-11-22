@@ -155,6 +155,28 @@ func (s *ClientTestSuite) TestBroadcastEVM() {
 	s.xplac = provider.ResetXplac(s.xplac)
 }
 
+func (s *ClientTestSuite) TestBroadcastSolidityContract() {
+	s.xplac.WithPrivateKey(s.accounts[0].PrivKey).
+		WithURL(s.apis[0]).
+		WithEvmRpc("http://" + s.network.Validators[0].AppConfig.JSONRPC.Address)
+
+	testABIJsonFilePath := "../util/testutil/test_files/abi.json"
+	testBytecodeJsonFilePath := "../util/testutil/test_files/bytecode.json"
+
+	deploySolContractMsg := types.DeploySolContractMsg{
+		ABIJsonFilePath:      testABIJsonFilePath,
+		BytecodeJsonFilePath: testBytecodeJsonFilePath,
+		Args:                 nil,
+	}
+	txbytes, err := s.xplac.DeploySolidityContract(deploySolContractMsg).CreateAndSignTx()
+	s.Require().NoError(err)
+
+	_, err = s.xplac.Broadcast(txbytes)
+	s.Require().NoError(err)
+
+	s.xplac = provider.ResetXplac(s.xplac)
+}
+
 func (s *ClientTestSuite) TestMultiSignature() {
 	s.xplac.WithURL(s.apis[0])
 	rootDir := s.network.Validators[0].Dir

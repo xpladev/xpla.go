@@ -1,13 +1,12 @@
 package evm
 
 import (
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 )
 
 // (Tx) make msg - send coin
-func MakeSendCoinMsg(sendCoinMsg types.SendCoinMsg, privKey key.PrivateKey) (types.SendCoinMsg, error) {
-	return parseSendCoinArgs(sendCoinMsg, privKey)
+func MakeSendCoinMsg(sendCoinMsg types.SendCoinMsg) (types.SendCoinMsg, error) {
+	return parseSendCoinArgs(sendCoinMsg)
 }
 
 // (Tx) make msg - deploy solidity contract

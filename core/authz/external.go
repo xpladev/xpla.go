@@ -20,7 +20,7 @@ func NewAuthzExternal(xplac provider.XplaClient) (e AuthzExternal) {
 
 // Grant authorization to an address.
 func (e AuthzExternal) AuthzGrant(authzGrantMsg types.AuthzGrantMsg) provider.XplaClient {
-	msg, err := MakeAuthzGrantMsg(authzGrantMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeAuthzGrantMsg(authzGrantMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -32,7 +32,7 @@ func (e AuthzExternal) AuthzGrant(authzGrantMsg types.AuthzGrantMsg) provider.Xp
 
 // Revoke authorization.
 func (e AuthzExternal) AuthzRevoke(authzRevokeMsg types.AuthzRevokeMsg) provider.XplaClient {
-	msg, err := MakeAuthzRevokeMsg(authzRevokeMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeAuthzRevokeMsg(authzRevokeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

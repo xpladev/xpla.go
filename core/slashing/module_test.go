@@ -26,7 +26,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	// unjail
 	s.xplac.Unjail()
 
-	makeUnjailMsg, err := slashing.MakeUnjailMsg(s.xplac.GetPrivateKey())
+	makeUnjailMsg, err := slashing.MakeUnjailMsg(s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	testMsg = makeUnjailMsg

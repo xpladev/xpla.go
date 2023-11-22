@@ -21,7 +21,7 @@ func (s *IntegrationTestSuite) TestRewardTx() {
 	}
 	s.xplac.FundFeeCollector(fundFeeCollectorMsg)
 
-	makeFundFeeCollectorMsg, err := mreward.MakeFundFeeCollectorMsg(fundFeeCollectorMsg, s.xplac.GetPrivateKey())
+	makeFundFeeCollectorMsg, err := mreward.MakeFundFeeCollectorMsg(fundFeeCollectorMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeFundFeeCollectorMsg, s.xplac.GetMsg())

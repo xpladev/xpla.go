@@ -2,16 +2,16 @@ package slashing
 
 import (
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/xpladev/xpla/app/params"
 )
 
 // (Tx) make msg - unjail
-func MakeUnjailMsg(privKey key.PrivateKey) (slashingtypes.MsgUnjail, error) {
-	return parseUnjailArgs(privKey)
+func MakeUnjailMsg(addr sdk.AccAddress) (slashingtypes.MsgUnjail, error) {
+	return parseUnjailArgs(addr)
 }
 
 // (Query) make msg - slahsing params

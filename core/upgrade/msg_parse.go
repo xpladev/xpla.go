@@ -1,7 +1,6 @@
 package upgrade
 
 import (
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -12,7 +11,7 @@ import (
 )
 
 // Parsing - software upgrade
-func parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg types.SoftwareUpgradeMsg, privKey key.PrivateKey) (govtypes.MsgSubmitProposal, error) {
+func parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg types.SoftwareUpgradeMsg, from sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
 	heightI64, err := util.FromStringToInt64(softwareUpgradeMsg.UpgradeHeight)
 	if err != nil {
 		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
@@ -27,10 +26,6 @@ func parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg types.SoftwareUpgradeMs
 		softwareUpgradeMsg.Description,
 		plan,
 	)
-	from, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
-	}
 
 	deposit, err := sdk.ParseCoinsNormalized(util.DenomAdd(softwareUpgradeMsg.Deposit))
 	if err != nil {
@@ -46,12 +41,7 @@ func parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg types.SoftwareUpgradeMs
 }
 
 // Parsing - cancel software upgrade
-func parseCancelSoftwareUpgradeArgs(cancelSoftwareUpgradeMsg types.CancelSoftwareUpgradeMsg, privKey key.PrivateKey) (govtypes.MsgSubmitProposal, error) {
-	from, err := util.GetAddrByPrivKey(privKey)
-	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
-	}
-
+func parseCancelSoftwareUpgradeArgs(cancelSoftwareUpgradeMsg types.CancelSoftwareUpgradeMsg, from sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
 	deposit, err := sdk.ParseCoinsNormalized(util.DenomAdd(cancelSoftwareUpgradeMsg.Deposit))
 	if err != nil {
 		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)

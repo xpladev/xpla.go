@@ -7,7 +7,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
@@ -71,18 +70,18 @@ func MakeExecuteMsg(executeMsg types.ExecuteMsg, addr sdk.AccAddress) (wasmtypes
 }
 
 // (Tx) make msg - clear contract admin
-func MakeClearContractAdminMsg(clearContractAdminMsg types.ClearContractAdminMsg, privKey key.PrivateKey) (wasmtypes.MsgClearAdmin, error) {
-	return parseClearContractAdminArgs(clearContractAdminMsg, privKey)
+func MakeClearContractAdminMsg(clearContractAdminMsg types.ClearContractAdminMsg, sender sdk.AccAddress) (wasmtypes.MsgClearAdmin, error) {
+	return parseClearContractAdminArgs(clearContractAdminMsg, sender)
 }
 
 // (Tx) make msg - set contract admin
-func MakeSetContractAdmintMsg(setContractAdminMsg types.SetContractAdminMsg, privKey key.PrivateKey) (wasmtypes.MsgUpdateAdmin, error) {
-	return parseSetContractAdmintArgs(setContractAdminMsg, privKey)
+func MakeSetContractAdmintMsg(setContractAdminMsg types.SetContractAdminMsg, sender sdk.AccAddress) (wasmtypes.MsgUpdateAdmin, error) {
+	return parseSetContractAdmintArgs(setContractAdminMsg, sender)
 }
 
 // (Tx) make msg - migrate
-func MakeMigrateMsg(migrateMsg types.MigrateMsg, privKey key.PrivateKey) (wasmtypes.MsgMigrateContract, error) {
-	return parseMigrateArgs(migrateMsg, privKey)
+func MakeMigrateMsg(migrateMsg types.MigrateMsg, sender sdk.AccAddress) (wasmtypes.MsgMigrateContract, error) {
+	return parseMigrateArgs(migrateMsg, sender)
 }
 
 // (Query) make msg - query contract

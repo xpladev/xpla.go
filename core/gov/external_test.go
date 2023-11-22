@@ -23,7 +23,7 @@ func (s *IntegrationTestSuite) TestGovTx() {
 	}
 	s.xplac.SubmitProposal(submitProposalMsg)
 
-	makeSubmitProposalMsg, err := mgov.MakeSubmitProposalMsg(submitProposalMsg, s.xplac.GetPrivateKey())
+	makeSubmitProposalMsg, err := mgov.MakeSubmitProposalMsg(submitProposalMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeSubmitProposalMsg, s.xplac.GetMsg())
@@ -44,7 +44,7 @@ func (s *IntegrationTestSuite) TestGovTx() {
 	}
 	s.xplac.GovDeposit(govDepositMsg)
 
-	makeGovDepositMsg, err := mgov.MakeGovDepositMsg(govDepositMsg, s.xplac.GetPrivateKey())
+	makeGovDepositMsg, err := mgov.MakeGovDepositMsg(govDepositMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeGovDepositMsg, s.xplac.GetMsg())
@@ -65,7 +65,7 @@ func (s *IntegrationTestSuite) TestGovTx() {
 	}
 	s.xplac.Vote(voteMsg)
 
-	makeVoteMsg, err := mgov.MakeVoteMsg(voteMsg, s.xplac.GetPrivateKey())
+	makeVoteMsg, err := mgov.MakeVoteMsg(voteMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeVoteMsg, s.xplac.GetMsg())
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) TestGovTx() {
 	}
 	s.xplac.WeightedVote(weightedVoteMsg)
 
-	makeWeightedVoteMsg, err := mgov.MakeWeightedVoteMsg(weightedVoteMsg, s.xplac.GetPrivateKey())
+	makeWeightedVoteMsg, err := mgov.MakeWeightedVoteMsg(weightedVoteMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeWeightedVoteMsg, s.xplac.GetMsg())
@@ -162,7 +162,7 @@ func (s *IntegrationTestSuite) TestGov() {
 		}
 		s.xplac.QueryDeposit(queryDepositMsg)
 
-		makeQueryDepositMsg, _, err := mgov.MakeQueryDepositMsg(queryDepositMsg, s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
+		makeQueryDepositMsg, _, err := mgov.MakeQueryDepositMsg(queryDepositMsg, s.xplac.GetHttpMutex(), s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
 		s.Require().NoError(err)
 
 		s.Require().Equal(makeQueryDepositMsg, s.xplac.GetMsg())
@@ -175,7 +175,7 @@ func (s *IntegrationTestSuite) TestGov() {
 		}
 		s.xplac.QueryDeposit(queryDepositMsg)
 
-		makeQueryDepositsMsg, _, err := mgov.MakeQueryDepositsMsg(queryDepositMsg, s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
+		makeQueryDepositsMsg, _, err := mgov.MakeQueryDepositsMsg(queryDepositMsg, s.xplac.GetHttpMutex(), s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
 		s.Require().NoError(err)
 
 		s.Require().Equal(makeQueryDepositsMsg, s.xplac.GetMsg())
@@ -189,7 +189,7 @@ func (s *IntegrationTestSuite) TestGov() {
 		}
 		s.xplac.QueryVote(queryVoteMsg)
 
-		makeQueryVoteMsg, err := mgov.MakeQueryVoteMsg(queryVoteMsg, s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
+		makeQueryVoteMsg, err := mgov.MakeQueryVoteMsg(queryVoteMsg, s.xplac.GetHttpMutex(), s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
 		s.Require().NoError(err)
 
 		s.Require().Equal(makeQueryVoteMsg, s.xplac.GetMsg())
@@ -202,7 +202,7 @@ func (s *IntegrationTestSuite) TestGov() {
 		}
 		s.xplac.QueryVote(queryVoteMsg)
 
-		makeQueryVotesMsg, _, err := mgov.MakeQueryVotesMsg(queryVoteMsg, s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
+		makeQueryVotesMsg, _, err := mgov.MakeQueryVotesMsg(queryVoteMsg, s.xplac.GetHttpMutex(), s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
 		s.Require().NoError(err)
 
 		s.Require().Equal(makeQueryVotesMsg, s.xplac.GetMsg())
@@ -215,7 +215,7 @@ func (s *IntegrationTestSuite) TestGov() {
 		}
 		s.xplac.Tally(tallyMsg)
 
-		makeGovTallyMsg, err := mgov.MakeGovTallyMsg(tallyMsg, s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
+		makeGovTallyMsg, err := mgov.MakeGovTallyMsg(tallyMsg, s.xplac.GetHttpMutex(), s.xplac.GetGrpcClient(), s.xplac.GetContext(), s.xplac.GetLcdURL(), queryType)
 		s.Require().NoError(err)
 
 		s.Require().Equal(makeGovTallyMsg, s.xplac.GetMsg())

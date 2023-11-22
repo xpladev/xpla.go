@@ -22,7 +22,7 @@ func (s *IntegrationTestSuite) TestEvmTx() {
 	}
 	s.xplac.EvmSendCoin(sendCoinMsg)
 
-	makeSendCoinMsg, err := mevm.MakeSendCoinMsg(sendCoinMsg, s.xplac.GetPrivateKey())
+	makeSendCoinMsg, err := mevm.MakeSendCoinMsg(sendCoinMsg)
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeSendCoinMsg, s.xplac.GetMsg())

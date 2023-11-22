@@ -21,7 +21,7 @@ func (s *IntegrationTestSuite) TestDistributionTx() {
 	}
 	s.xplac.FundCommunityPool(fundCommunityPoolMsg)
 
-	makeFundCommunityPoolMsg, err := mdist.MakeFundCommunityPoolMsg(fundCommunityPoolMsg, s.xplac.GetPrivateKey())
+	makeFundCommunityPoolMsg, err := mdist.MakeFundCommunityPoolMsg(fundCommunityPoolMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeFundCommunityPoolMsg, s.xplac.GetMsg())
@@ -45,7 +45,7 @@ func (s *IntegrationTestSuite) TestDistributionTx() {
 	}
 	s.xplac.CommunityPoolSpend(communityPoolSpendMsg)
 
-	makeProposalCommunityPoolSpendMsg, err := mdist.MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg, s.xplac.GetPrivateKey(), s.xplac.GetEncoding())
+	makeProposalCommunityPoolSpendMsg, err := mdist.MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg, s.xplac.GetFromAddress(), s.xplac.GetEncoding())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeProposalCommunityPoolSpendMsg, s.xplac.GetMsg())
@@ -67,7 +67,7 @@ func (s *IntegrationTestSuite) TestDistributionTx() {
 	}
 	s.xplac.WithdrawRewards(withdrawRewardsMsg)
 
-	makeWithdrawRewardsMsg, err := mdist.MakeWithdrawRewardsMsg(withdrawRewardsMsg, s.xplac.GetPrivateKey())
+	makeWithdrawRewardsMsg, err := mdist.MakeWithdrawRewardsMsg(withdrawRewardsMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeWithdrawRewardsMsg, s.xplac.GetMsg())
@@ -87,7 +87,7 @@ func (s *IntegrationTestSuite) TestDistributionTx() {
 	}
 	s.xplac.SetWithdrawAddr(setWithdrawAddrMsg)
 
-	makeSetWithdrawAddrMsg, err := mdist.MakeSetWithdrawAddrMsg(setWithdrawAddrMsg, s.xplac.GetPrivateKey())
+	makeSetWithdrawAddrMsg, err := mdist.MakeSetWithdrawAddrMsg(setWithdrawAddrMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeSetWithdrawAddrMsg, s.xplac.GetMsg())

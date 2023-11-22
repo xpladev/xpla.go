@@ -31,7 +31,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		Amount:      "1000",
 	}
 
-	makeBankSendMsg, err := bank.MakeBankSendMsg(bankSendMsg, s.xplac.GetPrivateKey())
+	makeBankSendMsg, err := bank.MakeBankSendMsg(bankSendMsg)
 	s.Require().NoError(err)
 
 	testMsg = makeBankSendMsg

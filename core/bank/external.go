@@ -20,7 +20,7 @@ func NewBankExternal(xplac provider.XplaClient) (e BankExternal) {
 
 // Send funds from one account to another.
 func (e BankExternal) BankSend(bankSendMsg types.BankSendMsg) provider.XplaClient {
-	msg, err := MakeBankSendMsg(bankSendMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeBankSendMsg(bankSendMsg)
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

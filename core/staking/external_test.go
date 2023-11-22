@@ -29,7 +29,7 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	}
 	s.xplac.CreateValidator(createValidatorMsg)
 
-	makeCreateValidatorMsg, err := mstaking.MakeCreateValidatorMsg(createValidatorMsg, s.xplac.GetPrivateKey(), s.xplac.GetOutputDocument())
+	makeCreateValidatorMsg, err := mstaking.MakeCreateValidatorMsg(createValidatorMsg, s.xplac.GetFromAddress(), s.xplac.GetOutputDocument())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeCreateValidatorMsg, s.xplac.GetMsg())
@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	}
 	s.xplac.EditValidator(editValidatorMsg)
 
-	makeEditValidatorMsg, err := mstaking.MakeEditValidatorMsg(editValidatorMsg, s.xplac.GetPrivateKey())
+	makeEditValidatorMsg, err := mstaking.MakeEditValidatorMsg(editValidatorMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeEditValidatorMsg, s.xplac.GetMsg())
@@ -72,7 +72,7 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	}
 	s.xplac.Delegate(delegateMsg)
 
-	makeDelegateMsg, err := mstaking.MakeDelegateMsg(delegateMsg, s.xplac.GetPrivateKey())
+	makeDelegateMsg, err := mstaking.MakeDelegateMsg(delegateMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeDelegateMsg, s.xplac.GetMsg())
@@ -93,7 +93,7 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	}
 	s.xplac.Unbond(unbondMsg)
 
-	makeUnbondMsg, err := mstaking.MakeUnbondMsg(unbondMsg, s.xplac.GetPrivateKey())
+	makeUnbondMsg, err := mstaking.MakeUnbondMsg(unbondMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeUnbondMsg, s.xplac.GetMsg())
@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	}
 	s.xplac.Redelegate(redelegateMsg)
 
-	makeRedelegateMsg, err := mstaking.MakeRedelegateMsg(redelegateMsg, s.xplac.GetPrivateKey())
+	makeRedelegateMsg, err := mstaking.MakeRedelegateMsg(redelegateMsg, s.xplac.GetFromAddress())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeRedelegateMsg, s.xplac.GetMsg())

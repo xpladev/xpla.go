@@ -20,7 +20,7 @@ func NewFeegrantExternal(xplac provider.XplaClient) (e FeegrantExternal) {
 
 // Grant fee allowance to an address.
 func (e FeegrantExternal) FeeGrant(grantMsg types.FeeGrantMsg) provider.XplaClient {
-	msg, err := MakeFeeGrantMsg(grantMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeFeeGrantMsg(grantMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}
@@ -32,7 +32,7 @@ func (e FeegrantExternal) FeeGrant(grantMsg types.FeeGrantMsg) provider.XplaClie
 
 // Revoke fee-grant.
 func (e FeegrantExternal) RevokeFeeGrant(revokeGrantMsg types.RevokeFeeGrantMsg) provider.XplaClient {
-	msg, err := MakeRevokeFeeGrantMsg(revokeGrantMsg, e.Xplac.GetPrivateKey())
+	msg, err := MakeRevokeFeeGrantMsg(revokeGrantMsg, e.Xplac.GetFromAddress())
 	if err != nil {
 		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
 	}

@@ -4,33 +4,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
 )
 
 // (Tx) make msg - create validator
-func MakeCreateValidatorMsg(createValidatorMsg types.CreateValidatorMsg, privKey key.PrivateKey, output string) (sdk.Msg, error) {
-	return parseCreateValidatorArgs(createValidatorMsg, privKey, output)
+func MakeCreateValidatorMsg(createValidatorMsg types.CreateValidatorMsg, from sdk.AccAddress, output string) (sdk.Msg, error) {
+	return parseCreateValidatorArgs(createValidatorMsg, from, output)
 }
 
 // (Tx) make msg - edit validator
-func MakeEditValidatorMsg(editValidatorMsg types.EditValidatorMsg, privKey key.PrivateKey) (stakingtypes.MsgEditValidator, error) {
-	return parseEditValidatorArgs(editValidatorMsg, privKey)
+func MakeEditValidatorMsg(editValidatorMsg types.EditValidatorMsg, addr sdk.AccAddress) (stakingtypes.MsgEditValidator, error) {
+	return parseEditValidatorArgs(editValidatorMsg, addr)
 }
 
 // (Tx) make msg - delegate
-func MakeDelegateMsg(delegateMsg types.DelegateMsg, privKey key.PrivateKey) (stakingtypes.MsgDelegate, error) {
-	return parseDelegateArgs(delegateMsg, privKey)
+func MakeDelegateMsg(delegateMsg types.DelegateMsg, delAddr sdk.AccAddress) (stakingtypes.MsgDelegate, error) {
+	return parseDelegateArgs(delegateMsg, delAddr)
 }
 
 // (Tx) make msg - unbond
-func MakeUnbondMsg(unbondMsg types.UnbondMsg, privKey key.PrivateKey) (stakingtypes.MsgUndelegate, error) {
-	return parseUnbondArgs(unbondMsg, privKey)
+func MakeUnbondMsg(unbondMsg types.UnbondMsg, delAddr sdk.AccAddress) (stakingtypes.MsgUndelegate, error) {
+	return parseUnbondArgs(unbondMsg, delAddr)
 }
 
 // (Tx) make msg - redelegate
-func MakeRedelegateMsg(redelegateMsg types.RedelegateMsg, privKey key.PrivateKey) (stakingtypes.MsgBeginRedelegate, error) {
-	return parseRedelegateArgs(redelegateMsg, privKey)
+func MakeRedelegateMsg(redelegateMsg types.RedelegateMsg, delAddr sdk.AccAddress) (stakingtypes.MsgBeginRedelegate, error) {
+	return parseRedelegateArgs(redelegateMsg, delAddr)
 }
 
 // (Query) make msg - validator

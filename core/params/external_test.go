@@ -29,7 +29,7 @@ func (s *IntegrationTestSuite) TestParamsTx() {
 	}
 	s.xplac.ParamChange(paramChangeMsg)
 
-	makeProposalParamChangeMsg, err := mparams.MakeProposalParamChangeMsg(paramChangeMsg, s.xplac.GetPrivateKey(), s.xplac.GetEncoding())
+	makeProposalParamChangeMsg, err := mparams.MakeProposalParamChangeMsg(paramChangeMsg, s.xplac.GetFromAddress(), s.xplac.GetEncoding())
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeProposalParamChangeMsg, s.xplac.GetMsg())
