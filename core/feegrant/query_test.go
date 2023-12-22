@@ -37,7 +37,7 @@ type IntegrationTestSuite struct {
 	accounts []simtypes.Account
 
 	cfg     network.Config
-	network *network.Network
+	network network.Network
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {

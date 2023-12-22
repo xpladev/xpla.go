@@ -186,7 +186,7 @@ type (
 )
 
 // New creates a new Network for integration tests or in-process testnets run via the CLI
-func New(t *testing.T, cfg Config) *Network {
+func New(t *testing.T, cfg Config) Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()
@@ -195,7 +195,7 @@ func New(t *testing.T, cfg Config) *Network {
 	require.NoError(t, err)
 	t.Logf("created temporary directory: %s", baseDir)
 
-	network := &Network{
+	network := Network{
 		T:          t,
 		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),

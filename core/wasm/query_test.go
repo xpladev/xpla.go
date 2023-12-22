@@ -44,7 +44,7 @@ type IntegrationTestSuite struct {
 	contractAddr string
 
 	cfg     network.Config
-	network *network.Network
+	network network.Network
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {

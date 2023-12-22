@@ -127,7 +127,7 @@ type ClientTestSuite struct {
 	testTxHash string
 
 	cfg     network.Config
-	network *network.Network
+	network network.Network
 }
 
 func NewClientTestSuite(cfg network.Config) *ClientTestSuite {
