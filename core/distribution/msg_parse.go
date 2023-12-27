@@ -33,7 +33,7 @@ func parseProposalCommunityPoolSpendArgs(communityPoolSpendMsg types.CommunityPo
 	var err error
 
 	if communityPoolSpendMsg.JsonFilePath != "" {
-		proposal, err = distcli.ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Marshaler, communityPoolSpendMsg.JsonFilePath)
+		proposal, err = distcli.ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Codec, communityPoolSpendMsg.JsonFilePath)
 		if err != nil {
 			return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
 		}

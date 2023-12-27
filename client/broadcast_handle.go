@@ -39,7 +39,7 @@ func broadcastTx(xplac *xplaClient, txBytes []byte, mode txtypes.BroadcastMode) 
 		xplac.GetHttpMutex().Unlock()
 
 		var broadcastTxResponse txtypes.BroadcastTxResponse
-		err = xplac.GetEncoding().Marshaler.UnmarshalJSON(out, &broadcastTxResponse)
+		err = xplac.GetEncoding().Codec.UnmarshalJSON(out, &broadcastTxResponse)
 		if err != nil {
 			return nil, util.LogErr(errors.ErrFailedToUnmarshal, err)
 		}

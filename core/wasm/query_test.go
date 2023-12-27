@@ -142,7 +142,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var getTxResponse sdktx.GetTxResponse
 	jsonpb.Unmarshal(strings.NewReader(storeTxQuery), &getTxResponse)
 
-	s.wasmCodeID = getTxResponse.TxResponse.Logs[0].Events[1].Attributes[0].Value
+	s.wasmCodeID = getTxResponse.TxResponse.Logs[0].Events[1].Attributes[1].Value
 
 	// instantiate contract
 	instantiateMsg := types.InstantiateMsg{
@@ -407,7 +407,7 @@ func (s *IntegrationTestSuite) TestLibWasmvmVersion() {
 
 		res, err := s.xplac.LibwasmvmVersion().Query()
 		s.Require().NoError(err)
-		s.Require().Equal("1.0.1", res)
+		s.Require().Equal("1.3.0", res)
 	}
 	s.xplac = provider.ResetXplac(s.xplac)
 }

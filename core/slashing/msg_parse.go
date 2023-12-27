@@ -22,7 +22,7 @@ func parseUnjailArgs(addr sdk.AccAddress) (slashingtypes.MsgUnjail, error) {
 func parseQuerySigingInfoArgs(signingInfoMsg types.SigningInfoMsg, xplacEncodingConfig params.EncodingConfig) (slashingtypes.QuerySigningInfoRequest, error) {
 	if signingInfoMsg.ConsPubKey != "" {
 		var pk cryptotypes.PubKey
-		err := xplacEncodingConfig.Marshaler.UnmarshalInterfaceJSON([]byte(signingInfoMsg.ConsPubKey), &pk)
+		err := xplacEncodingConfig.Codec.UnmarshalInterfaceJSON([]byte(signingInfoMsg.ConsPubKey), &pk)
 		if err != nil {
 			return slashingtypes.QuerySigningInfoRequest{}, util.LogErr(errors.ErrFailedToUnmarshal, err)
 		}

@@ -308,7 +308,7 @@ func (s *ClientTestSuite) TestMultiSignature() {
 	// multisig tx is normal
 	s.Require().Error(err)
 	s.Require().Equal(
-		`code 8 : tx failed - [with code 5 : 10000000000axpla is smaller than 133715200000000000axpla: insufficient funds: insufficient funds]`,
+		`code 8 : tx failed - [with code 5 : 10000000000axpla is smaller than 179990050000000000axpla: insufficient funds: insufficient funds]`,
 		err.Error(),
 	)
 

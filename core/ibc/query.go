@@ -8,11 +8,11 @@ import (
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
-	ibctransfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	ibcclientutils "github.com/cosmos/ibc-go/v3/modules/core/02-client/client/utils"
-	ibcclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	ibcconnection "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
-	ibcchannel "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+	ibctransfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	ibcclientutils "github.com/cosmos/ibc-go/v4/modules/core/02-client/client/utils"
+	ibcclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	ibcconnection "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
+	ibcchannel "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 )
 
 var out []byte

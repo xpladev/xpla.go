@@ -205,7 +205,7 @@ func (s *IntegrationTestSuite) TestCallSolidityContract() {
 		FromByteAddress:      util.FromStringToByte20Address(s.accounts[0].PubKey.Address().String()).String(),
 	}
 
-	exeTxbytes, err := xplac.WithSequence("").InvokeSolidityContract(invokeSolContractMsg).CreateAndSignTx()
+	exeTxbytes, err := xplac.WithGasLimit("").WithSequence("").InvokeSolidityContract(invokeSolContractMsg).CreateAndSignTx()
 	s.Require().NoError(err)
 
 	_, err = xplac.Broadcast(exeTxbytes)

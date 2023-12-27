@@ -3,6 +3,7 @@ package testutil
 import (
 	"encoding/json"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -48,7 +49,7 @@ func Setup(isCheckTx bool, invCheckPeriod uint) *xapp.XplaApp {
 
 func setup(withGenesis bool, invCheckPeriod uint) (*xapp.XplaApp, xapp.GenesisState) {
 	db := dbm.NewMemDB()
-	encCdc := xapp.MakeEncodingConfig()
+	encCdc := xapp.MakeTestEncodingConfig()
 	app := xapp.NewXplaApp(
 		log.NewNopLogger(),
 		db,
@@ -58,7 +59,9 @@ func setup(withGenesis bool, invCheckPeriod uint) (*xapp.XplaApp, xapp.GenesisSt
 		xapp.DefaultNodeHome,
 		invCheckPeriod,
 		encCdc,
+		xapp.GetEnabledProposals(),
 		helpers.EmptyAppOptions{},
+		[]wasm.Option{},
 	)
 	if withGenesis {
 		return app, xapp.NewDefaultGenesisState()

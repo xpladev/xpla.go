@@ -36,7 +36,7 @@ func NewClient() (cmclient.Context, error) {
 
 	clientCtx = clientCtx.
 		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Codec).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithKeyringOptions(hd.EthSecp256k1Option()).
@@ -47,7 +47,8 @@ func NewClient() (cmclient.Context, error) {
 }
 
 const (
-	DefaultEvmGasLimit         = "21000"
+	DefaultEvmGasLimit         = "100000"
+	DefaultEvmQueryGasLimit    = "200000" // Gas is not consumed when querying
 	DefaultSolidityValue       = "0"
 	DefaultEvmTxReceiptTimeout = 100
 )

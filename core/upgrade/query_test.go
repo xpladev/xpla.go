@@ -65,7 +65,7 @@ func (s *IntegrationTestSuite) TestModulesVersion() {
 		var queryModuleVersionsResponse upgradetypes.QueryModuleVersionsResponse
 		jsonpb.Unmarshal(strings.NewReader(res), &queryModuleVersionsResponse)
 
-		s.Require().Equal(24, len(queryModuleVersionsResponse.ModuleVersions))
+		s.Require().Equal(27, len(queryModuleVersionsResponse.ModuleVersions))
 	}
 	s.xplac = provider.ResetXplac(s.xplac)
 }

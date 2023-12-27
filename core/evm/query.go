@@ -25,7 +25,7 @@ func QueryEvm(i core.QueryClient) (string, error) {
 
 	gasLimit := i.Ixplac.GetGasLimit()
 	if i.Ixplac.GetGasLimit() == "" {
-		gasLimitU64, err := util.FromStringToUint64(util.DefaultEvmGasLimit)
+		gasLimitU64, err := util.FromStringToUint64(util.DefaultEvmQueryGasLimit)
 		if err != nil {
 			return "", util.LogErr(errors.ErrParse, err)
 		}
