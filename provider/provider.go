@@ -227,6 +227,10 @@ type TxMsgProvider interface {
 	SoftwareUpgrade(types.SoftwareUpgradeMsg) XplaClient
 	CancelSoftwareUpgrade(types.CancelSoftwareUpgradeMsg) XplaClient
 
+	// volunteer
+	RegisterVolunteerValidator(types.RegisterVolunteerValidatorMsg) XplaClient
+	UnregisterVolunteerValidator(types.UnregisterVolunteerValidatorMsg) XplaClient
+
 	// wasm
 	StoreCode(types.StoreMsg) XplaClient
 	InstantiateContract(types.InstantiateMsg) XplaClient
@@ -367,6 +371,9 @@ type QueryMsgProvider interface {
 	UpgradeApplied(types.AppliedMsg) XplaClient
 	ModulesVersion(...types.QueryModulesVersionMsg) XplaClient
 	Plan() XplaClient
+
+	// volunteer
+	QueryVolunteerValidators() XplaClient
 
 	// wasm
 	QueryContract(types.QueryMsg) XplaClient

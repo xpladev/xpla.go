@@ -21,6 +21,7 @@ import (
 	"github.com/xpladev/xpla.go/core/slashing"
 	"github.com/xpladev/xpla.go/core/staking"
 	"github.com/xpladev/xpla.go/core/upgrade"
+	"github.com/xpladev/xpla.go/core/volunteer"
 	"github.com/xpladev/xpla.go/core/wasm"
 )
 
@@ -59,6 +60,7 @@ func Controller() *coreController {
 			slashing.NewCoreModule(),
 			staking.NewCoreModule(),
 			upgrade.NewCoreModule(),
+			volunteer.NewCoreModule(),
 			wasm.NewCoreModule(),
 		)
 	})

@@ -22,6 +22,7 @@ import (
 	"github.com/xpladev/xpla.go/core/slashing"
 	"github.com/xpladev/xpla.go/core/staking"
 	"github.com/xpladev/xpla.go/core/upgrade"
+	"github.com/xpladev/xpla.go/core/volunteer"
 	"github.com/xpladev/xpla.go/core/wasm"
 	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/provider"
@@ -117,6 +118,7 @@ type externalCoreModule struct {
 	slashing.SlashingExternal
 	staking.StakingExternal
 	upgrade.UpgradeExternal
+	volunteer.VolunteerExternal
 	wasm.WasmExternal
 }
 
@@ -140,6 +142,7 @@ func (xplac *xplaClient) UpdateXplacInCoreModule() provider.XplaClient {
 		slashing.NewSlashingExternal(xplac),
 		staking.NewStakingExternal(xplac),
 		upgrade.NewUpgradeExternal(xplac),
+		volunteer.NewVolunteerExternal(xplac),
 		wasm.NewWasmExternal(xplac),
 	}
 	return xplac
@@ -296,7 +299,9 @@ func (xplac *xplaClient) WithOutputDocument(outputDocument string) provider.Xpla
 
 // Set from address manually
 func (xplac *xplaClient) WithFromAddress(fromAddress sdk.AccAddress) provider.XplaClient {
-	xplac.opts.FromAddress = fromAddress
+	if fromAddress != nil {
+		xplac.opts.FromAddress = fromAddress
+	}
 	return xplac.UpdateXplacInCoreModule()
 }
 
