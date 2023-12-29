@@ -54,7 +54,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	account0 := s.network.Validators[0].AdditionalAccount
-	xplac := s.xplac.WithPrivateKey(account0.PrivKey).WithURL(s.apis[0])
+	xplac := s.xplac.WithPrivateKey(account0.PrivKey).
+		WithGasAdjustment(types.DefaultGasAdjustment).
+		WithURL(s.apis[0])
 
 	// store wasm file
 	storeMsg := types.StoreMsg{
