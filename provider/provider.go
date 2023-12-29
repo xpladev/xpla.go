@@ -62,6 +62,7 @@ type XplaClient interface {
 // Optional parameters of client.xplaClient.
 type Options struct {
 	PrivateKey     key.PrivateKey
+	PublicKey      key.PublicKey
 	AccountNumber  string
 	Sequence       string
 	BroadcastMode  string
@@ -89,6 +90,7 @@ type WithProvider interface {
 	WithEncoding(params.EncodingConfig) XplaClient
 	WithContext(context.Context) XplaClient
 	WithPrivateKey(key.PrivateKey) XplaClient
+	WithPublicKey(key.PublicKey) XplaClient
 	WithAccountNumber(string) XplaClient
 	WithBroadcastMode(string) XplaClient
 	WithSequence(string) XplaClient
@@ -116,6 +118,7 @@ type WithProvider interface {
 type GetProvider interface {
 	GetChainId() string
 	GetPrivateKey() key.PrivateKey
+	GetPublicKey() key.PublicKey
 	GetEncoding() params.EncodingConfig
 	GetContext() context.Context
 	GetLcdURL() string

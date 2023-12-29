@@ -18,7 +18,7 @@ func (s *IntegrationTestSuite) TestAuth() {
 
 	// acc address
 	queryAccAddressMsg := types.QueryAccAddressMsg{
-		Address: s.accounts[0].Address.String(),
+		Address: s.network.Validators[0].AdditionalAccount.Address.String(),
 	}
 	s.xplac.AccAddress(queryAccAddressMsg)
 
@@ -41,7 +41,7 @@ func (s *IntegrationTestSuite) TestAuth() {
 
 	// txs by events
 	queryTxsByEventsMsg := types.QueryTxsByEventsMsg{
-		Events: "transfer.recipient=" + s.accounts[0].Address.String(),
+		Events: "transfer.recipient=" + s.network.Validators[0].AdditionalAccount.Address.String(),
 	}
 	s.xplac.TxsByEvents(queryTxsByEventsMsg)
 	txsByEventMsg, err := mauth.MakeTxsByEventsMsg(queryTxsByEventsMsg)

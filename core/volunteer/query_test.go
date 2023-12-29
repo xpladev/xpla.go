@@ -3,7 +3,6 @@ package volunteer_test
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
@@ -18,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/stretchr/testify/suite"
@@ -35,9 +33,8 @@ var (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	xplac    provider.XplaClient
-	apis     []string
-	accounts []simtypes.Account
+	xplac provider.XplaClient
+	apis  []string
 
 	cfg     network.Config
 	network network.Network
@@ -49,10 +46,6 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
-	src := rand.NewSource(1)
-	r := rand.New(src)
-	s.accounts = testutil.RandomAccounts(r, 2)
 
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())

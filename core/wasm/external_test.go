@@ -11,7 +11,9 @@ var (
 )
 
 func (s *IntegrationTestSuite) TestWasmTx() {
-	s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
+	account0 := s.network.Validators[0].AdditionalAccount
+
+	s.xplac.WithPrivateKey(account0.PrivKey)
 	// store code
 	storeMsg := types.StoreMsg{
 		FilePath:              testWasmFilePath,
@@ -19,7 +21,7 @@ func (s *IntegrationTestSuite) TestWasmTx() {
 	}
 	s.xplac.StoreCode(storeMsg)
 
-	makeStoreCodeMsg, err := mwasm.MakeStoreCodeMsg(storeMsg, s.accounts[0].Address)
+	makeStoreCodeMsg, err := mwasm.MakeStoreCodeMsg(storeMsg, account0.Address)
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeStoreCodeMsg, s.xplac.GetMsg())
@@ -34,12 +36,12 @@ func (s *IntegrationTestSuite) TestWasmTx() {
 		CodeId:  "1",
 		Amount:  "10",
 		Label:   "Contract instant",
-		InitMsg: `{"owner":"` + s.accounts[0].Address.String() + `"}`,
-		Admin:   s.accounts[0].Address.String(),
+		InitMsg: `{"owner":"` + account0.Address.String() + `"}`,
+		Admin:   account0.Address.String(),
 	}
 	s.xplac.InstantiateContract(instantiateMsg)
 
-	makeInstantiateMsg, err := mwasm.MakeInstantiateMsg(instantiateMsg, s.accounts[0].Address)
+	makeInstantiateMsg, err := mwasm.MakeInstantiateMsg(instantiateMsg, account0.Address)
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeInstantiateMsg, s.xplac.GetMsg())
@@ -61,7 +63,7 @@ func (s *IntegrationTestSuite) TestWasmTx() {
 	}
 	s.xplac.ExecuteContract(executeMsg)
 
-	makeExecuteMsg, err := mwasm.MakeExecuteMsg(executeMsg, s.accounts[0].Address)
+	makeExecuteMsg, err := mwasm.MakeExecuteMsg(executeMsg, account0.Address)
 	s.Require().NoError(err)
 
 	s.Require().Equal(makeExecuteMsg, s.xplac.GetMsg())

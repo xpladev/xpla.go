@@ -2,7 +2,6 @@ package wasm_test
 
 import (
 	"encoding/json"
-	"math/rand"
 	"strings"
 	"testing"
 
@@ -16,20 +15,12 @@ import (
 	"github.com/xpladev/xpla.go/util/testutil/network"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/ethereum/go-ethereum/common"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/suite"
 )
 
 var (
 	validatorNumber   = 1
-	testBalance       = "1000000000000000000000000000"
 	testContractLabel = "test contract"
 	testWasmFilePath  = "../../util/testutil/test_files/cw721_metadata_onchain.wasm"
 )
@@ -39,7 +30,6 @@ type IntegrationTestSuite struct {
 
 	xplac        provider.XplaClient
 	apis         []string
-	accounts     []simtypes.Account
 	wasmCodeID   string
 	contractAddr string
 
@@ -54,63 +44,6 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	src := rand.NewSource(1)
-	r := rand.New(src)
-	s.accounts = testutil.RandomAccounts(r, 2)
-
-	balanceBigInt, err := util.FromStringToBigInt(testBalance)
-	s.Require().NoError(err)
-
-	genesisState := s.cfg.GenesisState
-
-	// add genesis account
-	var authGenesis authtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authGenesis))
-
-	var genAccounts []authtypes.GenesisAccount
-
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[0].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[1].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err)
-
-	authGenesis.Accounts = accounts
-
-	authGenesisBz, err := s.cfg.Codec.MarshalJSON(&authGenesis)
-	s.Require().NoError(err)
-	genesisState[authtypes.ModuleName] = authGenesisBz
-
-	// add balances
-	var bankGenesis banktypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis))
-
-	bankGenesis.Balances = []banktypes.Balance{
-		{
-			Address: s.accounts[0].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-		{
-			Address: s.accounts[1].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-	}
-
-	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
-	s.Require().NoError(err)
-	genesisState[banktypes.ModuleName] = bankGenesisBz
-
-	s.cfg.GenesisState = genesisState
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -120,7 +53,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.network.Validators[0].AppConfig.GRPC.Address,
 	}
 
-	xplac := s.xplac.WithPrivateKey(s.accounts[0].PrivKey).WithURL(s.apis[0])
+	account0 := s.network.Validators[0].AdditionalAccount
+	xplac := s.xplac.WithPrivateKey(account0.PrivKey).WithURL(s.apis[0])
 
 	// store wasm file
 	storeMsg := types.StoreMsg{
@@ -152,9 +86,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		InitMsg: `{
 			"name":"cw721-metadata-onchain",
 			"symbol":"CW721",
-			"minter":"` + s.accounts[0].Address.String() + `"
+			"minter":"` + account0.Address.String() + `"
 	   }`,
-		Admin: s.accounts[0].Address.String(),
+		Admin: account0.Address.String(),
 	}
 	txbytes, err = xplac.WithSequence("").InstantiateContract(instantiateMsg).CreateAndSignTx()
 	s.Require().NoError(err)
@@ -180,6 +114,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestQueryContract() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	for i, api := range s.apis {
 		if i == 0 {
 			s.xplac.WithURL(api)
@@ -202,13 +138,15 @@ func (s *IntegrationTestSuite) TestQueryContract() {
 		var m minterResponse
 
 		json.Unmarshal([]byte(res), &m)
-		s.Require().Equal(s.accounts[0].Address.String(), m.Data.Minter)
+		s.Require().Equal(account0.Address.String(), m.Data.Minter)
 	}
 	s.xplac = provider.ResetXplac(s.xplac)
 
 }
 
 func (s *IntegrationTestSuite) TestListCode() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	for i, api := range s.apis {
 		if i == 0 {
 			s.xplac.WithURL(api)
@@ -223,7 +161,7 @@ func (s *IntegrationTestSuite) TestListCode() {
 		jsonpb.Unmarshal(strings.NewReader(res), &queryCodeResponse)
 
 		s.Require().Equal(uint64(1), queryCodeResponse.CodeInfos[0].CodeID)
-		s.Require().Equal(s.accounts[0].Address.String(), queryCodeResponse.CodeInfos[0].Creator)
+		s.Require().Equal(account0.Address.String(), queryCodeResponse.CodeInfos[0].Creator)
 		s.Require().Equal("2DD26686622A5BF5A94DF201867C82E638E3A139E3FDE30B5B8D33F37AF1CD89", queryCodeResponse.CodeInfos[0].DataHash.String())
 		s.Require().Equal("", queryCodeResponse.CodeInfos[0].InstantiatePermission.Address)
 		s.Require().Equal(wasmtypes.AccessTypeEverybody, queryCodeResponse.CodeInfos[0].InstantiatePermission.Permission)
@@ -232,6 +170,8 @@ func (s *IntegrationTestSuite) TestListCode() {
 }
 
 func (s *IntegrationTestSuite) TestListContractByCode() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	for i, api := range s.apis {
 		// LCD cannot support list contract by code, replace code info
 		if i == 0 {
@@ -247,7 +187,7 @@ func (s *IntegrationTestSuite) TestListContractByCode() {
 			jsonpb.Unmarshal(strings.NewReader(res), &queryCodeResponse)
 
 			s.Require().Equal(uint64(1), queryCodeResponse.CodeID)
-			s.Require().Equal(s.accounts[0].Address.String(), queryCodeResponse.Creator)
+			s.Require().Equal(account0.Address.String(), queryCodeResponse.Creator)
 
 		} else {
 			s.xplac.WithGrpc(api)
@@ -270,6 +210,8 @@ func (s *IntegrationTestSuite) TestListContractByCode() {
 }
 
 func (s *IntegrationTestSuite) TestCodeInfo() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	for i, api := range s.apis {
 		if i == 0 {
 			s.xplac.WithURL(api)
@@ -287,7 +229,7 @@ func (s *IntegrationTestSuite) TestCodeInfo() {
 		jsonpb.Unmarshal(strings.NewReader(res), &queryCodeResponse)
 
 		s.Require().Equal(uint64(1), queryCodeResponse.CodeID)
-		s.Require().Equal(s.accounts[0].Address.String(), queryCodeResponse.Creator)
+		s.Require().Equal(account0.Address.String(), queryCodeResponse.Creator)
 		s.Require().Equal("2DD26686622A5BF5A94DF201867C82E638E3A139E3FDE30B5B8D33F37AF1CD89", queryCodeResponse.DataHash.String())
 		s.Require().Equal("", queryCodeResponse.InstantiatePermission.Address)
 		s.Require().Equal(wasmtypes.AccessTypeEverybody, queryCodeResponse.InstantiatePermission.Permission)
@@ -296,6 +238,8 @@ func (s *IntegrationTestSuite) TestCodeInfo() {
 }
 
 func (s *IntegrationTestSuite) TestContractInfo() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	for i, api := range s.apis {
 		if i == 0 {
 			s.xplac.WithURL(api)
@@ -317,7 +261,7 @@ func (s *IntegrationTestSuite) TestContractInfo() {
 
 		s.Require().Equal(codeIdU64, queryContractInfoResponse.CodeID)
 		s.Require().Equal(s.contractAddr, queryContractInfoResponse.Address)
-		s.Require().Equal(s.accounts[0].Address.String(), queryContractInfoResponse.Admin)
+		s.Require().Equal(account0.Address.String(), queryContractInfoResponse.Admin)
 		s.Require().Equal(testContractLabel, queryContractInfoResponse.Label)
 	}
 	s.xplac = provider.ResetXplac(s.xplac)
@@ -343,7 +287,7 @@ func (s *IntegrationTestSuite) TestContractStateAll() {
 		s.Require().Equal("636F6E74726163745F696E666F", queryAllContractStateResponse.Models[0].Key.String())
 		s.Require().Equal([]byte(`{"contract":"crates.io:cw721-metadata-onchain","version":"0.15.0"}`), queryAllContractStateResponse.Models[0].Value)
 		s.Require().Equal("6D696E746572", queryAllContractStateResponse.Models[1].Key.String())
-		s.Require().Equal([]byte(`"xpla1l03kma4vv9qcvhgcxf2ga0rnv7dqcumaxexssh"`), queryAllContractStateResponse.Models[1].Value)
+		s.Require().Equal([]byte(`"xpla1l8l7uju593qtu08uprtrly223dnpxlrvlxcp54"`), queryAllContractStateResponse.Models[1].Value)
 		s.Require().Equal("6E66745F696E666F", queryAllContractStateResponse.Models[2].Key.String())
 		s.Require().Equal([]byte(`{"name":"cw721-metadata-onchain","symbol":"CW721"}`), queryAllContractStateResponse.Models[2].Value)
 	}
@@ -351,6 +295,8 @@ func (s *IntegrationTestSuite) TestContractStateAll() {
 }
 
 func (s *IntegrationTestSuite) TestContractHistory() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	for i, api := range s.apis {
 		if i == 0 {
 			s.xplac.WithURL(api)
@@ -372,7 +318,7 @@ func (s *IntegrationTestSuite) TestContractHistory() {
 
 		s.Require().Equal(codeIdU64, queryContractHistoryResponse.Entries[0].CodeID)
 		s.Require().Equal(wasmtypes.ContractCodeHistoryOperationTypeInit, queryContractHistoryResponse.Entries[0].Operation)
-		s.Require().Equal([]byte(`{"name":"cw721-metadata-onchain","symbol":"CW721","minter":"`+s.accounts[0].Address.String()+`"}`), queryContractHistoryResponse.Entries[0].Msg.Bytes())
+		s.Require().Equal([]byte(`{"name":"cw721-metadata-onchain","symbol":"CW721","minter":"`+account0.Address.String()+`"}`), queryContractHistoryResponse.Entries[0].Msg.Bytes())
 	}
 	s.xplac = provider.ResetXplac(s.xplac)
 }

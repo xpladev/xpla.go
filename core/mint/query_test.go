@@ -107,7 +107,7 @@ func (s *IntegrationTestSuite) TestAnnualProvisions() {
 		var queryAnnualProvisionsResponse minttypes.QueryAnnualProvisionsResponse
 		jsonpb.Unmarshal(strings.NewReader(res), &queryAnnualProvisionsResponse)
 
-		s.Require().Equal("70000000000000000000.000000000000000000", queryAnnualProvisionsResponse.AnnualProvisions.String())
+		s.Require().Equal("140000000000000000000.000000000000000000", queryAnnualProvisionsResponse.AnnualProvisions.String())
 
 	}
 	s.xplac = provider.ResetXplac(s.xplac)

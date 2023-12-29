@@ -13,11 +13,14 @@ var (
 )
 
 func (s *IntegrationTestSuite) TestEvmTx() {
-	s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
+	account0 := s.network.Validators[0].AdditionalAccount
+	account1 := s.network.Validators[1].AdditionalAccount
+
+	s.xplac.WithPrivateKey(account0.PrivKey)
 	// send evm coin
 	sendCoinMsg := types.SendCoinMsg{
-		FromAddress: s.accounts[0].PubKey.Address().String(),
-		ToAddress:   s.accounts[1].PubKey.Address().String(),
+		FromAddress: account0.PubKey.Address().String(),
+		ToAddress:   account1.PubKey.Address().String(),
 		Amount:      "1000",
 	}
 	s.xplac.EvmSendCoin(sendCoinMsg)
@@ -62,13 +65,15 @@ func (s *IntegrationTestSuite) TestEvmTx() {
 }
 
 func (s *IntegrationTestSuite) TestEvm() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	// call contract
 	callSolContractMsg := types.CallSolContractMsg{
 		ContractAddress:      testSolContractAddress,
 		ContractFuncCallName: "retrieve",
 		ABIJsonFilePath:      testABIPath,
 		BytecodeJsonFilePath: testBytecodePath,
-		FromByteAddress:      s.accounts[0].PubKey.Address().String(),
+		FromByteAddress:      account0.PubKey.Address().String(),
 	}
 	s.xplac.CallSolidityContract(callSolContractMsg)
 
@@ -107,7 +112,7 @@ func (s *IntegrationTestSuite) TestEvm() {
 
 	// account info
 	accountInfoMsg := types.AccountInfoMsg{
-		Account: s.accounts[0].PubKey.Address().String(),
+		Account: account0.PubKey.Address().String(),
 	}
 	s.xplac.AccountInfo(accountInfoMsg)
 
@@ -219,7 +224,7 @@ func (s *IntegrationTestSuite) TestEvm() {
 		ContractAddress:      testSolContractAddress,
 		ABIJsonFilePath:      testABIPath,
 		BytecodeJsonFilePath: testBytecodePath,
-		FromByteAddress:      s.accounts[0].PubKey.Address().String(),
+		FromByteAddress:      account0.PubKey.Address().String(),
 	}
 	s.xplac.EstimateGas(invokeSolContractMsg)
 

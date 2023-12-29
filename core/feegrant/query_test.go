@@ -54,8 +54,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	val := s.network.Validators[0]
-	granter := val.Address
+	granter := s.network.Validators[0].Address
 	grantee := s.network.Validators[1].Address
 
 	s.createGrant(granter, grantee)

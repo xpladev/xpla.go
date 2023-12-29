@@ -240,7 +240,7 @@ func (suite *TestSuite) TestSimulateEncodeAndDecodeTx() {
 
 	encodeRes, err := xplac.EncodeTx(encodeTxMsg)
 	suite.Require().NoError(err)
-	encoded := "Cp8BCpwBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEnwKK3hwbGExbDAza21hNHZ2OXFjdmhnY3hmMmdhMHJudjdkcWN1bWF4ZXhzc2gSK3hwbGExaDR4MmpsbnFrenEyazh3cmZ6dnR0bDlwNWdjZmZ6NHhlNWNqMmMaIAoFYXhwbGESFzgzNjIyODM5MDIyNDM4MjI3MDU2NTgyEiMSIQobCgVheHBsYRISMjEyNTAwMDAwMDAwMDAwMDAwEJChDw=="
+	encoded := "Cp8BCpwBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEnwKK3hwbGExbDAza21hNHZ2OXFjdmhnY3hmMmdhMHJudjdkcWN1bWF4ZXhzc2gSK3hwbGExaDR4MmpsbnFrenEyazh3cmZ6dnR0bDlwNWdjZmZ6NHhlNWNqMmMaIAoFYXhwbGESFzgzNjIyODM5MDIyNDM4MjI3MDU2NTgyEiQSIgocCgVheHBsYRITMTI3NTAwMDAwMDAwMDAwMDAwMBCQoQ8="
 	suite.Require().Equal(encodeRes, encoded)
 
 	decodeTxMsg := types.DecodeTxMsg{

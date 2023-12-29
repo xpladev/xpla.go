@@ -2,7 +2,6 @@ package staking_test
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
@@ -17,7 +16,6 @@ import (
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
@@ -30,9 +28,8 @@ var validatorNumber = 2
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	xplac    provider.XplaClient
-	apis     []string
-	accounts []simtypes.Account
+	xplac provider.XplaClient
+	apis  []string
 
 	cfg     network.Config
 	network network.Network
@@ -44,10 +41,6 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
-	src := rand.NewSource(1)
-	r := rand.New(src)
-	s.accounts = testutil.RandomAccounts(r, 2)
 
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -80,7 +73,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 3000000),
 	)
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// unbonding
 	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)

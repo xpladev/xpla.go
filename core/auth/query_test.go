@@ -2,32 +2,23 @@ package auth_test
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/xpladev/xpla.go/client"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/util"
 	"github.com/xpladev/xpla.go/util/testutil"
 	"github.com/xpladev/xpla.go/util/testutil/network"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -38,7 +29,6 @@ type IntegrationTestSuite struct {
 
 	xplac      provider.XplaClient
 	apis       []string
-	accounts   []simtypes.Account
 	testTxHash string
 
 	cfg     network.Config
@@ -51,79 +41,16 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
-	src := rand.NewSource(1)
-	r := rand.New(src)
-	s.accounts = testutil.RandomAccounts(r, 2)
 	s.testTxHash = "B6BBBB649F19E8970EF274C0083FE945FD38AD8C524D68BB3FE3A20D72DF03C4"
-
-	balanceBigInt, err := util.FromStringToBigInt("1000000000000000000000000000")
-	s.Require().NoError(err)
-
-	genesisState := s.cfg.GenesisState
-
-	// add genesis account
-	var authGenesis authtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authGenesis))
-
-	var genAccounts []authtypes.GenesisAccount
-
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[0].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[1].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err)
-
-	authGenesis.Accounts = accounts
-
-	authGenesisBz, err := s.cfg.Codec.MarshalJSON(&authGenesis)
-	s.Require().NoError(err)
-	genesisState[authtypes.ModuleName] = authGenesisBz
-
-	// add balances
-	var bankGenesis banktypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis))
-
-	bankGenesis.Balances = []banktypes.Balance{
-		{
-			Address: s.accounts[0].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-		{
-			Address: s.accounts[1].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-	}
-
-	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
-	s.Require().NoError(err)
-	genesisState[banktypes.ModuleName] = bankGenesisBz
-
-	s.cfg.GenesisState = genesisState
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	kb := s.network.Validators[0].ClientCtx.Keyring
-	_, _, err = kb.NewMnemonic("newAccount", keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-
+	// for checking tx test
 	val := s.network.Validators[0]
-	newAddr := s.accounts[0].Address
-
-	_, err = banktestutil.MsgSendExec(
+	_, err := banktestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
-		newAddr,
+		val.AdditionalAccount.Address,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -185,15 +112,17 @@ func (s *IntegrationTestSuite) TestAccAddress() {
 		s.Require().NoError(err)
 
 		var accountResponse authtypes.QueryAccountResponse
-		jsonpb.Unmarshal(strings.NewReader(res), &accountResponse)
+		err = jsonpb.Unmarshal(strings.NewReader(res), &accountResponse)
+		s.Require().NoError(err)
 
 		var ethAccount ethermint.EthAccount
-		proto.Unmarshal(accountResponse.Account.Value, &ethAccount)
+		err = s.xplac.GetEncoding().Codec.Unmarshal(accountResponse.Account.Value, &ethAccount)
+		s.Require().NoError(err)
 
 		s.Require().Equal("/ethermint.crypto.v1.ethsecp256k1.PubKey", ethAccount.PubKey.TypeUrl)
 		s.Require().Equal(addr, ethAccount.Address)
-		s.Require().Equal(uint64(2), ethAccount.AccountNumber)
-
+		s.Require().Equal(uint64(0), ethAccount.AccountNumber)
+		s.Require().Equal("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", ethAccount.CodeHash)
 	}
 	s.xplac = provider.ResetXplac(s.xplac)
 }
@@ -212,7 +141,6 @@ func (s *IntegrationTestSuite) TestAccounts() {
 		var accountsResponse authtypes.QueryAccountsResponse
 		jsonpb.Unmarshal(strings.NewReader(res), &accountsResponse)
 
-		// 2 validators, 7 module accounts, 2 init accounts
 		s.Require().Len(accountsResponse.Accounts, 11)
 	}
 	s.xplac = provider.ResetXplac(s.xplac)
@@ -220,11 +148,7 @@ func (s *IntegrationTestSuite) TestAccounts() {
 
 func (s *IntegrationTestSuite) TestQueryTxByEventAndQueryTx() {
 	val := s.network.Validators[0]
-
-	newAccount, err := val.ClientCtx.Keyring.Key("newAccount")
-	s.Require().NoError(err)
-
-	out, err := s.createBankMsg(val, newAccount.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1000)))
+	out, err := s.createBankMsg(val, val.AdditionalAccount.Address, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1000)))
 	s.Require().NoError(err)
 
 	var txRes sdk.TxResponse

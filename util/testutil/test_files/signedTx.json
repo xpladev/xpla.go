@@ -37,7 +37,7 @@
            "amount": [
                {
                    "denom": "axpla",
-                   "amount": "212500000000000000"
+                   "amount": "1275000000000000000"
                }
            ],
            "gas_limit": "250000",
@@ -46,6 +46,7 @@
        }
    },
    "signatures": [
-       "Oi31T6ajLatpQ6i7vMtTHktEn5jJFOFGfV76A/bqW58YBGD+9axsbcBrgBHMFu5bHYuk1s1GdwlDq37/qbTK3gE="
+       "9a6M3+z4tz1swGz6Ow5xvm2NA2LiSY1fntHyKnw5sm5W29EoKlCbU77sYnZ7MzEct62buV0jZ6lNysF5E0G2iQE="
    ]
 }
+

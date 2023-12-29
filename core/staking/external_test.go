@@ -8,8 +8,11 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestStakingTx() {
-	s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
-	tmpVal := sdk.ValAddress(s.accounts[0].Address)
+	account0 := s.network.Validators[0].AdditionalAccount
+	account1 := s.network.Validators[1].AdditionalAccount
+
+	s.xplac.WithPrivateKey(account0.PrivKey)
+	tmpVal := sdk.ValAddress(account0.Address)
 
 	// create validator
 	createValidatorMsg := types.CreateValidatorMsg{
@@ -68,7 +71,7 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	// delegate
 	delegateMsg := types.DelegateMsg{
 		Amount:  "1000",
-		ValAddr: sdk.ValAddress(s.accounts[0].Address).String(),
+		ValAddr: sdk.ValAddress(account0.Address).String(),
 	}
 	s.xplac.Delegate(delegateMsg)
 
@@ -89,7 +92,7 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	// unbonding
 	unbondMsg := types.UnbondMsg{
 		Amount:  "1000",
-		ValAddr: sdk.ValAddress(s.accounts[0].Address).String(),
+		ValAddr: sdk.ValAddress(account0.Address).String(),
 	}
 	s.xplac.Unbond(unbondMsg)
 
@@ -110,8 +113,8 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 	// redelegation
 	redelegateMsg := types.RedelegateMsg{
 		Amount:     "1000",
-		ValSrcAddr: sdk.ValAddress(s.accounts[0].Address).String(),
-		ValDstAddr: sdk.ValAddress(s.accounts[1].Address).String(),
+		ValSrcAddr: sdk.ValAddress(account0.Address).String(),
+		ValDstAddr: sdk.ValAddress(account1.Address).String(),
 	}
 	s.xplac.Redelegate(redelegateMsg)
 
@@ -131,6 +134,8 @@ func (s *IntegrationTestSuite) TestStakingTx() {
 }
 
 func (s *IntegrationTestSuite) TestStaking() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	val := s.network.Validators[0].ValAddress.String()
 	val2 := s.network.Validators[1].ValAddress.String()
 	// query validators
@@ -159,7 +164,7 @@ func (s *IntegrationTestSuite) TestStaking() {
 
 	// delegation
 	queryDelegationMsg := types.QueryDelegationMsg{
-		DelegatorAddr: s.accounts[0].Address.String(),
+		DelegatorAddr: account0.Address.String(),
 		ValidatorAddr: val,
 	}
 
@@ -174,7 +179,7 @@ func (s *IntegrationTestSuite) TestStaking() {
 
 	// delegations
 	queryDelegationMsg = types.QueryDelegationMsg{
-		DelegatorAddr: s.accounts[0].Address.String(),
+		DelegatorAddr: account0.Address.String(),
 	}
 
 	s.xplac.QueryDelegation(queryDelegationMsg)
@@ -202,7 +207,7 @@ func (s *IntegrationTestSuite) TestStaking() {
 
 	// unbonding delegation
 	queryUnbondingDelegationMsg := types.QueryUnbondingDelegationMsg{
-		DelegatorAddr: s.accounts[0].Address.String(),
+		DelegatorAddr: account0.Address.String(),
 		ValidatorAddr: val,
 	}
 
@@ -217,7 +222,7 @@ func (s *IntegrationTestSuite) TestStaking() {
 
 	// unbonding delegations
 	queryUnbondingDelegationMsg = types.QueryUnbondingDelegationMsg{
-		DelegatorAddr: s.accounts[0].Address.String(),
+		DelegatorAddr: account0.Address.String(),
 	}
 
 	s.xplac.QueryUnbondingDelegation(queryUnbondingDelegationMsg)
@@ -245,7 +250,7 @@ func (s *IntegrationTestSuite) TestStaking() {
 
 	// redelegation
 	queryRedelegationMsg := types.QueryRedelegationMsg{
-		DelegatorAddr:    s.accounts[0].Address.String(),
+		DelegatorAddr:    account0.Address.String(),
 		SrcValidatorAddr: val,
 		DstValidatorAddr: val2,
 	}
@@ -261,7 +266,7 @@ func (s *IntegrationTestSuite) TestStaking() {
 
 	// redelegations
 	queryRedelegationMsg = types.QueryRedelegationMsg{
-		DelegatorAddr: s.accounts[0].Address.String(),
+		DelegatorAddr: account0.Address.String(),
 	}
 
 	s.xplac.QueryRedelegation(queryRedelegationMsg)

@@ -10,6 +10,8 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestCoreModule() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	src := rand.NewSource(1)
 	r := rand.New(src)
 	accounts := testutil.RandomAccounts(r, 2)
@@ -30,7 +32,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		InstantiatePermission: "instantiate-only-sender",
 	}
 
-	makeStoreCodeMsg, err := wasm.MakeStoreCodeMsg(storeMsg, s.accounts[0].Address)
+	makeStoreCodeMsg, err := wasm.MakeStoreCodeMsg(storeMsg, account0.Address)
 	s.Require().NoError(err)
 
 	testMsg = makeStoreCodeMsg
@@ -43,11 +45,11 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		CodeId:  "1",
 		Amount:  "10",
 		Label:   "Contract instant",
-		InitMsg: `{"owner":"` + s.accounts[0].Address.String() + `"}`,
-		Admin:   s.accounts[0].Address.String(),
+		InitMsg: `{"owner":"` + account0.Address.String() + `"}`,
+		Admin:   account0.Address.String(),
 	}
 
-	makeInstantiateMsg, err := wasm.MakeInstantiateMsg(instantiateMsg, s.accounts[0].Address)
+	makeInstantiateMsg, err := wasm.MakeInstantiateMsg(instantiateMsg, account0.Address)
 	s.Require().NoError(err)
 
 	testMsg = makeInstantiateMsg
@@ -63,7 +65,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 		ExecMsg:         `{"execute_method":{"execute_key":"execute_test","execute_value":"execute_val"}}`,
 	}
 
-	makeExecuteMsg, err := wasm.MakeExecuteMsg(executeMsg, s.accounts[0].Address)
+	makeExecuteMsg, err := wasm.MakeExecuteMsg(executeMsg, account0.Address)
 	s.Require().NoError(err)
 
 	testMsg = makeExecuteMsg

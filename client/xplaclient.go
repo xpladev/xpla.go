@@ -77,6 +77,7 @@ func (xplac *xplaClient) WithOptions(
 ) provider.XplaClient {
 	return xplac.
 		WithPrivateKey(options.PrivateKey).
+		WithPublicKey(options.PublicKey).
 		WithAccountNumber(options.AccountNumber).
 		WithBroadcastMode(options.BroadcastMode).
 		WithSequence(options.Sequence).
@@ -175,8 +176,17 @@ func (xplac *xplaClient) WithPrivateKey(privateKey key.PrivateKey) provider.Xpla
 			xplac.err = err
 			return xplac.UpdateXplacInCoreModule()
 		}
-		// Automatically setting FromAddress when xpla client has the private key
+		// Automatically setting FromAddress and public key when xpla client has the private key
 		xplac.opts.FromAddress = addr
+		xplac.opts.PublicKey = privateKey.PubKey()
+	}
+	return xplac.UpdateXplacInCoreModule()
+}
+
+// Set public key manually
+func (xplac *xplaClient) WithPublicKey(pubKey key.PublicKey) provider.XplaClient {
+	if pubKey != nil {
+		xplac.opts.PublicKey = pubKey
 	}
 	return xplac.UpdateXplacInCoreModule()
 }
@@ -332,6 +342,7 @@ func (xplac *xplaClient) WithErr(err error) provider.XplaClient {
 // Get parameters of the xpla client
 func (xplac *xplaClient) GetChainId() string                    { return xplac.chainId }
 func (xplac *xplaClient) GetPrivateKey() key.PrivateKey         { return xplac.opts.PrivateKey }
+func (xplac *xplaClient) GetPublicKey() key.PublicKey           { return xplac.opts.PublicKey }
 func (xplac *xplaClient) GetEncoding() paramsapp.EncodingConfig { return xplac.encodingConfig }
 func (xplac *xplaClient) GetContext() context.Context           { return xplac.context }
 func (xplac *xplaClient) GetLcdURL() string                     { return xplac.opts.LcdURL }

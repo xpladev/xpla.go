@@ -70,6 +70,8 @@ xplac := client.NewXplaClient(
 type Options struct {    
     // Set private key
     PrivateKey     key.PrivateKey
+    // Set public key manually
+    PublicKey      key.PublicKey
     // Set account number of address
     AccountNumber  string
     // Set account sequence of address

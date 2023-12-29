@@ -66,8 +66,23 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 		return nil, err
 	}
 
+	pubKey := xplac.GetPublicKey()
+	if xplac.GetPublicKey() == nil {
+		if xplac.GetFromAddress() != nil {
+			accountInfo, err := xplac.LoadAccount(xplac.GetFromAddress())
+			if err != nil {
+				return nil, util.LogErr(errors.ErrParse, err)
+			}
+
+			pubKey = accountInfo.GetPubKey()
+
+		} else {
+			return nil, util.LogErr(errors.ErrInvalidRequest, "cannot be simulated without the public key.")
+		}
+	}
+
 	sig := signing.SignatureV2{
-		PubKey: xplac.GetPrivateKey().PubKey(),
+		PubKey: pubKey,
 		Data: &signing.SingleSignatureData{
 			SignMode: xplac.GetSignMode(),
 		},

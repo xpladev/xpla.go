@@ -7,8 +7,10 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestVolunteerTx() {
-	s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
-	tmpVal := sdk.ValAddress(s.accounts[0].Address)
+	account0 := s.network.Validators[0].AdditionalAccount
+
+	s.xplac.WithPrivateKey(account0.PrivKey)
+	tmpVal := sdk.ValAddress(account0.Address)
 
 	// register volunteer validator.
 	registerVolunteerValidatorMsg := types.RegisterVolunteerValidatorMsg{

@@ -143,7 +143,7 @@ func DefaultConfig() Config {
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.EthSecp256k1Type),
 		KeyringOptions:    []keyring.Option{hd.EthSecp256k1Option()},
-		AdditionalAccount: false,
+		AdditionalAccount: true,
 	}
 }
 

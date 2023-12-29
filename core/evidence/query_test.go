@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s IntegrationTestSuite) TestAllEvidence() {
+func (s *IntegrationTestSuite) TestAllEvidence() {
 	for i, api := range s.apis {
 		if i == 0 {
 			s.xplac.WithURL(api)

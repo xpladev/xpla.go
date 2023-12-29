@@ -11,8 +11,6 @@ import (
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util/testutil"
 	"github.com/xpladev/xpla.go/util/testutil/network"
-
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -31,15 +29,6 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
-	genesisState := s.cfg.GenesisState
-	var bankGenesis banktypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis))
-
-	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
-	s.Require().NoError(err)
-	genesisState[banktypes.ModuleName] = bankGenesisBz
-	s.cfg.GenesisState = genesisState
 
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
