@@ -6,7 +6,7 @@ import (
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
-	ibcclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
+	ibcclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 )
 
 // Parsing - IBC client consensus state

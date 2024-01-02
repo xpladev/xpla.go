@@ -21,7 +21,7 @@ func NewIxplaClient(moduleClient provider.XplaClient, qt uint8) *QueryClient {
 
 // Print protobuf message by using cosmos sdk codec.
 func PrintProto(i QueryClient, toPrint proto.Message) ([]byte, error) {
-	out, err := i.Ixplac.GetEncoding().Marshaler.MarshalJSON(toPrint)
+	out, err := i.Ixplac.GetEncoding().Codec.MarshalJSON(toPrint)
 	if err != nil {
 		return nil, util.LogErr(errors.ErrFailedToMarshal, err)
 	}

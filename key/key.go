@@ -13,6 +13,7 @@ import (
 )
 
 type PrivateKey = cryptotypes.PrivKey
+type PublicKey = cryptotypes.PubKey
 
 // Make new mnemonic words by using bip39 entropy.
 // Mnemonic words are changed every time user run new mnemonic function.

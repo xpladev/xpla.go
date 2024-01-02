@@ -7,11 +7,14 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestAuthzTx() {
-	s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
+	account0 := s.network.Validators[0].AdditionalAccount
+	account1 := s.network.Validators[1].AdditionalAccount
+
+	s.xplac.WithPrivateKey(account0.PrivKey)
 	// authz grant
 	authzGrantMsg := types.AuthzGrantMsg{
-		Granter:           s.accounts[0].Address.String(),
-		Grantee:           s.accounts[1].Address.String(),
+		Granter:           account0.Address.String(),
+		Grantee:           account1.Address.String(),
 		AuthorizationType: "send",
 		SpendLimit:        "1000",
 	}
@@ -33,8 +36,8 @@ func (s *IntegrationTestSuite) TestAuthzTx() {
 
 	// authz revoke
 	authzRevokeMsg := types.AuthzRevokeMsg{
-		Granter: s.accounts[0].Address.String(),
-		Grantee: s.accounts[1].Address.String(),
+		Granter: account0.Address.String(),
+		Grantee: account1.Address.String(),
 		MsgType: "/cosmos.bank.v1beta1.MsgSend",
 	}
 	s.xplac.AuthzRevoke(authzRevokeMsg)
@@ -56,8 +59,8 @@ func (s *IntegrationTestSuite) TestAuthzTx() {
 	// authz exec
 	// e.g. bank send
 	bankSendMsg := types.BankSendMsg{
-		FromAddress: s.accounts[0].Address.String(),
-		ToAddress:   s.accounts[1].Address.String(),
+		FromAddress: account0.Address.String(),
+		ToAddress:   account1.Address.String(),
 		Amount:      "1000",
 	}
 
@@ -68,7 +71,7 @@ func (s *IntegrationTestSuite) TestAuthzTx() {
 	s.Require().NoError(err)
 
 	authzExecMsg := types.AuthzExecMsg{
-		Grantee:      s.accounts[1].Address.String(),
+		Grantee:      account1.Address.String(),
 		ExecTxString: string(bankSendJsonTxbytes),
 	}
 	s.xplac.AuthzExec(authzExecMsg)
@@ -89,10 +92,13 @@ func (s *IntegrationTestSuite) TestAuthzTx() {
 }
 
 func (s *IntegrationTestSuite) TestAuthz() {
+	account0 := s.network.Validators[0].AdditionalAccount
+	account1 := s.network.Validators[1].AdditionalAccount
+
 	// query authz grants
 	queryAuthzGrantMsg := types.QueryAuthzGrantMsg{
-		Grantee: s.accounts[0].Address.String(),
-		Granter: s.accounts[1].Address.String(),
+		Grantee: account0.Address.String(),
+		Granter: account1.Address.String(),
 	}
 	s.xplac.QueryAuthzGrants(queryAuthzGrantMsg)
 
@@ -105,7 +111,7 @@ func (s *IntegrationTestSuite) TestAuthz() {
 
 	// grants by grantee
 	queryAuthzGrantMsg = types.QueryAuthzGrantMsg{
-		Grantee: s.accounts[0].Address.String(),
+		Grantee: account0.Address.String(),
 	}
 	s.xplac.QueryAuthzGrants(queryAuthzGrantMsg)
 
@@ -118,7 +124,7 @@ func (s *IntegrationTestSuite) TestAuthz() {
 
 	// grants by granter
 	queryAuthzGrantMsg = types.QueryAuthzGrantMsg{
-		Granter: s.accounts[1].Address.String(),
+		Granter: account1.Address.String(),
 	}
 	s.xplac.QueryAuthzGrants(queryAuthzGrantMsg)
 

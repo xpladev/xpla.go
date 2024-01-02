@@ -1,7 +1,6 @@
 package bank_test
 
 import (
-	"math/rand"
 	"strings"
 	"testing"
 
@@ -11,13 +10,7 @@ import (
 	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/ethereum/go-ethereum/common"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/xpladev/xpla.go/util/testutil"
 	"github.com/xpladev/xpla.go/util/testutil/network"
@@ -30,13 +23,11 @@ var (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	xplac      provider.XplaClient
-	apis       []string
-	accounts   []simtypes.Account
-	testTxHash string
+	xplac provider.XplaClient
+	apis  []string
 
 	cfg     network.Config
-	network *network.Network
+	network network.Network
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -46,64 +37,6 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	src := rand.NewSource(1)
-	r := rand.New(src)
-	s.accounts = testutil.RandomAccounts(r, 2)
-	s.testTxHash = "B6BBBB649F19E8970EF274C0083FE945FD38AD8C524D68BB3FE3A20D72DF03C4"
-
-	balanceBigInt, err := util.FromStringToBigInt("1000000000000000000000000000")
-	s.Require().NoError(err)
-
-	genesisState := s.cfg.GenesisState
-
-	// add genesis account
-	var authGenesis authtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authGenesis))
-
-	var genAccounts []authtypes.GenesisAccount
-
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[0].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[1].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err)
-
-	authGenesis.Accounts = accounts
-
-	authGenesisBz, err := s.cfg.Codec.MarshalJSON(&authGenesis)
-	s.Require().NoError(err)
-	genesisState[authtypes.ModuleName] = authGenesisBz
-
-	// add balances
-	var bankGenesis banktypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis))
-
-	bankGenesis.Balances = []banktypes.Balance{
-		{
-			Address: s.accounts[0].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-		{
-			Address: s.accounts[1].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-	}
-
-	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
-	s.Require().NoError(err)
-	genesisState[banktypes.ModuleName] = bankGenesisBz
-
-	s.cfg.GenesisState = genesisState
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 

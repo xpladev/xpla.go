@@ -28,7 +28,7 @@ func (s *ClientTestSuite) TestLoadAccount() {
 
 func (s *ClientTestSuite) TestSimulate() {
 	val1 := s.network.Validators[0].Address
-	s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
+	s.xplac.WithPrivateKey(s.network.Validators[4].AdditionalAccount.PrivKey)
 
 	for i, api := range s.apis {
 		if i == 0 {
@@ -45,7 +45,7 @@ func (s *ClientTestSuite) TestSimulate() {
 		xplac.WithSequence(util.FromUint64ToString(account.GetSequence()))
 
 		authzGrantMsg := types.AuthzGrantMsg{
-			Granter:           s.accounts[0].Address.String(),
+			Granter:           s.network.Validators[4].AdditionalAccount.Address.String(),
 			Grantee:           val1.String(),
 			AuthorizationType: "send",
 			SpendLimit:        "1000",

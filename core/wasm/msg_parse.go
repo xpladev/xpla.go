@@ -75,7 +75,7 @@ func instantiatePermission(permission string, sender sdk.AccAddress) (*wasmtypes
 		return &wasmtypes.AllowEverybody, nil
 
 	case permMethod == instantiateBySender:
-		x := wasmtypes.AccessTypeOnlyAddress.With(sender)
+		x := wasmtypes.AccessTypeAnyOfAddresses.With(sender)
 		return &x, nil
 
 	case permMethod == instantiateByAddress:
@@ -86,7 +86,7 @@ func instantiatePermission(permission string, sender sdk.AccAddress) (*wasmtypes
 		if err != nil {
 			return nil, util.LogErr(errors.ErrParse, err)
 		}
-		x := wasmtypes.AccessTypeOnlyAddress.With(addr)
+		x := wasmtypes.AccessTypeAnyOfAddresses.With(addr)
 		return &x, nil
 
 	case permMethod == instantiateNobody:

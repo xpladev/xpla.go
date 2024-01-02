@@ -6,5 +6,5 @@ import (
 )
 
 func MakeEncodingConfig() params.EncodingConfig {
-	return app.MakeEncodingConfig()
+	return app.MakeTestEncodingConfig()
 }

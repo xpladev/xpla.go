@@ -32,7 +32,7 @@ func (xplac *xplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.Acco
 		xplac.GetHttpMutex().Unlock()
 
 		var response authtypes.QueryAccountResponse
-		err = xplac.GetEncoding().Marshaler.UnmarshalJSON(out, &response)
+		err = xplac.GetEncoding().Codec.UnmarshalJSON(out, &response)
 		if err != nil {
 			return nil, util.LogErr(errors.ErrFailedToUnmarshal, err)
 		}
@@ -66,8 +66,23 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 		return nil, err
 	}
 
+	pubKey := xplac.GetPublicKey()
+	if xplac.GetPublicKey() == nil {
+		if xplac.GetFromAddress() != nil {
+			accountInfo, err := xplac.LoadAccount(xplac.GetFromAddress())
+			if err != nil {
+				return nil, util.LogErr(errors.ErrParse, err)
+			}
+
+			pubKey = accountInfo.GetPubKey()
+
+		} else {
+			return nil, util.LogErr(errors.ErrInvalidRequest, "cannot be simulated without the public key.")
+		}
+	}
+
 	sig := signing.SignatureV2{
-		PubKey: xplac.GetPrivateKey().PubKey(),
+		PubKey: pubKey,
 		Data: &signing.SingleSignatureData{
 			SignMode: xplac.GetSignMode(),
 		},
@@ -85,7 +100,7 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 	}
 
 	if xplac.GetGrpcUrl() == "" {
-		reqBytes, err := xplac.GetEncoding().Marshaler.MarshalJSON(&sdktx.SimulateRequest{
+		reqBytes, err := xplac.GetEncoding().Codec.MarshalJSON(&sdktx.SimulateRequest{
 			TxBytes: txBytes,
 		})
 		if err != nil {
@@ -101,7 +116,7 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 		xplac.GetHttpMutex().Unlock()
 
 		var response sdktx.SimulateResponse
-		err = xplac.GetEncoding().Marshaler.UnmarshalJSON(out, &response)
+		err = xplac.GetEncoding().Codec.UnmarshalJSON(out, &response)
 		if err != nil {
 			return nil, util.LogErr(errors.ErrFailedToUnmarshal, err)
 		}

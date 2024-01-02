@@ -7,11 +7,14 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestBankTx() {
-	s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
+	account0 := s.network.Validators[0].AdditionalAccount
+	account1 := s.network.Validators[1].AdditionalAccount
+
+	s.xplac.WithPrivateKey(account0.PrivKey)
 	// bank send
 	bankSendMsg := types.BankSendMsg{
-		FromAddress: s.accounts[0].Address.String(),
-		ToAddress:   s.accounts[1].Address.String(),
+		FromAddress: account0.Address.String(),
+		ToAddress:   account1.Address.String(),
 		Amount:      "1000",
 	}
 	s.xplac.BankSend(bankSendMsg)
@@ -32,9 +35,11 @@ func (s *IntegrationTestSuite) TestBankTx() {
 }
 
 func (s *IntegrationTestSuite) TestBank() {
+	account0 := s.network.Validators[0].AdditionalAccount
+
 	// bank all balances
 	bankBalancesMsg := types.BankBalancesMsg{
-		Address: s.accounts[0].Address.String(),
+		Address: account0.Address.String(),
 	}
 	s.xplac.BankBalances(bankBalancesMsg)
 
@@ -47,7 +52,7 @@ func (s *IntegrationTestSuite) TestBank() {
 
 	// bank balance denom
 	bankBalancesMsg = types.BankBalancesMsg{
-		Address: s.accounts[0].Address.String(),
+		Address: account0.Address.String(),
 		Denom:   types.XplaDenom,
 	}
 	s.xplac.BankBalances(bankBalancesMsg)

@@ -22,6 +22,7 @@ import (
 	"github.com/xpladev/xpla.go/core/slashing"
 	"github.com/xpladev/xpla.go/core/staking"
 	"github.com/xpladev/xpla.go/core/upgrade"
+	"github.com/xpladev/xpla.go/core/volunteer"
 	"github.com/xpladev/xpla.go/core/wasm"
 	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/provider"
@@ -76,6 +77,7 @@ func (xplac *xplaClient) WithOptions(
 ) provider.XplaClient {
 	return xplac.
 		WithPrivateKey(options.PrivateKey).
+		WithPublicKey(options.PublicKey).
 		WithAccountNumber(options.AccountNumber).
 		WithBroadcastMode(options.BroadcastMode).
 		WithSequence(options.Sequence).
@@ -117,6 +119,7 @@ type externalCoreModule struct {
 	slashing.SlashingExternal
 	staking.StakingExternal
 	upgrade.UpgradeExternal
+	volunteer.VolunteerExternal
 	wasm.WasmExternal
 }
 
@@ -140,6 +143,7 @@ func (xplac *xplaClient) UpdateXplacInCoreModule() provider.XplaClient {
 		slashing.NewSlashingExternal(xplac),
 		staking.NewStakingExternal(xplac),
 		upgrade.NewUpgradeExternal(xplac),
+		volunteer.NewVolunteerExternal(xplac),
 		wasm.NewWasmExternal(xplac),
 	}
 	return xplac
@@ -172,8 +176,17 @@ func (xplac *xplaClient) WithPrivateKey(privateKey key.PrivateKey) provider.Xpla
 			xplac.err = err
 			return xplac.UpdateXplacInCoreModule()
 		}
-		// Automatically setting FromAddress when xpla client has the private key
+		// Automatically setting FromAddress and public key when xpla client has the private key
 		xplac.opts.FromAddress = addr
+		xplac.opts.PublicKey = privateKey.PubKey()
+	}
+	return xplac.UpdateXplacInCoreModule()
+}
+
+// Set public key manually
+func (xplac *xplaClient) WithPublicKey(pubKey key.PublicKey) provider.XplaClient {
+	if pubKey != nil {
+		xplac.opts.PublicKey = pubKey
 	}
 	return xplac.UpdateXplacInCoreModule()
 }
@@ -296,7 +309,9 @@ func (xplac *xplaClient) WithOutputDocument(outputDocument string) provider.Xpla
 
 // Set from address manually
 func (xplac *xplaClient) WithFromAddress(fromAddress sdk.AccAddress) provider.XplaClient {
-	xplac.opts.FromAddress = fromAddress
+	if fromAddress != nil {
+		xplac.opts.FromAddress = fromAddress
+	}
 	return xplac.UpdateXplacInCoreModule()
 }
 
@@ -327,6 +342,7 @@ func (xplac *xplaClient) WithErr(err error) provider.XplaClient {
 // Get parameters of the xpla client
 func (xplac *xplaClient) GetChainId() string                    { return xplac.chainId }
 func (xplac *xplaClient) GetPrivateKey() key.PrivateKey         { return xplac.opts.PrivateKey }
+func (xplac *xplaClient) GetPublicKey() key.PublicKey           { return xplac.opts.PublicKey }
 func (xplac *xplaClient) GetEncoding() paramsapp.EncodingConfig { return xplac.encodingConfig }
 func (xplac *xplaClient) GetContext() context.Context           { return xplac.context }
 func (xplac *xplaClient) GetLcdURL() string                     { return xplac.opts.LcdURL }

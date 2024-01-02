@@ -35,7 +35,7 @@ type IntegrationTestSuite struct {
 	accounts []simtypes.Account
 
 	cfg     network.Config
-	network *network.Network
+	network network.Network
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -68,7 +68,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 2", "Where is the title!?", govtypes.ProposalTypeText)
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// create a proposal3 with deposit
 	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),

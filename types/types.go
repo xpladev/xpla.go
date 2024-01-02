@@ -17,7 +17,7 @@ const (
 	QueryLcd  = 2
 
 	DefaultGasLimit      = "250000"
-	DefaultGasPrice      = "850000000000"
+	DefaultGasPrice      = "5100000000000"
 	DefaultGasAdjustment = "1.75"
 	DefaultAccNum        = 0
 	DefaultAccSeq        = 0

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/xpladev/xpla.go/types"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -44,10 +47,12 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	xtestutil "github.com/xpladev/xpla.go/util/testutil"
 
 	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/evmos/ethermint/server/config"
@@ -73,7 +78,9 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 		return app.NewXplaApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
+			app.GetEnabledProposals(),
 			simapp.EmptyAppOptions{},
+			[]wasm.Option{},
 			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
@@ -107,22 +114,23 @@ type Config struct {
 	GRPCAddress       string              // GRPC server listen address (including port)
 	EnableTMLogging   bool                // enable Tendermint logging to STDOUT
 	CleanupDir        bool                // remove base temporary directory during cleanup
+	AdditionalAccount bool
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
 func DefaultConfig() Config {
-	encCfg := app.MakeEncodingConfig()
+	encCfg := app.MakeTestEncodingConfig()
 	powerReduction := sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(types.BaseDenomUnit), nil))
 
 	return Config{
-		Codec:             encCfg.Marshaler,
+		Codec:             encCfg.Codec,
 		TxConfig:          encCfg.TxConfig,
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor(encCfg),
-		GenesisState:      app.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		GenesisState:      app.ModuleBasics.DefaultGenesis(encCfg.Codec),
 		TimeoutCommit:     2 * time.Second,
 		ChainID:           testChainID,
 		NumValidators:     4,
@@ -135,6 +143,7 @@ func DefaultConfig() Config {
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.EthSecp256k1Type),
 		KeyringOptions:    []keyring.Option{hd.EthSecp256k1Option()},
+		AdditionalAccount: true,
 	}
 }
 
@@ -161,20 +170,21 @@ type (
 	// a client can make RPC and API calls and interact with any client command
 	// or handler.
 	Validator struct {
-		AppConfig     *config.Config
-		ClientCtx     client.Context
-		Ctx           *server.Context
-		Dir           string
-		NodeID        string
-		PubKey        cryptotypes.PubKey
-		Moniker       string
-		APIAddress    string
-		RPCAddress    string
-		P2PAddress    string
-		Address       sdk.AccAddress
-		ValAddress    sdk.ValAddress
-		RPCClient     tmclient.Client
-		JSONRPCClient *ethclient.Client
+		AppConfig         *config.Config
+		ClientCtx         client.Context
+		Ctx               *server.Context
+		Dir               string
+		NodeID            string
+		PubKey            cryptotypes.PubKey
+		Moniker           string
+		APIAddress        string
+		RPCAddress        string
+		P2PAddress        string
+		Address           sdk.AccAddress
+		ValAddress        sdk.ValAddress
+		RPCClient         tmclient.Client
+		JSONRPCClient     *ethclient.Client
+		AdditionalAccount simtypes.Account
 
 		tmNode      *node.Node
 		api         *api.Server
@@ -186,7 +196,7 @@ type (
 )
 
 // New creates a new Network for integration tests or in-process testnets run via the CLI
-func New(t *testing.T, cfg Config) *Network {
+func New(t *testing.T, cfg Config) Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()
@@ -195,7 +205,7 @@ func New(t *testing.T, cfg Config) *Network {
 	require.NoError(t, err)
 	t.Logf("created temporary directory: %s", baseDir)
 
-	network := &Network{
+	network := Network{
 		T:          t,
 		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),
@@ -403,6 +413,47 @@ func New(t *testing.T, cfg Config) *Network {
 		err = ctx.Viper.ReadInConfig()
 		require.NoError(t, err)
 
+		var accs simtypes.Account
+		if cfg.AdditionalAccount {
+			privkeySeed := make([]byte, 16)
+
+			src := rand.NewSource(int64(i))
+			r := rand.New(src)
+			r.Read(privkeySeed)
+
+			mnemonic, err := xtestutil.NewTestMnemonic(privkeySeed)
+			require.NoError(t, err)
+
+			keyringAlgos, _ := kb.SupportedAlgorithms()
+			algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
+			require.NoError(t, err)
+
+			addr, secret, err := testutil.GenerateSaveCoinKey(kb, "add_account_"+nodeDirName, mnemonic, false, algo)
+			require.NoError(t, err)
+
+			info := map[string]string{"secret": secret}
+			infoBz, err := json.Marshal(info)
+			require.NoError(t, err)
+			require.NoError(t, writeFile(fmt.Sprintf("%v.json", "add_key_seed"), clientDir, infoBz))
+
+			balances := sdk.NewCoins(
+				sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+			)
+			genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
+			genAccounts = append(genAccounts, &ethermint.EthAccount{
+				BaseAccount: authtypes.NewBaseAccount(addr, nil, 0, 0),
+				CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
+			})
+
+			ethsecpPrivKey, err := xtestutil.NewTestEthSecpPrivKey(secret)
+			require.NoError(t, err)
+
+			accs.PrivKey = ethsecpPrivKey
+			accs.PubKey = accs.PrivKey.PubKey()
+			accs.Address = sdk.AccAddress(accs.PubKey.Address())
+			accs.ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
+		}
+
 		clientCtx := client.Context{}.
 			WithKeyringDir(clientDir).
 			WithKeyring(kb).
@@ -415,18 +466,19 @@ func New(t *testing.T, cfg Config) *Network {
 			WithAccountRetriever(cfg.AccountRetriever)
 
 		network.Validators[i] = &Validator{
-			AppConfig:  appCfg,
-			ClientCtx:  clientCtx,
-			Ctx:        ctx,
-			Dir:        filepath.Join(network.BaseDir, nodeDirName),
-			NodeID:     nodeID,
-			PubKey:     pubKey,
-			Moniker:    nodeDirName,
-			RPCAddress: tmCfg.RPC.ListenAddress,
-			P2PAddress: tmCfg.P2P.ListenAddress,
-			APIAddress: apiAddr,
-			Address:    addr,
-			ValAddress: sdk.ValAddress(addr),
+			AppConfig:         appCfg,
+			ClientCtx:         clientCtx,
+			Ctx:               ctx,
+			Dir:               filepath.Join(network.BaseDir, nodeDirName),
+			NodeID:            nodeID,
+			PubKey:            pubKey,
+			Moniker:           nodeDirName,
+			RPCAddress:        tmCfg.RPC.ListenAddress,
+			P2PAddress:        tmCfg.P2P.ListenAddress,
+			APIAddress:        apiAddr,
+			Address:           addr,
+			ValAddress:        sdk.ValAddress(addr),
+			AdditionalAccount: accs,
 		}
 	}
 

@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"math/big"
-	"math/rand"
 	"strings"
 	"testing"
 
@@ -16,15 +15,8 @@ import (
 	"github.com/xpladev/xpla.go/util/testutil"
 	"github.com/xpladev/xpla.go/util/testutil/network"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/suite"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -32,8 +24,7 @@ import (
 )
 
 var (
-	validatorNumber          = 1
-	testBalance              = "1000000000000000000000000000"
+	validatorNumber          = 2
 	testABIJsonFilePath      = "../../util/testutil/test_files/abi.json"
 	testBytecodeJsonFilePath = "../../util/testutil/test_files/bytecode.json"
 )
@@ -42,13 +33,12 @@ type IntegrationTestSuite struct {
 	suite.Suite
 
 	xplac              provider.XplaClient
-	accounts           []simtypes.Account
 	evmtestTxHash      string
 	evmTestBlockHeight int64
 	contractAddr       string
 
 	cfg     network.Config
-	network *network.Network
+	network network.Network
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -58,63 +48,6 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	src := rand.NewSource(1)
-	r := rand.New(src)
-	s.accounts = testutil.RandomAccounts(r, 2)
-
-	balanceBigInt, err := util.FromStringToBigInt(testBalance)
-	s.Require().NoError(err)
-
-	genesisState := s.cfg.GenesisState
-
-	// add genesis account
-	var authGenesis authtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authGenesis))
-
-	var genAccounts []authtypes.GenesisAccount
-
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[0].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-	genAccounts = append(genAccounts, &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(s.accounts[1].Address, nil, 0, 0),
-		CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-	})
-
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err)
-
-	authGenesis.Accounts = accounts
-
-	authGenesisBz, err := s.cfg.Codec.MarshalJSON(&authGenesis)
-	s.Require().NoError(err)
-	genesisState[authtypes.ModuleName] = authGenesisBz
-
-	// add balances
-	var bankGenesis banktypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis))
-
-	bankGenesis.Balances = []banktypes.Balance{
-		{
-			Address: s.accounts[0].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-		{
-			Address: s.accounts[1].Address.String(),
-			Coins: sdk.Coins{
-				sdk.NewCoin(types.XplaDenom, sdk.NewIntFromBigInt(balanceBigInt)),
-			},
-		},
-	}
-
-	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
-	s.Require().NoError(err)
-	genesisState[banktypes.ModuleName] = bankGenesisBz
-
-	s.cfg.GenesisState = genesisState
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -122,7 +55,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		WithEvmRpc("http://" + s.network.Validators[0].AppConfig.JSONRPC.Address).
 		WithURL(s.network.Validators[0].APIAddress)
 
-	xplac := s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
+	account0 := s.network.Validators[0].AdditionalAccount
+	xplac := s.xplac.WithPrivateKey(account0.PrivKey).
+		WithGasAdjustment(types.DefaultGasAdjustment)
 
 	// deploy contract
 	deploySolContractMsg := types.DeploySolContractMsg{
@@ -139,7 +74,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// request tx event
 	txEventsRes, err := xplac.TxsByEvents(types.QueryTxsByEventsMsg{
-		Events: "transfer.sender=" + s.accounts[0].Address.String(),
+		Events: "transfer.sender=" + account0.Address.String(),
 	}).Query()
 	s.Require().NoError(err)
 
@@ -169,7 +104,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestCallSolidityContract() {
-	xplac := s.xplac.WithPrivateKey(s.accounts[0].PrivKey)
+	account1 := s.network.Validators[1].AdditionalAccount
+	xplac := s.xplac.WithPrivateKey(account1.PrivKey)
 
 	// call contract
 	callSolContractMsg := types.CallSolContractMsg{
@@ -177,7 +113,7 @@ func (s *IntegrationTestSuite) TestCallSolidityContract() {
 		ContractFuncCallName: "retrieve",
 		ABIJsonFilePath:      testABIJsonFilePath,
 		BytecodeJsonFilePath: testBytecodeJsonFilePath,
-		FromByteAddress:      util.FromStringToByte20Address(s.accounts[0].PubKey.Address().String()).String(),
+		FromByteAddress:      util.FromStringToByte20Address(account1.PubKey.Address().String()).String(),
 	}
 
 	res, err := xplac.CallSolidityContract(callSolContractMsg).Query()
@@ -202,10 +138,10 @@ func (s *IntegrationTestSuite) TestCallSolidityContract() {
 		Args:                 args,
 		ABIJsonFilePath:      testABIJsonFilePath,
 		BytecodeJsonFilePath: testBytecodeJsonFilePath,
-		FromByteAddress:      util.FromStringToByte20Address(s.accounts[0].PubKey.Address().String()).String(),
+		FromByteAddress:      util.FromStringToByte20Address(account1.PubKey.Address().String()).String(),
 	}
 
-	exeTxbytes, err := xplac.WithSequence("").InvokeSolidityContract(invokeSolContractMsg).CreateAndSignTx()
+	exeTxbytes, err := xplac.WithGasLimit("").WithSequence("").InvokeSolidityContract(invokeSolContractMsg).CreateAndSignTx()
 	s.Require().NoError(err)
 
 	_, err = xplac.Broadcast(exeTxbytes)
@@ -218,7 +154,7 @@ func (s *IntegrationTestSuite) TestCallSolidityContract() {
 		ContractFuncCallName: "retrieve",
 		ABIJsonFilePath:      testABIJsonFilePath,
 		BytecodeJsonFilePath: testBytecodeJsonFilePath,
-		FromByteAddress:      util.FromStringToByte20Address(s.accounts[0].PubKey.Address().String()).String(),
+		FromByteAddress:      util.FromStringToByte20Address(account1.PubKey.Address().String()).String(),
 	}
 
 	res, err = xplac.CallSolidityContract(callSolContractMsg).Query()
@@ -277,8 +213,9 @@ func (s *IntegrationTestSuite) TestGetBlockByHashOrHeight() {
 }
 
 func (s *IntegrationTestSuite) TestAccountInfo() {
+	account0 := s.network.Validators[0].AdditionalAccount
 	accountInfoMsg := types.AccountInfoMsg{
-		Account: s.accounts[0].PubKey.Address().String(),
+		Account: account0.PubKey.Address().String(),
 	}
 	res, err := s.xplac.AccountInfo(accountInfoMsg).Query()
 	s.Require().NoError(err)
@@ -286,8 +223,8 @@ func (s *IntegrationTestSuite) TestAccountInfo() {
 	var accountInfoResponse types.AccountInfoResponse
 	json.Unmarshal([]byte(res), &accountInfoResponse)
 
-	s.Require().Equal(s.accounts[0].PubKey.Address().String(), strings.ToUpper(accountInfoResponse.Account[2:]))
-	s.Require().Equal(s.accounts[0].Address.String(), accountInfoResponse.Bech32Account)
+	s.Require().Equal(account0.PubKey.Address().String(), strings.ToUpper(accountInfoResponse.Account[2:]))
+	s.Require().Equal(account0.Address.String(), accountInfoResponse.Bech32Account)
 }
 
 func (s *IntegrationTestSuite) TestSuggestGasPrice() {
@@ -386,7 +323,7 @@ func (s *IntegrationTestSuite) TestNetPeerCount() {
 	var netPeerCountResponse types.NetPeerCountResponse
 	json.Unmarshal([]byte(res), &netPeerCountResponse)
 
-	s.Require().Equal(0, netPeerCountResponse.NetPeerCount)
+	s.Require().Equal(1, netPeerCountResponse.NetPeerCount)
 }
 
 func (s *IntegrationTestSuite) TestNetListening() {
@@ -426,7 +363,7 @@ func (s *IntegrationTestSuite) TestEthAccounts() {
 	var ethAccountsResponse types.EthAccountsResponse
 	json.Unmarshal([]byte(res), &ethAccountsResponse)
 
-	s.Require().Len(ethAccountsResponse.EthAccounts, 1)
+	s.Require().Len(ethAccountsResponse.EthAccounts, 2)
 }
 
 func (s *IntegrationTestSuite) TestEthGetBlockTransactionCount() {
@@ -462,6 +399,7 @@ func (s *IntegrationTestSuite) TestEthGetBlockTransactionCount() {
 }
 
 func (s *IntegrationTestSuite) TestEstimateGas() {
+	account0 := s.network.Validators[0].AdditionalAccount
 	var args []interface{}
 	args = append(args, big.NewInt(1))
 
@@ -471,7 +409,7 @@ func (s *IntegrationTestSuite) TestEstimateGas() {
 		Args:                 args,
 		ABIJsonFilePath:      testABIJsonFilePath,
 		BytecodeJsonFilePath: testBytecodeJsonFilePath,
-		FromByteAddress:      util.FromStringToByte20Address(s.accounts[0].PubKey.Address().String()).String(),
+		FromByteAddress:      util.FromStringToByte20Address(account0.PubKey.Address().String()).String(),
 	}
 	res, err := s.xplac.EstimateGas(invokeSolContractMsg).Query()
 	s.Require().NoError(err)
