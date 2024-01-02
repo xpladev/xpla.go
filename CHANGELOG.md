@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.3 - 2024-01-02
+
+### 🚀 Features
+
+- feat: update dependency, add volunteer module and update functions of the xpla client @Moonyongjung (#9)
+
+### 🔬 Others
+
+- refactor: get address without the private key when make tx and add http mutex @Moonyongjung (#8)
+
 ## v0.1.2 - 2023-09-08
 
 ### 🔬 Others
