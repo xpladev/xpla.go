@@ -84,7 +84,7 @@ func (suite *TestSuite) TestSimulateCreateUnsignedTx() {
 	clientCtx, err := util.NewClient()
 	suite.Require().NoError(err)
 
-	_, _, newTx, err := readTxAndInitContexts(clientCtx, unsignedTxPath)
+	_, _, newTx, err := readTxAndInitContexts(xplac.GetLogger(), clientCtx, unsignedTxPath)
 	suite.Require().NoError(err)
 
 	newTxbytes, err := xplac.GetEncoding().TxConfig.TxEncoder()(newTx)
@@ -121,7 +121,7 @@ func (suite *TestSuite) TestSimulateSignTx() {
 	clientCtx, err := util.NewClient()
 	suite.Require().NoError(err)
 
-	_, _, newTx, err := readTxAndInitContexts(clientCtx, signedTxPath)
+	_, _, newTx, err := readTxAndInitContexts(xplac.GetLogger(), clientCtx, signedTxPath)
 	suite.Require().NoError(err)
 
 	newTxbytes, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(newTx)
@@ -196,7 +196,7 @@ func (suite *TestSuite) TestSimulateCreateAndSignTx() {
 	clientCtx, err := util.NewClient()
 	suite.Require().NoError(err)
 
-	_, _, newTx, err := readTxAndInitContexts(clientCtx, signedTxPath)
+	_, _, newTx, err := readTxAndInitContexts(xplac.GetLogger(), clientCtx, signedTxPath)
 	suite.Require().NoError(err)
 
 	newTxbytes, err := xplac.GetEncoding().TxConfig.TxEncoder()(newTx)
@@ -253,7 +253,7 @@ func (suite *TestSuite) TestSimulateEncodeAndDecodeTx() {
 	clientCtx, err := util.NewClient()
 	suite.Require().NoError(err)
 
-	_, _, newTx, err := readTxAndInitContexts(clientCtx, unsignedTxPath)
+	_, _, newTx, err := readTxAndInitContexts(xplac.GetLogger(), clientCtx, unsignedTxPath)
 	suite.Require().NoError(err)
 
 	newTxbytes, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(newTx)

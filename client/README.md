@@ -106,7 +106,9 @@ type Options struct {
     // "Generate only" is same that OutputDocument is not empty string 
     OutputDocument string
     // Set from address manually
-    FromAddress    sdk.AccAddress	
+    FromAddress    sdk.AccAddress
+    // Set log verbose (0: default, 1: details, 2: implication)
+    Verbose        int
 }
 ```
 

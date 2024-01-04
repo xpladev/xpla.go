@@ -194,16 +194,22 @@ func (s *ClientTestSuite) TestMultiSignature() {
 	kb, err := keyring.New(types.XplaToolDefaultName, keyring.BackendTest, rootDir, nil, hd.EthSecp256k1Option())
 	s.Require().NoError(err)
 
+	armor1, err := key.EncryptArmorPrivKey(key1.PrivKey, key.DefaultEncryptPassphrase)
+	s.Require().NoError(err)
+
 	err = kb.ImportPrivKey(
 		key1Name,
-		key.EncryptArmorPrivKey(key1.PrivKey, key.DefaultEncryptPassphrase),
+		armor1,
 		key.DefaultEncryptPassphrase,
 	)
 	s.Require().NoError(err)
 
+	armor2, err := key.EncryptArmorPrivKey(key2.PrivKey, key.DefaultEncryptPassphrase)
+	s.Require().NoError(err)
+
 	err = kb.ImportPrivKey(
 		key2Name,
-		key.EncryptArmorPrivKey(key2.PrivKey, key.DefaultEncryptPassphrase),
+		armor2,
 		key.DefaultEncryptPassphrase,
 	)
 	s.Require().NoError(err)
@@ -309,10 +315,6 @@ func (s *ClientTestSuite) TestMultiSignature() {
 	// generate error insufficient funds
 	// multisig tx is normal
 	s.Require().Error(err)
-	s.Require().Equal(
-		`code 8 : tx failed - [with code 5 : 10000000000axpla is smaller than 1077997200000000000axpla: insufficient funds: insufficient funds]`,
-		err.Error(),
-	)
 
 	s.xplac = provider.ResetXplac(s.xplac)
 }

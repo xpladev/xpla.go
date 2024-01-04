@@ -38,7 +38,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeFeeGrantMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, feegrant.FeegrantGrantMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, feegrant.FeegrantGrantMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeFeeGrantMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -52,12 +52,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeRevokeFeeGrantMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, feegrant.FeegrantRevokeGrantMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, feegrant.FeegrantRevokeGrantMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeRevokeFeeGrantMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

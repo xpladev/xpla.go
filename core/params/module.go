@@ -2,8 +2,7 @@ package params
 
 import (
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
+	"github.com/xpladev/xpla.go/types"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -19,14 +18,17 @@ func (c *coreModule) Name() string {
 	return ParamsModule
 }
 
-func (c *coreModule) NewTxRouter(builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
+func (c *coreModule) NewTxRouter(logger types.Logger, builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
 	switch {
 	case msgType == ParamsProposalParamChangeMsgType:
 		convertMsg := msg.(govtypes.MsgSubmitProposal)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	default:
-		return nil, util.LogErr(errors.ErrInvalidMsgType, msgType)
+		return nil, logger.Err(types.ErrWrap(types.ErrInvalidMsgType, msgType))
 	}
 
 	return builder, nil

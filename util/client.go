@@ -15,7 +15,6 @@ import (
 	erpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -31,7 +30,7 @@ func NewClient() (cmclient.Context, error) {
 	encodingConfig := MakeEncodingConfig()
 	clientKeyring, err := NewKeyring(BackendMemory, "")
 	if err != nil {
-		return cmclient.Context{}, LogErr(errors.ErrKeyNotFound, err)
+		return cmclient.Context{}, types.ErrWrap(types.ErrKeyNotFound, err)
 	}
 
 	clientCtx = clientCtx.
@@ -64,17 +63,16 @@ type EvmClient struct {
 func NewEvmClient(evmRpcUrl string, ctx context.Context) (*EvmClient, error) {
 	// Target blockchain node URL
 	httpDefaultTransport := http.DefaultTransport
-	defaultTransportPointer, ok := httpDefaultTransport.(*http.Transport)
+	defaultTransport, ok := httpDefaultTransport.(*http.Transport)
 	if !ok {
-		return nil, LogErr(errors.ErrInvalidRequest, "default transport pointer err")
+		return nil, types.ErrWrap(types.ErrInvalidRequest, "default transport pointer err")
 	}
-	defaultTransport := *defaultTransportPointer
 	defaultTransport.DisableKeepAlives = true
 
-	httpClient := &http.Client{Transport: &defaultTransport}
+	httpClient := &http.Client{Transport: defaultTransport}
 	rpcClient, err := erpc.DialHTTPWithClient(evmRpcUrl, httpClient)
 	if err != nil {
-		return nil, LogErr(errors.ErrEvmRpcRequest, err)
+		return nil, types.ErrWrap(types.ErrEvmRpcRequest, err)
 	}
 
 	ethClient := ethclient.NewClient(rpcClient)
@@ -94,7 +92,7 @@ func NewKeyring(backendType string, keyringPath string) (keyring.Keyring, error)
 			hd.EthSecp256k1Option(),
 		)
 		if err != nil {
-			return nil, LogErr(errors.ErrKeyNotFound, err)
+			return nil, types.ErrWrap(types.ErrKeyNotFound, err)
 		}
 
 		return k, nil
@@ -108,7 +106,7 @@ func NewKeyring(backendType string, keyringPath string) (keyring.Keyring, error)
 			hd.EthSecp256k1Option(),
 		)
 		if err != nil {
-			return nil, LogErr(errors.ErrKeyNotFound, err)
+			return nil, types.ErrWrap(types.ErrKeyNotFound, err)
 		}
 
 		return k, nil
@@ -122,13 +120,13 @@ func NewKeyring(backendType string, keyringPath string) (keyring.Keyring, error)
 			hd.EthSecp256k1Option(),
 		)
 		if err != nil {
-			return nil, LogErr(errors.ErrKeyNotFound, err)
+			return nil, types.ErrWrap(types.ErrKeyNotFound, err)
 		}
 
 		return k, nil
 
 	default:
-		return nil, LogErr(errors.ErrInvalidMsgType, "invalid keyring backend type")
+		return nil, types.ErrWrap(types.ErrInvalidMsgType, "invalid keyring backend type")
 	}
 }
 
@@ -152,26 +150,26 @@ func CtxHttpClient(methodType string, url string, reqBody []byte, ctx context.Co
 	if methodType == "GET" {
 		resp, err = ctxhttp.Get(ctx, httpClient, url)
 		if err != nil {
-			return nil, LogErr(errors.ErrHttpRequest, "failed GET method", err)
+			return nil, types.ErrWrap(types.ErrHttpRequest, "failed GET method", err)
 		}
 	} else if methodType == "POST" {
 		resp, err = ctxhttp.Post(ctx, httpClient, url, "application/json", bytes.NewBuffer(reqBody))
 		if err != nil {
-			return nil, LogErr(errors.ErrHttpRequest, "failed POST method", err)
+			return nil, types.ErrWrap(types.ErrHttpRequest, "failed POST method", err)
 		}
 	} else {
-		return nil, LogErr(errors.ErrHttpRequest, "not correct method", err)
+		return nil, types.ErrWrap(types.ErrHttpRequest, "not correct method", err)
 	}
 
 	defer resp.Body.Close()
 
 	out, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, LogErr(errors.ErrHttpRequest, "failed to read response", err)
+		return nil, types.ErrWrap(types.ErrHttpRequest, "failed to read response", err)
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, LogErr(errors.ErrHttpRequest, resp.StatusCode, ":", string(out))
+		return nil, types.ErrWrap(types.ErrHttpRequest, resp.StatusCode, ":", string(out))
 	}
 
 	return out, nil

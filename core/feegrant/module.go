@@ -2,8 +2,7 @@ package feegrant
 
 import (
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
+	"github.com/xpladev/xpla.go/types"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -19,18 +18,24 @@ func (c *coreModule) Name() string {
 	return FeegrantModule
 }
 
-func (c *coreModule) NewTxRouter(builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
+func (c *coreModule) NewTxRouter(logger types.Logger, builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
 	switch {
 	case msgType == FeegrantGrantMsgType:
 		convertMsg := msg.(feegrant.MsgGrantAllowance)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == FeegrantRevokeGrantMsgType:
 		convertMsg := msg.(feegrant.MsgRevokeAllowance)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	default:
-		return nil, util.LogErr(errors.ErrInvalidMsgType, msgType)
+		return nil, logger.Err(types.ErrWrap(types.ErrInvalidMsgType, msgType))
 	}
 
 	return builder, nil

@@ -6,8 +6,6 @@ import (
 
 	mevm "github.com/xpladev/xpla.go/core/evm"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
 
 // Query transactions and xpla blockchain information.
@@ -21,11 +19,11 @@ func (xplac *xplaClient) Query() (string, error) {
 	if xplac.GetGrpcUrl() == "" && xplac.GetLcdURL() == "" {
 		if xplac.GetModule() == mevm.EvmModule {
 			if xplac.GetEvmRpc() == "" {
-				return "", util.LogErr(errors.ErrNotSatisfiedOptions, "evm JSON-RPC URL must exist")
+				return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "evm JSON-RPC URL must exist"))
 			}
 
 		} else {
-			return "", util.LogErr(errors.ErrNotSatisfiedOptions, "at least one of the gRPC URL or LCD URL must exist for query")
+			return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "at least one of the gRPC URL or LCD URL must exist for query"))
 		}
 	}
 	queryClient := core.NewIxplaClient(xplac, setQueryType(xplac))

@@ -1,6 +1,10 @@
 package core
 
-import cmclient "github.com/cosmos/cosmos-sdk/client"
+import (
+	"github.com/xpladev/xpla.go/types"
+
+	cmclient "github.com/cosmos/cosmos-sdk/client"
+)
 
 // The standard form for a module in the core package.
 // Every modules are enrolled to the controller by using this interface.
@@ -9,7 +13,7 @@ type CoreModule interface {
 	Name() string
 
 	// Routed transaction messages are built in the TxBuilder of Cosmos-SDK.
-	NewTxRouter(cmclient.TxBuilder, string, interface{}) (cmclient.TxBuilder, error)
+	NewTxRouter(types.Logger, cmclient.TxBuilder, string, interface{}) (cmclient.TxBuilder, error)
 
 	// Route query requests by gRPC or HTTP.
 	// Queries are returned with string type regardless of communication protocol.

@@ -4,7 +4,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	authv1beta1 "cosmossdk.io/api/cosmos/auth/v1beta1"
@@ -38,7 +37,7 @@ func queryByGrpcAuth(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Auth account
@@ -49,7 +48,7 @@ func queryByGrpcAuth(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Auth accounts
@@ -60,56 +59,56 @@ func queryByGrpcAuth(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Auth tx by event
 	case i.Ixplac.GetMsgType() == AuthQueryTxsByEventsMsgType:
 		if i.Ixplac.GetRpc() == "" {
-			return "", util.LogErr(errors.ErrNotSatisfiedOptions, "query txs by events, need RPC URL when txs methods")
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "query txs by events, need RPC URL when txs methods"))
 		}
 		convertMsg := i.Ixplac.GetMsg().(QueryTxsByEventParseMsg)
 		clientCtx, err := core.ClientForQuery(i)
 		if err != nil {
-			return "", err
+			return "", i.Ixplac.GetLogger().Err(err)
 		}
 
 		res, err = authtx.QueryTxsByEvents(clientCtx, convertMsg.TmEvents, convertMsg.Page, convertMsg.Limit, "")
 		if err != nil {
-			return "", util.LogErr(errors.ErrRpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrRpcRequest, err))
 		}
 
 	// Auth tx
 	case i.Ixplac.GetMsgType() == AuthQueryTxMsgType:
 		if i.Ixplac.GetRpc() == "" {
-			return "", util.LogErr(errors.ErrNotSatisfiedOptions, "auth query tx msg, need RPC URL when txs methods")
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "auth query tx msg, need RPC URL when txs methods"))
 		}
 		convertMsg := i.Ixplac.GetMsg().(QueryTxParseMsg)
 
 		clientCtx, err := core.ClientForQuery(i)
 		if err != nil {
-			return "", err
+			return "", i.Ixplac.GetLogger().Err(err)
 		}
 
 		if convertMsg.TxType == "hash" {
 			res, err = authtx.QueryTx(clientCtx, convertMsg.TmEvents[0])
 			if err != nil {
-				return "", util.LogErr(errors.ErrRpcRequest, err)
+				return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrRpcRequest, err))
 			}
 		} else {
 			res, err = authtx.QueryTxsByEvents(clientCtx, convertMsg.TmEvents, rest.DefaultPage, rest.DefaultLimit, "")
 			if err != nil {
-				return "", util.LogErr(errors.ErrRpcRequest, err)
+				return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrRpcRequest, err))
 			}
 		}
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	out, err = core.PrintProto(i, res)
 	if err != nil {
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 
 	return string(out), nil
@@ -144,7 +143,7 @@ func queryByLcdAuth(i core.QueryClient) (string, error) {
 		convertMsg := i.Ixplac.GetMsg().(QueryTxsByEventParseMsg)
 
 		if len(convertMsg.TmEvents) > 1 {
-			return "", util.LogErr(errors.ErrNotSupport, "support only one event on the LCD")
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "support only one event on the LCD"))
 		}
 
 		parsedEvent := convertMsg.TmEvents[0]
@@ -163,7 +162,7 @@ func queryByLcdAuth(i core.QueryClient) (string, error) {
 		convertMsg := i.Ixplac.GetMsg().(QueryTxParseMsg)
 
 		if len(convertMsg.TmEvents) > 1 {
-			return "", util.LogErr(errors.ErrNotSupport, "support only one event on the LCD")
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "support only one event on the LCD"))
 		}
 
 		parsedValue := convertMsg.TmEvents
@@ -175,7 +174,7 @@ func queryByLcdAuth(i core.QueryClient) (string, error) {
 
 		} else if parsedTxType == "signature" {
 			// inactivate
-			return "", util.LogErr(errors.ErrNotSupport, "inactivate GetTxEvent('signature') when using LCD because of sometimes generating parsing error that based64 encoded signature has '='")
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "inactivate GetTxEvent('signature') when using LCD because of sometimes generating parsing error that based64 encoded signature has '='"))
 			// events := "?events=" + parsedValue
 			// page := "&pagination.page=" + util.FromIntToString(rest.DefaultPage)
 			// limit := "&pagination.limit=" + util.FromIntToString(rest.DefaultLimit)
@@ -190,14 +189,14 @@ func queryByLcdAuth(i core.QueryClient) (string, error) {
 		}
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
 		i.Ixplac.GetHttpMutex().Unlock()
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	i.Ixplac.GetHttpMutex().Unlock()
 

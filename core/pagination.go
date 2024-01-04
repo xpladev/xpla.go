@@ -3,8 +3,6 @@ package core
 import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
 
 var PageRequest *query.PageRequest
@@ -30,7 +28,7 @@ func ReadPageRequest(pagination types.Pagination) (*query.PageRequest, error) {
 	reverse := pagination.Reverse
 
 	if page > 1 && offset > 0 {
-		return nil, util.LogErr(errors.ErrInvalidRequest, "page and offset cannot be used together")
+		return nil, types.ErrWrap(types.ErrInvalidRequest, "page and offset cannot be used together")
 	}
 
 	if page > 1 {

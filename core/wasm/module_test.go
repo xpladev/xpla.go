@@ -36,7 +36,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeStoreCodeMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, wasm.WasmStoreMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, wasm.WasmStoreMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeStoreCodeMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -53,7 +53,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeInstantiateMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, wasm.WasmInstantiateMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, wasm.WasmInstantiateMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeInstantiateMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -69,7 +69,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeExecuteMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, wasm.WasmExecuteMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, wasm.WasmExecuteMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeExecuteMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -82,7 +82,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeClearContractAdminMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, wasm.WasmClearContractAdminMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, wasm.WasmClearContractAdminMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeClearContractAdminMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -95,7 +95,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeSetContractAdmintMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, wasm.WasmSetContractAdminMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, wasm.WasmSetContractAdminMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeSetContractAdmintMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -110,12 +110,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeMigrateMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, wasm.WasmMigrateMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, wasm.WasmMigrateMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeMigrateMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

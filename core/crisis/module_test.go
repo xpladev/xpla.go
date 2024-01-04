@@ -33,7 +33,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.xplac = client.NewXplaClient(testutil.TestChainId)
+	s.xplac = client.NewXplaClient(testutil.TestChainId).WithVerbose(1)
 	s.apis = []string{
 		s.network.Validators[0].APIAddress,
 		s.network.Validators[0].AppConfig.GRPC.Address,
@@ -71,12 +71,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeInvariantRouteMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, crisis.CrisisInvariantBrokenMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, crisis.CrisisInvariantBrokenMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeInvariantRouteMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

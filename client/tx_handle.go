@@ -9,7 +9,6 @@ import (
 	"github.com/xpladev/xpla.go/controller"
 	"github.com/xpladev/xpla.go/key"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
@@ -35,14 +34,14 @@ func setTxBuilderMsg(xplac *xplaClient) (cmclient.TxBuilder, error) {
 	builder := xplac.GetEncoding().TxConfig.NewTxBuilder()
 
 	return controller.Controller().Get(xplac.GetModule()).
-		NewTxRouter(builder, xplac.GetMsgType(), xplac.GetMsg())
+		NewTxRouter(xplac.GetLogger(), builder, xplac.GetMsgType(), xplac.GetMsg())
 }
 
 // Set information for transaction builder.
 func convertAndSetBuilder(xplac *xplaClient, builder cmclient.TxBuilder, gasLimit string, feeAmount string) (cmclient.TxBuilder, error) {
 	feeAmountDenomRemove, err := util.FromStringToBigInt(util.DenomRemove(feeAmount))
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 	}
 	feeAmountCoin := sdk.Coin{
 		Amount: sdk.NewIntFromBigInt(feeAmountDenomRemove),
@@ -53,7 +52,7 @@ func convertAndSetBuilder(xplac *xplaClient, builder cmclient.TxBuilder, gasLimi
 	if xplac.GetTimeoutHeight() != "" {
 		h, err := util.FromStringToUint64(xplac.GetTimeoutHeight())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 		builder.SetTimeoutHeight(h)
 	}
@@ -63,7 +62,7 @@ func convertAndSetBuilder(xplac *xplaClient, builder cmclient.TxBuilder, gasLimi
 	}
 	gasLimitStr, err := util.FromStringToUint64(gasLimit)
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 	}
 
 	builder.SetGasLimit(gasLimitStr)
@@ -95,7 +94,7 @@ func txSignRound(xplac *xplaClient,
 
 	err := builder.SetSignatures(sigsV2...)
 	if err != nil {
-		return util.LogErr(errors.ErrParse, err)
+		return xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	sigsV2 = []signing.SignatureV2{}
@@ -114,7 +113,7 @@ func txSignRound(xplac *xplaClient,
 			accSeqs[i],
 		)
 		if err != nil {
-			return util.LogErr(errors.ErrParse, err)
+			return xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		sigsV2 = append(sigsV2, sigV2)
@@ -122,7 +121,7 @@ func txSignRound(xplac *xplaClient,
 
 	err = builder.SetSignatures(sigsV2...)
 	if err != nil {
-		return util.LogErr(errors.ErrParse, err)
+		return xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	return nil
@@ -140,11 +139,11 @@ func evmTxSignRound(xplac *xplaClient,
 
 	seqU64, err := util.FromStringToUint64(xplac.GetSequence())
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 	}
 	gasLimitStr, err := util.FromStringToUint64(gasLimit)
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 	}
 
 	tx := evmtypes.NewTransaction(
@@ -160,21 +159,21 @@ func evmTxSignRound(xplac *xplaClient,
 
 	signedTx, err := evmtypes.SignTx(tx, signer, ethPrivKey)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 	txbytes, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, util.LogErr(errors.ErrFailedToMarshal, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrFailedToMarshal, err))
 	}
 
 	return txbytes, nil
 }
 
 // Read transaction file and make standard transaction.
-func readTxAndInitContexts(clientCtx cmclient.Context, filename string) (cmclient.Context, tx.Factory, sdk.Tx, error) {
+func readTxAndInitContexts(l types.Logger, clientCtx cmclient.Context, filename string) (cmclient.Context, tx.Factory, sdk.Tx, error) {
 	stdTx, err := authclient.ReadTxFromFile(clientCtx, filename)
 	if err != nil {
-		return clientCtx, tx.Factory{}, nil, util.LogErr(errors.ErrParse, err)
+		return clientCtx, tx.Factory{}, nil, l.Err(types.ErrWrap(types.ErrCannotRead, err))
 	}
 
 	txFactory := util.NewFactory(clientCtx)
@@ -183,12 +182,12 @@ func readTxAndInitContexts(clientCtx cmclient.Context, filename string) (cmclien
 }
 
 // Marshal signature type JSON.
-func marshalSignatureJSON(txConfig cmclient.TxConfig, txBldr cmclient.TxBuilder, signatureOnly bool) ([]byte, error) {
+func marshalSignatureJSON(xplac *xplaClient, txConfig cmclient.TxConfig, txBldr cmclient.TxBuilder, signatureOnly bool) ([]byte, error) {
 	parsedTx := txBldr.GetTx()
 	if signatureOnly {
 		sigs, err := parsedTx.GetSignaturesV2()
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 		return txConfig.MarshalSignatureJSON(sigs)
 	}
@@ -197,10 +196,10 @@ func marshalSignatureJSON(txConfig cmclient.TxConfig, txBldr cmclient.TxBuilder,
 }
 
 // Unmarshal signature type JSON.
-func unmarshalSignatureJSON(clientCtx cmclient.Context, filename string) (sigs []signing.SignatureV2, err error) {
+func unmarshalSignatureJSON(xplac *xplaClient, clientCtx cmclient.Context, filename string) (sigs []signing.SignatureV2, err error) {
 	var bytes []byte
 	if bytes, err = os.ReadFile(filename); err != nil {
-		return
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrCannotRead, err))
 	}
 	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
 }
@@ -211,14 +210,14 @@ func toECDSA(privKey key.PrivateKey) (*ecdsa.PrivateKey, error) {
 }
 
 // Get multiple signatures information. It returns keyring of cosmos sdk.
-func getMultisigInfo(clientCtx cmclient.Context, name string) (keyring.Info, error) {
+func getMultisigInfo(xplac *xplaClient, clientCtx cmclient.Context, name string) (keyring.Info, error) {
 	kb := clientCtx.Keyring
 	multisigInfo, err := kb.Key(name)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrKeyNotFound, "error getting keybase multisig account", err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrKeyNotFound, "error getting keybase multisig account", err))
 	}
 	if multisigInfo.GetType() != keyring.TypeMulti {
-		return nil, util.LogErr(errors.ErrInvalidMsgType, name, "must be of type", keyring.TypeMulti, ":", multisigInfo.GetType())
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidRequest, name, "must be of type", keyring.TypeMulti, ":", multisigInfo.GetType()))
 	}
 
 	return multisigInfo, nil
@@ -237,7 +236,7 @@ func getGasLimitFeeAmount(xplac *xplaClient, builder cmclient.TxBuilder) (string
 			}
 			gasLimitAdjustment, err := util.GasLimitAdjustment(simulate.GasInfo.GasUsed, xplac.GetGasAdjustment())
 			if err != nil {
-				return "", "", err
+				return "", "", xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 			gasLimit = gasLimitAdjustment
 		}
@@ -247,12 +246,12 @@ func getGasLimitFeeAmount(xplac *xplaClient, builder cmclient.TxBuilder) (string
 	if xplac.GetFeeAmount() == "" {
 		gasLimitBigInt, err := util.FromStringToBigInt(gasLimit)
 		if err != nil {
-			return "", "", err
+			return "", "", xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		gasPriceBigInt, err := util.FromStringToBigInt(xplac.GetGasPrice())
 		if err != nil {
-			return "", "", err
+			return "", "", xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		feeAmountBigInt := util.MulBigInt(gasLimitBigInt, gasPriceBigInt)
@@ -274,7 +273,7 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 }
 
 // Get account number and sequence
-func GetAccNumAndSeq(xplac *xplaClient) (*xplaClient, error) {
+func getAccNumAndSeq(xplac *xplaClient) (*xplaClient, error) {
 	if xplac.GetAccountNumber() == "" || xplac.GetSequence() == "" {
 		if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
 			xplac.WithAccountNumber(util.FromUint64ToString(types.DefaultAccNum))

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/xpladev/xpla.go/types/errors"
+	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
@@ -22,19 +22,18 @@ const (
 func (xplac *xplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.AccountI, err error) {
 
 	if xplac.GetGrpcUrl() == "" {
-
 		xplac.GetHttpMutex().Lock()
 		out, err := util.CtxHttpClient("GET", xplac.GetLcdURL()+userInfoUrl+address.String(), nil, xplac.GetContext())
 		if err != nil {
 			xplac.GetHttpMutex().Unlock()
-			return nil, err
+			return nil, xplac.GetLogger().Err(err)
 		}
 		xplac.GetHttpMutex().Unlock()
 
 		var response authtypes.QueryAccountResponse
 		err = xplac.GetEncoding().Codec.UnmarshalJSON(out, &response)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrFailedToUnmarshal, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrFailedToUnmarshal, err))
 		}
 		return response.Account.GetCachedValue().(authtypes.AccountI), nil
 
@@ -45,13 +44,13 @@ func (xplac *xplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.Acco
 		}
 		response, err := queryClient.Account(xplac.GetContext(), &queryAccountRequest)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrGrpcRequest, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 		var newAccount authtypes.AccountI
 		err = xplac.GetEncoding().InterfaceRegistry.UnpackAny(response.Account, &newAccount)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		return newAccount, nil
@@ -63,7 +62,7 @@ func (xplac *xplaClient) LoadAccount(address sdk.AccAddress) (res authtypes.Acco
 func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.SimulateResponse, error) {
 	seq, err := util.FromStringToUint64(xplac.GetSequence())
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 	}
 
 	pubKey := xplac.GetPublicKey()
@@ -71,13 +70,13 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 		if xplac.GetFromAddress() != nil {
 			accountInfo, err := xplac.LoadAccount(xplac.GetFromAddress())
 			if err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, err
 			}
 
 			pubKey = accountInfo.GetPubKey()
 
 		} else {
-			return nil, util.LogErr(errors.ErrInvalidRequest, "cannot be simulated without the public key.")
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidRequest, "cannot be simulated without the public key."))
 		}
 	}
 
@@ -90,13 +89,13 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 	}
 
 	if err := txbuilder.SetSignatures(sig); err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	sdkTx := txbuilder.GetTx()
 	txBytes, err := xplac.GetEncoding().TxConfig.TxEncoder()(sdkTx)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	if xplac.GetGrpcUrl() == "" {
@@ -104,21 +103,21 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 			TxBytes: txBytes,
 		})
 		if err != nil {
-			return nil, util.LogErr(errors.ErrFailedToMarshal, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrFailedToMarshal, err))
 		}
 
 		xplac.GetHttpMutex().Lock()
 		out, err := util.CtxHttpClient("POST", xplac.GetLcdURL()+simulateUrl, reqBytes, xplac.GetContext())
 		if err != nil {
 			xplac.GetHttpMutex().Unlock()
-			return nil, err
+			return nil, xplac.GetLogger().Err(err)
 		}
 		xplac.GetHttpMutex().Unlock()
 
 		var response sdktx.SimulateResponse
 		err = xplac.GetEncoding().Codec.UnmarshalJSON(out, &response)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrFailedToUnmarshal, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrFailedToUnmarshal, err))
 		}
 
 		return &response, nil
@@ -130,7 +129,7 @@ func (xplac *xplaClient) Simulate(txbuilder cmclient.TxBuilder) (*sdktx.Simulate
 
 		response, err := serviceClient.Simulate(xplac.GetContext(), &simulateRequest)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrGrpcRequest, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 		return response, nil

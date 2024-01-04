@@ -1,43 +1,63 @@
 package evidence
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &EvidenceExternal{}
 
 type EvidenceExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewEvidenceExternal(xplac provider.XplaClient) (e EvidenceExternal) {
+func NewExternal(xplac provider.XplaClient) (e EvidenceExternal) {
 	e.Xplac = xplac
+	e.Name = EvidenceModule
 	return e
+}
+
+func (e EvidenceExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e EvidenceExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Query
 
 // Query for evidence by hash or for all (paginated) submitted evidence.
 func (e EvidenceExternal) QueryEvidence(queryEvidenceMsg ...types.QueryEvidenceMsg) provider.XplaClient {
-	if len(queryEvidenceMsg) == 0 {
+	switch {
+
+	case len(queryEvidenceMsg) == 0:
 		msg, err := MakeQueryAllEvidenceMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(EvidenceQueryAllMsgType, err)
 		}
-		e.Xplac.WithModule(EvidenceModule).
-			WithMsgType(EvidenceQueryAllMsgType).
-			WithMsg(msg)
-	} else if len(queryEvidenceMsg) == 1 {
+
+		return e.ToExternal(EvidenceQueryAllMsgType, msg)
+
+	case len(queryEvidenceMsg) == 1:
 		msg, err := MakeQueryEvidenceMsg(queryEvidenceMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(EvidenceQueryMsgType, err)
 		}
-		e.Xplac.WithModule(EvidenceModule).
-			WithMsgType(EvidenceQueryMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+		return e.ToExternal(EvidenceQueryMsgType, msg)
+
+	default:
+		return e.Err(EvidenceQueryMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }

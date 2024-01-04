@@ -47,6 +47,7 @@ type xplaClient struct {
 	grpc           grpc1.ClientConn
 	context        context.Context
 	httpMutex      *sync.Mutex
+	logger         types.Logger
 
 	opts provider.Options
 
@@ -64,6 +65,8 @@ func NewXplaClient(
 ) provider.XplaClient {
 	var xplac xplaClient
 	xplac.httpMutex = new(sync.Mutex)
+	xplac.logger = newLogger(0)
+
 	return xplac.
 		WithChainId(chainId).
 		WithEncoding(util.MakeEncodingConfig()).
@@ -95,6 +98,7 @@ func (xplac *xplaClient) WithOptions(
 		WithPagination(options.Pagination).
 		WithOutputDocument(options.OutputDocument).
 		WithFromAddress(options.FromAddress).
+		WithVerbose(options.Verbose).
 		UpdateXplacInCoreModule()
 }
 
@@ -126,25 +130,25 @@ type externalCoreModule struct {
 // Update xpla client if data in the xplaClient are changed.
 func (xplac *xplaClient) UpdateXplacInCoreModule() provider.XplaClient {
 	xplac.externalCoreModule = externalCoreModule{
-		auth.NewAuthExternal(xplac),
-		authz.NewAuthzExternal(xplac),
-		bank.NewBankExternal(xplac),
-		base.NewBaseExternal(xplac),
-		crisis.NewCrisisExternal(xplac),
-		distribution.NewDistributionExternal(xplac),
-		evidence.NewEvidenceExternal(xplac),
-		evm.NewEvmExternal(xplac),
-		feegrant.NewFeegrantExternal(xplac),
-		gov.NewGovExternal(xplac),
-		ibc.NewIbcExternal(xplac),
-		mint.NewMintExternal(xplac),
-		params.NewParamsExternal(xplac),
-		reward.NewRewardExternal(xplac),
-		slashing.NewSlashingExternal(xplac),
-		staking.NewStakingExternal(xplac),
-		upgrade.NewUpgradeExternal(xplac),
-		volunteer.NewVolunteerExternal(xplac),
-		wasm.NewWasmExternal(xplac),
+		auth.NewExternal(xplac),
+		authz.NewExternal(xplac),
+		bank.NewExternal(xplac),
+		base.NewExternal(xplac),
+		crisis.NewExternal(xplac),
+		distribution.NewExternal(xplac),
+		evidence.NewExternal(xplac),
+		evm.NewExternal(xplac),
+		feegrant.NewExternal(xplac),
+		gov.NewExternal(xplac),
+		ibc.NewExternal(xplac),
+		mint.NewExternal(xplac),
+		params.NewExternal(xplac),
+		reward.NewExternal(xplac),
+		slashing.NewExternal(xplac),
+		staking.NewExternal(xplac),
+		upgrade.NewExternal(xplac),
+		volunteer.NewExternal(xplac),
+		wasm.NewExternal(xplac),
 	}
 	return xplac
 }
@@ -315,6 +319,12 @@ func (xplac *xplaClient) WithFromAddress(fromAddress sdk.AccAddress) provider.Xp
 	return xplac.UpdateXplacInCoreModule()
 }
 
+// Set log verbose
+func (xplac *xplaClient) WithVerbose(verbose int) provider.XplaClient {
+	xplac.logger = newLogger(verbose)
+	return xplac.UpdateXplacInCoreModule()
+}
+
 // Set module name
 func (xplac *xplaClient) WithModule(module string) provider.XplaClient {
 	xplac.module = module
@@ -364,6 +374,7 @@ func (xplac *xplaClient) GetPagination() *query.PageRequest     { return core.Pa
 func (xplac *xplaClient) GetOutputDocument() string             { return xplac.opts.OutputDocument }
 func (xplac *xplaClient) GetFromAddress() sdk.AccAddress        { return xplac.opts.FromAddress }
 func (xplac *xplaClient) GetHttpMutex() *sync.Mutex             { return xplac.httpMutex }
+func (xplac *xplaClient) GetLogger() types.Logger               { return xplac.logger }
 func (xplac *xplaClient) GetModule() string                     { return xplac.module }
 func (xplac *xplaClient) GetMsgType() string                    { return xplac.msgType }
 func (xplac *xplaClient) GetMsg() interface{}                   { return xplac.msg }

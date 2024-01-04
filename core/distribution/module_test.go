@@ -34,7 +34,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeFundCommunityPoolMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, distribution.DistributionFundCommunityPoolMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, distribution.DistributionFundCommunityPoolMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeFundCommunityPoolMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeProposalCommunityPoolSpendMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, distribution.DistributionProposalCommunityPoolSpendMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, distribution.DistributionProposalCommunityPoolSpendMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeProposalCommunityPoolSpendMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -66,7 +66,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeWithdrawRewardsMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, distribution.DistributionWithdrawRewardsMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, distribution.DistributionWithdrawRewardsMsgType, testMsg)
 	s.Require().NoError(err)
 
 	// set withdraw address
@@ -78,12 +78,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeSetWithdrawAddrMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, distribution.DistributionSetWithdrawAddrMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, distribution.DistributionSetWithdrawAddrMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeSetWithdrawAddrMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

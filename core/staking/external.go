@@ -1,19 +1,38 @@
 package staking
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &StakingExternal{}
 
 type StakingExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewStakingExternal(xplac provider.XplaClient) (e StakingExternal) {
+func NewExternal(xplac provider.XplaClient) (e StakingExternal) {
 	e.Xplac = xplac
+	e.Name = StakingModule
 	return e
+}
+
+func (e StakingExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e StakingExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Tx
@@ -22,219 +41,204 @@ func NewStakingExternal(xplac provider.XplaClient) (e StakingExternal) {
 func (e StakingExternal) CreateValidator(createValidatorMsg types.CreateValidatorMsg) provider.XplaClient {
 	msg, err := MakeCreateValidatorMsg(createValidatorMsg, e.Xplac.GetFromAddress(), e.Xplac.GetOutputDocument())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingCreateValidatorMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingCreateValidatorMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingCreateValidatorMsgType, msg)
 }
 
 // Edit an existing validator account.
 func (e StakingExternal) EditValidator(editValidatorMsg types.EditValidatorMsg) provider.XplaClient {
 	msg, err := MakeEditValidatorMsg(editValidatorMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingEditValidatorMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingEditValidatorMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingEditValidatorMsgType, msg)
 }
 
 // Delegate liquid tokens to a validator.
 func (e StakingExternal) Delegate(delegateMsg types.DelegateMsg) provider.XplaClient {
 	msg, err := MakeDelegateMsg(delegateMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingDelegateMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingDelegateMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingDelegateMsgType, msg)
 }
 
 // Unbond shares from a validator.
 func (e StakingExternal) Unbond(unbondMsg types.UnbondMsg) provider.XplaClient {
 	msg, err := MakeUnbondMsg(unbondMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingUnbondMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingUnbondMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingUnbondMsgType, msg)
 }
 
 // Redelegate illiquid tokens from one validator to another.
 func (e StakingExternal) Redelegate(redelegateMsg types.RedelegateMsg) provider.XplaClient {
 	msg, err := MakeRedelegateMsg(redelegateMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingRedelegateMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingRedelegateMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingRedelegateMsgType, msg)
 }
 
 // Query
 
 // Query a validator or for all validators.
 func (e StakingExternal) QueryValidators(queryValidatorMsg ...types.QueryValidatorMsg) provider.XplaClient {
-	if len(queryValidatorMsg) == 0 {
+	switch {
+	case len(queryValidatorMsg) == 0:
 		msg, err := MakeQueryValidatorsMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryValidatorsMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryValidatorsMsgType).
-			WithMsg(msg)
-	} else if len(queryValidatorMsg) == 1 {
+
+		return e.ToExternal(StakingQueryValidatorsMsgType, msg)
+
+	case len(queryValidatorMsg) == 1:
 		msg, err := MakeQueryValidatorMsg(queryValidatorMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryValidatorMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryValidatorMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+		return e.ToExternal(StakingQueryValidatorMsgType, msg)
+
+	default:
+		return e.Err(StakingQueryValidatorMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }
 
 // Query a delegation based on address and validator address, all out going redelegations from a validator or all delegations made by on delegator.
 func (e StakingExternal) QueryDelegation(queryDelegationMsg types.QueryDelegationMsg) provider.XplaClient {
-	if queryDelegationMsg.DelegatorAddr != "" && queryDelegationMsg.ValidatorAddr != "" {
+	switch {
+	case queryDelegationMsg.DelegatorAddr != "" && queryDelegationMsg.ValidatorAddr != "":
 		msg, err := MakeQueryDelegationMsg(queryDelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryDelegationMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryDelegationMsgType).
-			WithMsg(msg)
-	} else if queryDelegationMsg.DelegatorAddr != "" {
+
+		return e.ToExternal(StakingQueryDelegationMsgType, msg)
+
+	case queryDelegationMsg.DelegatorAddr != "":
 		msg, err := MakeQueryDelegationsMsg(queryDelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryDelegationsMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryDelegationsMsgType).
-			WithMsg(msg)
-	} else if queryDelegationMsg.ValidatorAddr != "" {
+
+		return e.ToExternal(StakingQueryDelegationsMsgType, msg)
+
+	case queryDelegationMsg.ValidatorAddr != "":
 		msg, err := MakeQueryDelegationsToMsg(queryDelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryDelegationsToMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryDelegationsToMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "wrong delegation message"))
+
+		return e.ToExternal(StakingQueryDelegationsToMsgType, msg)
+
+	default:
+		return e.Err(StakingQueryDelegationsToMsgType, types.ErrWrap(types.ErrInvalidRequest, "wrong delegation message"))
 	}
-	return e.Xplac
 }
 
 // Query all unbonding delegatations from a validator, an unbonding-delegation record based on delegator and validator address or all unbonding-delegations records for one delegator.
 func (e StakingExternal) QueryUnbondingDelegation(queryUnbondingDelegationMsg types.QueryUnbondingDelegationMsg) provider.XplaClient {
-	if queryUnbondingDelegationMsg.DelegatorAddr != "" && queryUnbondingDelegationMsg.ValidatorAddr != "" {
+	switch {
+	case queryUnbondingDelegationMsg.DelegatorAddr != "" && queryUnbondingDelegationMsg.ValidatorAddr != "":
 		msg, err := MakeQueryUnbondingDelegationMsg(queryUnbondingDelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryUnbondingDelegationMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryUnbondingDelegationMsgType).
-			WithMsg(msg)
-	} else if queryUnbondingDelegationMsg.DelegatorAddr != "" {
+
+		return e.ToExternal(StakingQueryUnbondingDelegationMsgType, msg)
+
+	case queryUnbondingDelegationMsg.DelegatorAddr != "":
 		msg, err := MakeQueryUnbondingDelegationsMsg(queryUnbondingDelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryUnbondingDelegationsMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryUnbondingDelegationsMsgType).
-			WithMsg(msg)
-	} else if queryUnbondingDelegationMsg.ValidatorAddr != "" {
+
+		return e.ToExternal(StakingQueryUnbondingDelegationsMsgType, msg)
+
+	case queryUnbondingDelegationMsg.ValidatorAddr != "":
 		msg, err := MakeQueryUnbondingDelegationsFromMsg(queryUnbondingDelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryUnbondingDelegationsFromMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryUnbondingDelegationsFromMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "wrong unbonding delegation message"))
+
+		return e.ToExternal(StakingQueryUnbondingDelegationsFromMsgType, msg)
+
+	default:
+		return e.Err(StakingQueryUnbondingDelegationsFromMsgType, types.ErrWrap(types.ErrInvalidRequest, "wrong unbonding delegation message"))
 	}
-	return e.Xplac
 }
 
 // Query a redelegation record based on delegator and a source and destination validator.
 // Also, query all outgoing redelegatations from a validator or all redelegations records for one delegator.
 func (e StakingExternal) QueryRedelegation(queryRedelegationMsg types.QueryRedelegationMsg) provider.XplaClient {
-	if queryRedelegationMsg.DelegatorAddr != "" &&
+	switch {
+	case queryRedelegationMsg.DelegatorAddr != "" &&
 		queryRedelegationMsg.SrcValidatorAddr != "" &&
-		queryRedelegationMsg.DstValidatorAddr != "" {
+		queryRedelegationMsg.DstValidatorAddr != "":
+
 		msg, err := MakeQueryRedelegationMsg(queryRedelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryRedelegationMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryRedelegationMsgType).
-			WithMsg(msg)
-	} else if queryRedelegationMsg.DelegatorAddr != "" {
+
+		return e.ToExternal(StakingQueryRedelegationMsgType, msg)
+
+	case queryRedelegationMsg.DelegatorAddr != "":
 		msg, err := MakeQueryRedelegationsMsg(queryRedelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryRedelegationsMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryRedelegationsMsgType).
-			WithMsg(msg)
-	} else if queryRedelegationMsg.SrcValidatorAddr != "" {
+
+		return e.ToExternal(StakingQueryRedelegationsMsgType, msg)
+
+	case queryRedelegationMsg.SrcValidatorAddr != "":
 		msg, err := MakeQueryRedelegationsFromMsg(queryRedelegationMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(StakingQueryRedelegationsFromMsgType, err)
 		}
-		e.Xplac.WithModule(StakingModule).
-			WithMsgType(StakingQueryRedelegationsFromMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "wrong redelegation message"))
+
+		return e.ToExternal(StakingQueryRedelegationsFromMsgType, msg)
+
+	default:
+		return e.Err(StakingQueryRedelegationsFromMsgType, types.ErrWrap(types.ErrInvalidRequest, "wrong redelegation message"))
 	}
-	return e.Xplac
 }
 
 // Query historical info at given height.
 func (e StakingExternal) HistoricalInfo(historicalInfoMsg types.HistoricalInfoMsg) provider.XplaClient {
 	msg, err := MakeHistoricalInfoMsg(historicalInfoMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingHistoricalInfoMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingHistoricalInfoMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingHistoricalInfoMsgType, msg)
 }
 
 // Query the current staking pool values.
 func (e StakingExternal) StakingPool() provider.XplaClient {
 	msg, err := MakeQueryStakingPoolMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingQueryStakingPoolMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingQueryStakingPoolMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingQueryStakingPoolMsgType, msg)
 }
 
 // Query the current staking parameters information.
 func (e StakingExternal) StakingParams() provider.XplaClient {
 	msg, err := MakeQueryStakingParamsMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(StakingQueryStakingParamsMsgType, err)
 	}
-	e.Xplac.WithModule(StakingModule).
-		WithMsgType(StakingQueryStakingParamsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(StakingQueryStakingParamsMsgType, msg)
 }

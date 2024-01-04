@@ -36,7 +36,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeSubmitProposalMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, gov.GovSubmitProposalMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, gov.GovSubmitProposalMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeSubmitProposalMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeGovDepositMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, gov.GovDepositMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, gov.GovDepositMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeGovDepositMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -64,7 +64,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeVoteMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, gov.GovVoteMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, gov.GovVoteMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeVoteMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -81,12 +81,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeWeightedVoteMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, gov.GovWeightedVoteMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, gov.GovWeightedVoteMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeWeightedVoteMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

@@ -127,7 +127,7 @@ func (s *ClientTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), s.cfg)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
-	s.xplac = client.NewXplaClient(testutil.TestChainId).
+	s.xplac = client.NewXplaClient(testutil.TestChainId).WithVerbose(1).
 		WithGasAdjustment(types.DefaultGasAdjustment)
 
 	s.apis = []string{

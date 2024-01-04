@@ -3,7 +3,6 @@ package client
 import (
 	mevm "github.com/xpladev/xpla.go/core/evm"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -56,11 +55,11 @@ func (xplac *xplaClient) BroadcastAsync(txBytes []byte) (*types.TxRes, error) {
 // Broadcast the transaction which is evm transaction by using ethclient of go-ethereum.
 func (xplac *xplaClient) broadcastEvm(txBytes []byte) (*types.TxRes, error) {
 	if xplac.GetEvmRpc() == "" {
-		return nil, util.LogErr(errors.ErrNotSatisfiedOptions, "evm JSON-RPC URL must exist")
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "evm JSON-RPC URL must exist"))
 	}
 	evmClient, err := util.NewEvmClient(xplac.GetEvmRpc(), xplac.GetContext())
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(err)
 	}
 	broadcastMode := xplac.GetBroadcastMode()
 	return broadcastTxEvm(xplac, txBytes, broadcastMode, evmClient)

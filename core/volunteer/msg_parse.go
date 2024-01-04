@@ -2,7 +2,6 @@ package volunteer
 
 import (
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -26,7 +25,7 @@ func parseRegisterVolunteerValidatorArgs(
 	if registerVolunteerValidatorMsg.JsonFilePath != "" {
 		proposal, err = volunteercli.ParseRegisterVolunteerValidatorProposalWithDeposit(encodingConfig.Codec, registerVolunteerValidatorMsg.JsonFilePath)
 		if err != nil {
-			return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+			return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 		}
 	} else {
 		proposal.Title = registerVolunteerValidatorMsg.Title
@@ -36,17 +35,17 @@ func parseRegisterVolunteerValidatorArgs(
 
 	deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	amount, err := sdk.ParseCoinNormalized(util.DenomAdd(registerVolunteerValidatorMsg.Amount))
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	var pubKey cryptotypes.PubKey
 	if err := encodingConfig.Codec.UnmarshalInterfaceJSON([]byte(registerVolunteerValidatorMsg.ValPubKey), &pubKey); err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrFailedToUnmarshal, err)
 	}
 
 	stakingDescription := stakingtypes.NewDescription(
@@ -67,12 +66,12 @@ func parseRegisterVolunteerValidatorArgs(
 		stakingDescription,
 	)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrInvalidRequest, err)
 	}
 
 	return *msg, nil
@@ -86,7 +85,7 @@ func parseUnregisterVolunteerValidatorArgs(unregisterVolunteerValidatorMsg types
 	if unregisterVolunteerValidatorMsg.JsonFilePath != "" {
 		proposal, err = volunteercli.ParseUnregisterVolunteerValidatorProposalWithDeposit(encodingConfig.Codec, unregisterVolunteerValidatorMsg.JsonFilePath)
 		if err != nil {
-			return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+			return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 		}
 	} else {
 		proposal.Title = unregisterVolunteerValidatorMsg.Title
@@ -97,18 +96,18 @@ func parseUnregisterVolunteerValidatorArgs(unregisterVolunteerValidatorMsg types
 
 	deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	valAddr, err := sdk.ValAddressFromBech32(proposal.ValidatorAddress)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	content := volunteertypes.NewUnregisterVolunteerValidatorProposal(proposal.Title, proposal.Description, valAddr)
 	msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrInvalidRequest, err)
 	}
 
 	return *msg, nil

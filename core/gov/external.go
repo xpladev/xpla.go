@@ -1,19 +1,38 @@
 package gov
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &GovExternal{}
 
 type GovExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewGovExternal(xplac provider.XplaClient) (e GovExternal) {
+func NewExternal(xplac provider.XplaClient) (e GovExternal) {
 	e.Xplac = xplac
+	e.Name = GovModule
 	return e
+}
+
+func (e GovExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e GovExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Tx
@@ -22,48 +41,40 @@ func NewGovExternal(xplac provider.XplaClient) (e GovExternal) {
 func (e GovExternal) SubmitProposal(submitProposalMsg types.SubmitProposalMsg) provider.XplaClient {
 	msg, err := MakeSubmitProposalMsg(submitProposalMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(GovSubmitProposalMsgType, err)
 	}
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovSubmitProposalMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(GovSubmitProposalMsgType, msg)
 }
 
 // Deposit tokens for an active proposal.
 func (e GovExternal) GovDeposit(govDepositMsg types.GovDepositMsg) provider.XplaClient {
 	msg, err := MakeGovDepositMsg(govDepositMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(GovDepositMsgType, err)
 	}
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovDepositMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(GovDepositMsgType, msg)
 }
 
 // Vote for an active proposal, options: yes/no/no_with_veto/abstain.
 func (e GovExternal) Vote(voteMsg types.VoteMsg) provider.XplaClient {
 	msg, err := MakeVoteMsg(voteMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(GovVoteMsgType, err)
 	}
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovVoteMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(GovVoteMsgType, msg)
 }
 
 // Vote for an active proposal, options: yes/no/no_with_veto/abstain.
 func (e GovExternal) WeightedVote(weightedVoteMsg types.WeightedVoteMsg) provider.XplaClient {
 	msg, err := MakeWeightedVoteMsg(weightedVoteMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(GovWeightedVoteMsgType, err)
 	}
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovWeightedVoteMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(GovWeightedVoteMsgType, msg)
 }
 
 // Query
@@ -72,24 +83,20 @@ func (e GovExternal) WeightedVote(weightedVoteMsg types.WeightedVoteMsg) provide
 func (e GovExternal) QueryProposal(queryProposal types.QueryProposalMsg) provider.XplaClient {
 	msg, err := MakeQueryProposalMsg(queryProposal)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(GovQueryProposalMsgType, err)
 	}
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovQueryProposalMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(GovQueryProposalMsgType, msg)
 }
 
 // Query proposals with optional filters.
 func (e GovExternal) QueryProposals(queryProposals types.QueryProposalsMsg) provider.XplaClient {
 	msg, err := MakeQueryProposalsMsg(queryProposals)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(GovQueryProposalsMsgType, err)
 	}
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovQueryProposalsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(GovQueryProposalsMsgType, msg)
 }
 
 // Query details of a deposit or deposits on a proposal.
@@ -101,36 +108,31 @@ func (e GovExternal) QueryDeposit(queryDepositMsg types.QueryDepositMsg) provide
 		queryType = types.QueryLcd
 	}
 
-	if queryDepositMsg.Depositor != "" {
+	switch {
+	case queryDepositMsg.Depositor != "":
 		msg, argsType, err := MakeQueryDepositMsg(queryDepositMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(GovQueryDepositRequestMsgType, err)
 		}
 		if argsType == "params" {
-			e.Xplac.WithModule(GovModule).
-				WithMsgType(GovQueryDepositParamsMsgType).
-				WithMsg(msg)
+			return e.ToExternal(GovQueryDepositParamsMsgType, msg)
+
 		} else {
-			e.Xplac.WithModule(GovModule).
-				WithMsgType(GovQueryDepositRequestMsgType).
-				WithMsg(msg)
+			return e.ToExternal(GovQueryDepositRequestMsgType, msg)
 		}
-	} else {
+
+	default:
 		msg, argsType, err := MakeQueryDepositsMsg(queryDepositMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(GovQueryDepositsRequestMsgType, err)
 		}
 		if argsType == "params" {
-			e.Xplac.WithModule(GovModule).
-				WithMsgType(GovQueryDepositsParamsMsgType).
-				WithMsg(msg)
+			return e.ToExternal(GovQueryDepositsParamsMsgType, msg)
+
 		} else {
-			e.Xplac.WithModule(GovModule).
-				WithMsgType(GovQueryDepositsRequestMsgType).
-				WithMsg(msg)
+			return e.ToExternal(GovQueryDepositsRequestMsgType, msg)
 		}
 	}
-	return e.Xplac
 }
 
 // Query details of a single vote or votes on a proposal.
@@ -142,31 +144,27 @@ func (e GovExternal) QueryVote(queryVoteMsg types.QueryVoteMsg) provider.XplaCli
 		queryType = types.QueryLcd
 	}
 
-	if queryVoteMsg.VoterAddr != "" {
+	switch {
+	case queryVoteMsg.VoterAddr != "":
 		msg, err := MakeQueryVoteMsg(queryVoteMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(GovQueryVoteMsgType, err)
 		}
-		e.Xplac.WithModule(GovModule).
-			WithMsgType(GovQueryVoteMsgType).
-			WithMsg(msg)
 
-	} else {
+		return e.ToExternal(GovQueryVoteMsgType, msg)
+
+	default:
 		msg, status, err := MakeQueryVotesMsg(queryVoteMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(GovQueryVotesPassedMsgType, err)
 		}
 		if status == "notPassed" {
-			e.Xplac.WithModule(GovModule).
-				WithMsgType(GovQueryVotesNotPassedMsgType).
-				WithMsg(msg)
+			return e.ToExternal(GovQueryVotesNotPassedMsgType, msg)
+
 		} else {
-			e.Xplac.WithModule(GovModule).
-				WithMsgType(GovQueryVotesPassedMsgType).
-				WithMsg(msg)
+			return e.ToExternal(GovQueryVotesPassedMsgType, msg)
 		}
 	}
-	return e.Xplac
 }
 
 // Query the tally of a proposal vote.
@@ -180,45 +178,41 @@ func (e GovExternal) Tally(tallyMsg types.TallyMsg) provider.XplaClient {
 
 	msg, err := MakeGovTallyMsg(tallyMsg, e.Xplac.GetHttpMutex(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext(), e.Xplac.GetLcdURL(), queryType)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(GovTallyMsgType, err)
 	}
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovTallyMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(GovTallyMsgType, msg)
 }
 
 // Query parameters of the governance process or the parameters (voting|tallying|deposit) of the governance process.
 func (e GovExternal) GovParams(govParamsMsg ...types.GovParamsMsg) provider.XplaClient {
-	if len(govParamsMsg) == 0 {
-		e.Xplac.WithModule(GovModule).
-			WithMsgType(GovQueryGovParamsMsgType).
-			WithMsg(nil)
-	} else if len(govParamsMsg) == 1 {
+	switch {
+	case len(govParamsMsg) == 0:
+		return e.ToExternal(GovQueryGovParamsMsgType, nil)
+
+	case len(govParamsMsg) == 1:
 		msg, err := MakeGovParamsMsg(govParamsMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(GovQueryGovParamsMsgType, err)
 		}
-		e.Xplac.WithModule(GovModule)
+
 		switch govParamsMsg[0].ParamType {
 		case "voting":
-			e.Xplac.WithMsgType(GovQueryGovParamVotingMsgType)
+			return e.ToExternal(GovQueryGovParamVotingMsgType, msg)
 		case "tallying":
-			e.Xplac.WithMsgType(GovQueryGovParamTallyingMsgType)
+			return e.ToExternal(GovQueryGovParamTallyingMsgType, msg)
 		case "deposit":
-			e.Xplac.WithMsgType(GovQueryGovParamDepositMsgType)
+			return e.ToExternal(GovQueryGovParamDepositMsgType, msg)
+		default:
+			return e.Err(GovQueryGovParamsMsgType, types.ErrWrap(types.ErrInvalidRequest, "invalid param type"))
 		}
-		e.Xplac.WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+	default:
+		return e.Err(GovQueryGovParamsMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }
 
 // Query the proposer of a governance proposal.
 func (e GovExternal) Proposer(proposerMsg types.ProposerMsg) provider.XplaClient {
-	e.Xplac.WithModule(GovModule).
-		WithMsgType(GovQueryProposerMsgType).
-		WithMsg(proposerMsg.ProposalID)
-	return e.Xplac
+	return e.ToExternal(GovQueryProposerMsgType, proposerMsg.ProposalID)
 }

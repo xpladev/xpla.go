@@ -42,12 +42,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeProposalParamChangeMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, params.ParamsProposalParamChangeMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, params.ParamsProposalParamChangeMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeProposalParamChangeMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

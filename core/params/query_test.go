@@ -54,7 +54,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), s.cfg)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.xplac = client.NewXplaClient(testutil.TestChainId)
+	s.xplac = client.NewXplaClient(testutil.TestChainId).WithVerbose(1)
 	s.apis = []string{
 		s.network.Validators[0].APIAddress,
 		s.network.Validators[0].AppConfig.GRPC.Address,

@@ -1,19 +1,38 @@
 package distribution
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &DistributionExternal{}
 
 type DistributionExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewDistributionExternal(xplac provider.XplaClient) (e DistributionExternal) {
+func NewExternal(xplac provider.XplaClient) (e DistributionExternal) {
 	e.Xplac = xplac
+	e.Name = DistributionModule
 	return e
+}
+
+func (e DistributionExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e DistributionExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Tx
@@ -22,60 +41,50 @@ func NewDistributionExternal(xplac provider.XplaClient) (e DistributionExternal)
 func (e DistributionExternal) FundCommunityPool(fundCommunityPoolMsg types.FundCommunityPoolMsg) provider.XplaClient {
 	msg, err := MakeFundCommunityPoolMsg(fundCommunityPoolMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionFundCommunityPoolMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionFundCommunityPoolMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionFundCommunityPoolMsgType, msg)
 }
 
 // Submit a community pool spend proposal.
 func (e DistributionExternal) CommunityPoolSpend(communityPoolSpendMsg types.CommunityPoolSpendMsg) provider.XplaClient {
 	msg, err := MakeProposalCommunityPoolSpendMsg(communityPoolSpendMsg, e.Xplac.GetFromAddress(), e.Xplac.GetEncoding())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionProposalCommunityPoolSpendMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionProposalCommunityPoolSpendMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionProposalCommunityPoolSpendMsgType, msg)
 }
 
 // Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator.
 func (e DistributionExternal) WithdrawRewards(withdrawRewardsMsg types.WithdrawRewardsMsg) provider.XplaClient {
 	msg, err := MakeWithdrawRewardsMsg(withdrawRewardsMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionWithdrawRewardsMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionWithdrawRewardsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionWithdrawRewardsMsgType, msg)
 }
 
 // Withdraw all delegations rewards for a delegator.
 func (e DistributionExternal) WithdrawAllRewards() provider.XplaClient {
 	msg, err := MakeWithdrawAllRewardsMsg(e.Xplac.GetFromAddress(), e.Xplac.GetGrpcClient(), e.Xplac.GetContext())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionWithdrawAllRewardsMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionWithdrawAllRewardsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionWithdrawAllRewardsMsgType, msg)
 }
 
 // Change the default withdraw address for rewards associated with an address.
 func (e DistributionExternal) SetWithdrawAddr(setWithdrawAddrMsg types.SetWithdrawAddrMsg) provider.XplaClient {
 	msg, err := MakeSetWithdrawAddrMsg(setWithdrawAddrMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionSetWithdrawAddrMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionSetWithdrawAddrMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionSetWithdrawAddrMsgType, msg)
 }
 
 // Query
@@ -84,84 +93,73 @@ func (e DistributionExternal) SetWithdrawAddr(setWithdrawAddrMsg types.SetWithdr
 func (e DistributionExternal) DistributionParams() provider.XplaClient {
 	msg, err := MakeQueryDistributionParamsMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionQueryDistributionParamsMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionQueryDistributionParamsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionQueryDistributionParamsMsgType, msg)
 }
 
 // Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations.
 func (e DistributionExternal) ValidatorOutstandingRewards(validatorOutstandingRewardsMsg types.ValidatorOutstandingRewardsMsg) provider.XplaClient {
 	msg, err := MakeValidatorOutstandingRewardsMsg(validatorOutstandingRewardsMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionValidatorOutstandingRewardsMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionValidatorOutstandingRewardsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionValidatorOutstandingRewardsMsgType, msg)
 }
 
 // Query distribution validator commission.
 func (e DistributionExternal) DistCommission(queryDistCommissionMsg types.QueryDistCommissionMsg) provider.XplaClient {
 	msg, err := MakeQueryDistCommissionMsg(queryDistCommissionMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionQueryDistCommissionMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionQueryDistCommissionMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionQueryDistCommissionMsgType, msg)
 }
 
 // Query distribution validator slashes.
 func (e DistributionExternal) DistSlashes(queryDistSlashesMsg types.QueryDistSlashesMsg) provider.XplaClient {
 	msg, err := MakeQueryDistSlashesMsg(queryDistSlashesMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionQuerySlashesMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionQuerySlashesMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionQuerySlashesMsgType, msg)
 }
 
 // Query all ditribution delegator rewards or rewards from a particular validator.
 func (e DistributionExternal) DistRewards(queryDistRewardsMsg types.QueryDistRewardsMsg) provider.XplaClient {
 	if queryDistRewardsMsg.DelegatorAddr == "" {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInsufficientParams, "must set a delegator address"))
+		return e.Err(DistributionQueryRewardsMsgType, types.ErrWrap(types.ErrInsufficientParams, "must set a delegator address"))
 	}
 
-	if queryDistRewardsMsg.ValidatorAddr != "" {
+	switch {
+	case queryDistRewardsMsg.ValidatorAddr != "":
 		msg, err := MakeQueryDistRewardsMsg(queryDistRewardsMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(DistributionQueryRewardsMsgType, err)
 		}
-		e.Xplac.WithModule(DistributionModule).
-			WithMsgType(DistributionQueryRewardsMsgType).
-			WithMsg(msg)
-	} else {
+
+		return e.ToExternal(DistributionQueryRewardsMsgType, msg)
+
+	default:
 		msg, err := MakeQueryDistTotalRewardsMsg(queryDistRewardsMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(DistributionQueryTotalRewardsMsgType, err)
 		}
-		e.Xplac.WithModule(DistributionModule).
-			WithMsgType(DistributionQueryTotalRewardsMsgType).
-			WithMsg(msg)
+
+		return e.ToExternal(DistributionQueryTotalRewardsMsgType, msg)
 	}
-	return e.Xplac
 }
 
 // Query the amount of coins in the community pool.
 func (e DistributionExternal) CommunityPool() provider.XplaClient {
 	msg, err := MakeQueryCommunityPoolMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(DistributionQueryCommunityPoolMsgType, err)
 	}
-	e.Xplac.WithModule(DistributionModule).
-		WithMsgType(DistributionQueryCommunityPoolMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(DistributionQueryCommunityPoolMsgType, msg)
 }

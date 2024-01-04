@@ -1,17 +1,38 @@
 package auth
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
 )
 
+var _ core.External = &AuthExternal{}
+
 type AuthExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewAuthExternal(xplac provider.XplaClient) (e AuthExternal) {
+func NewExternal(xplac provider.XplaClient) (e AuthExternal) {
 	e.Xplac = xplac
+	e.Name = AuthModule
 	return e
+}
+
+func (e AuthExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e AuthExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Query
@@ -20,58 +41,48 @@ func NewAuthExternal(xplac provider.XplaClient) (e AuthExternal) {
 func (e AuthExternal) AuthParams() provider.XplaClient {
 	msg, err := MakeAuthParamMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthQueryParamsMsgType, err)
 	}
-	e.Xplac.WithModule(AuthModule).
-		WithMsgType(AuthQueryParamsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthQueryParamsMsgType, msg)
 }
 
 // Query for account by address.
 func (e AuthExternal) AccAddress(queryAccAddresMsg types.QueryAccAddressMsg) provider.XplaClient {
 	msg, err := MakeQueryAccAddressMsg(queryAccAddresMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthQueryAccAddressMsgType, err)
 	}
-	e.Xplac.WithModule(AuthModule).
-		WithMsgType(AuthQueryAccAddressMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthQueryAccAddressMsgType, msg)
 }
 
 // Query all accounts.
 func (e AuthExternal) Accounts() provider.XplaClient {
 	msg, err := MakeQueryAccountsMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthQueryAccountsMsgType, err)
 	}
-	e.Xplac.WithModule(AuthModule).
-		WithMsgType(AuthQueryAccountsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthQueryAccountsMsgType, msg)
 }
 
 // Query for paginated transactions that match a set of events.
 func (e AuthExternal) TxsByEvents(txsByEventsMsg types.QueryTxsByEventsMsg) provider.XplaClient {
 	msg, err := MakeTxsByEventsMsg(txsByEventsMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthQueryTxsByEventsMsgType, err)
 	}
-	e.Xplac.WithModule(AuthModule).
-		WithMsgType(AuthQueryTxsByEventsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthQueryTxsByEventsMsgType, msg)
 }
 
 // Query for a transaction by hash <addr>/<seq> combination or comma-separated signatures in a committed block.
 func (e AuthExternal) Tx(queryTxMsg types.QueryTxMsg) provider.XplaClient {
 	msg, err := MakeQueryTxMsg(queryTxMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthQueryTxMsgType, err)
 	}
-	e.Xplac.WithModule(AuthModule).
-		WithMsgType(AuthQueryTxMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthQueryTxMsgType, msg)
 }

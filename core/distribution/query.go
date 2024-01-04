@@ -4,7 +4,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	distv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
@@ -36,7 +35,7 @@ func queryByGrpcDist(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Distribution validator outstanding rewards
@@ -47,7 +46,7 @@ func queryByGrpcDist(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Distribution commission
@@ -58,7 +57,7 @@ func queryByGrpcDist(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Distribution slashes
@@ -69,7 +68,7 @@ func queryByGrpcDist(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Distribution rewards
@@ -80,7 +79,7 @@ func queryByGrpcDist(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Distribution total rewards
@@ -91,7 +90,7 @@ func queryByGrpcDist(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Distribution community pool
@@ -102,16 +101,16 @@ func queryByGrpcDist(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	out, err = core.PrintProto(i, res)
 	if err != nil {
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 
 	return string(out), nil
@@ -171,14 +170,14 @@ func queryByLcdDist(i core.QueryClient) (string, error) {
 		url = url + distCommunityPoolLabel
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
 		i.Ixplac.GetHttpMutex().Unlock()
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	i.Ixplac.GetHttpMutex().Unlock()
 

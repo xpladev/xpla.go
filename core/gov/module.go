@@ -2,8 +2,7 @@ package gov
 
 import (
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
+	"github.com/xpladev/xpla.go/types"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -19,26 +18,38 @@ func (c *coreModule) Name() string {
 	return GovModule
 }
 
-func (c *coreModule) NewTxRouter(builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
+func (c *coreModule) NewTxRouter(logger types.Logger, builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
 	switch {
 	case msgType == GovSubmitProposalMsgType:
 		convertMsg := msg.(govtypes.MsgSubmitProposal)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == GovDepositMsgType:
 		convertMsg := msg.(govtypes.MsgDeposit)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == GovVoteMsgType:
 		convertMsg := msg.(govtypes.MsgVote)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == GovWeightedVoteMsgType:
 		convertMsg := msg.(govtypes.MsgVoteWeighted)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	default:
-		return nil, util.LogErr(errors.ErrInvalidMsgType, msgType)
+		return nil, logger.Err(types.ErrWrap(types.ErrInvalidMsgType, msgType))
 	}
 
 	return builder, nil
