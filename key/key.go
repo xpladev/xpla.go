@@ -2,8 +2,6 @@ package key
 
 import (
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -22,12 +20,12 @@ func NewMnemonic() (string, error) {
 	// number of words by reading system entropy.
 	entropy, err := bip39.NewEntropy(types.DefaultEntropySize)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", types.ErrWrap(types.ErrParse, err)
 	}
 
 	mnemonic, err := bip39.NewMnemonic(entropy)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", types.ErrWrap(types.ErrParse, err)
 	}
 
 	return mnemonic, nil
@@ -39,7 +37,7 @@ func NewPrivKey(mnemonic string) (cryptotypes.PrivKey, error) {
 	algo := evmhd.EthSecp256k1
 	derivedPri, err := algo.Derive()(mnemonic, keyring.DefaultBIP39Passphrase, sdk.GetConfig().GetFullBIP44Path())
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, types.ErrWrap(types.ErrParse, err)
 	}
 
 	privateKey := algo.Generate()(derivedPri)
@@ -51,7 +49,7 @@ func NewPrivKey(mnemonic string) (cryptotypes.PrivKey, error) {
 func Bech32AddrString(p PrivateKey) (string, error) {
 	addr, err := sdk.AccAddressFromHex(p.PubKey().Address().String())
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", types.ErrWrap(types.ErrParse, err)
 	}
 
 	return addr.String(), nil

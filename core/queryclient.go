@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/xpladev/xpla.go/provider"
-	"github.com/xpladev/xpla.go/types/errors"
+	"github.com/xpladev/xpla.go/types"
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
@@ -23,7 +23,7 @@ func NewIxplaClient(moduleClient provider.XplaClient, qt uint8) *QueryClient {
 func PrintProto(i QueryClient, toPrint proto.Message) ([]byte, error) {
 	out, err := i.Ixplac.GetEncoding().Codec.MarshalJSON(toPrint)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrFailedToMarshal, err)
+		return nil, types.ErrWrap(types.ErrFailedToMarshal, err)
 	}
 	return out, nil
 }
@@ -32,7 +32,7 @@ func PrintProto(i QueryClient, toPrint proto.Message) ([]byte, error) {
 func PrintObjectLegacy(i QueryClient, toPrint interface{}) ([]byte, error) {
 	out, err := i.Ixplac.GetEncoding().Amino.MarshalJSON(toPrint)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrFailedToMarshal, err)
+		return nil, types.ErrWrap(types.ErrFailedToMarshal, err)
 	}
 	return out, nil
 }
@@ -41,7 +41,7 @@ func PrintObjectLegacy(i QueryClient, toPrint interface{}) ([]byte, error) {
 func ClientForQuery(i QueryClient) (cmclient.Context, error) {
 	client, err := cmclient.NewClientFromNode(i.Ixplac.GetRpc())
 	if err != nil {
-		return cmclient.Context{}, util.LogErr(errors.ErrSdkClient, err)
+		return cmclient.Context{}, types.ErrWrap(types.ErrSdkClient, err)
 	}
 
 	clientCtx, err := util.NewClient()

@@ -11,7 +11,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 )
 
@@ -27,21 +26,21 @@ var BcryptSecurityParameter = 12
 var DefaultEncryptPassphrase = "xplaDefaultPassphrase"
 
 // Encrypt secp-256k1 private key to make armored key.
-func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string) string {
+func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string) (string, error) {
 	return encryptPrivKey(privKey, passphrase)
 }
 
 // Encrypt secp-256k1 private key to make armored key without passphrase for keyring. (for test)
-func EncryptArmorPrivKeyWithoutPassphrase(privKey cryptotypes.PrivKey) string {
+func EncryptArmorPrivKeyWithoutPassphrase(privKey cryptotypes.PrivKey) (string, error) {
 	return encryptPrivKey(privKey, DefaultEncryptPassphrase)
 }
 
 // Encrypt private key.
-func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) string {
+func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (string, error) {
 	saltBytes := crypto.CRandBytes(16)
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
-		panic(util.LogErr(errors.ErrInvalidRequest, "error generating bcrypt key from passphrase", err))
+		return "", types.ErrWrap(types.ErrInvalidRequest, "error generating bcrypt key from passphrase", err)
 	}
 
 	key = crypto.Sha256(key) // get 32 bytes
@@ -57,7 +56,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) string {
 
 	header[headerType] = types.DefaultXplaKeyAlgo
 
-	return armor.EncodeArmor(blockTypePrivKey, header, encBytes)
+	return armor.EncodeArmor(blockTypePrivKey, header, encBytes), nil
 }
 
 // Decrypt armored private key.
@@ -68,6 +67,9 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptoty
 	}
 
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
+	if err != nil {
+		return privKey, "", err
+	}
 
 	if header[headerType] == "" {
 		header[headerType] = types.DefaultXplaKeyAlgo
@@ -84,6 +86,10 @@ func UnarmorDecryptPrivKeyWithoutPassphrase(armorStr string) (privKey cryptotype
 	}
 
 	privKey, err = decryptPrivKey(saltBytes, encBytes, DefaultEncryptPassphrase)
+	if err != nil {
+		return privKey, "", err
+	}
+
 	if header[headerType] == "" {
 		header[headerType] = types.DefaultXplaKeyAlgo
 	}
@@ -99,20 +105,20 @@ func decodingArmoredPrivKey(armorStr string) ([]byte, []byte, map[string]string,
 	}
 
 	if blockType != blockTypePrivKey {
-		return nil, nil, nil, util.LogErr(errors.ErrInvalidRequest, "unrecognized armor type: ", blockType)
+		return nil, nil, nil, types.ErrWrap(types.ErrInvalidRequest, "unrecognized armor type: ", blockType)
 	}
 
 	if header["kdf"] != "bcrypt" {
-		return nil, nil, nil, util.LogErr(errors.ErrInvalidRequest, "unrecognized KDF type: ", header["kdf"])
+		return nil, nil, nil, types.ErrWrap(types.ErrInvalidRequest, "unrecognized KDF type: ", header["kdf"])
 	}
 
 	if header["salt"] == "" {
-		return nil, nil, nil, util.LogErr(errors.ErrInvalidRequest, "missing salt bytes")
+		return nil, nil, nil, types.ErrWrap(types.ErrInvalidRequest, "missing salt bytes")
 	}
 
 	saltBytes, err := hex.DecodeString(header["salt"])
 	if err != nil {
-		return nil, nil, nil, util.LogErr(errors.ErrInvalidRequest, "error decoding salt: %v", err.Error())
+		return nil, nil, nil, types.ErrWrap(types.ErrInvalidRequest, "error decoding salt: %v", err.Error())
 	}
 
 	return saltBytes, encBytes, header, nil
@@ -122,16 +128,16 @@ func decodingArmoredPrivKey(armorStr string) ([]byte, []byte, map[string]string,
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey cryptotypes.PrivKey, err error) {
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
-		return privKey, util.LogErr(errors.ErrInvalidRequest, err, "error generating bcrypt key from passphrase")
+		return privKey, types.ErrWrap(types.ErrInvalidRequest, err, "error generating bcrypt key from passphrase")
 	}
 
 	key = crypto.Sha256(key) // Get 32 bytes
 
 	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 	if err != nil && err.Error() == "Ciphertext decryption failed" {
-		return privKey, util.LogErr(errors.ErrInvalidRequest, "invalid account password")
+		return privKey, types.ErrWrap(types.ErrInvalidRequest, "invalid account password")
 	} else if err != nil {
-		return privKey, util.LogErr(errors.ErrParse, err)
+		return privKey, types.ErrWrap(types.ErrParse, err)
 	}
 
 	return legacy.PrivKeyFromBytes(privKeyBytes)

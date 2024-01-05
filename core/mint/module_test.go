@@ -11,6 +11,6 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().Equal(mint.MintModule, c.Name())
 
 	// test tx
-	_, err := c.NewTxRouter(nil, "", nil)
+	_, err := c.NewTxRouter(s.xplac.GetLogger(), nil, "", nil)
 	s.Require().Error(err)
 }

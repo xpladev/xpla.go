@@ -3,8 +3,7 @@ package wasm
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
+	"github.com/xpladev/xpla.go/types"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
 )
@@ -19,34 +18,52 @@ func (c *coreModule) Name() string {
 	return WasmModule
 }
 
-func (c *coreModule) NewTxRouter(builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
+func (c *coreModule) NewTxRouter(logger types.Logger, builder cmclient.TxBuilder, msgType string, msg interface{}) (cmclient.TxBuilder, error) {
 	switch {
 	case msgType == WasmStoreMsgType:
 		convertMsg := msg.(wasm.MsgStoreCode)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == WasmInstantiateMsgType:
 		convertMsg := msg.(wasm.MsgInstantiateContract)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == WasmExecuteMsgType:
 		convertMsg := msg.(wasm.MsgExecuteContract)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == WasmClearContractAdminMsgType:
 		convertMsg := msg.(wasm.MsgClearAdmin)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == WasmSetContractAdminMsgType:
 		convertMsg := msg.(wasm.MsgUpdateAdmin)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	case msgType == WasmMigrateMsgType:
 		convertMsg := msg.(wasm.MsgMigrateContract)
-		builder.SetMsgs(&convertMsg)
+		err := builder.SetMsgs(&convertMsg)
+		if err != nil {
+			return nil, logger.Err(err)
+		}
 
 	default:
-		return nil, util.LogErr(errors.ErrInvalidMsgType, msgType)
+		return nil, logger.Err(types.ErrWrap(types.ErrInvalidMsgType, msgType))
 	}
 
 	return builder, nil

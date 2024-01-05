@@ -4,7 +4,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	feegrantv1beta1 "cosmossdk.io/api/cosmos/feegrant/v1beta1"
@@ -37,7 +36,7 @@ func queryByGrpcFeegrant(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Feegrant grants by grantee
@@ -48,7 +47,7 @@ func queryByGrpcFeegrant(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Feegrant grants by granter
@@ -59,16 +58,16 @@ func queryByGrpcFeegrant(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	out, err = core.PrintProto(i, res)
 	if err != nil {
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 
 	return string(out), nil
@@ -97,17 +96,17 @@ func queryByLcdFeegrant(i core.QueryClient) (string, error) {
 
 	// Feegrant grants by granter
 	case i.Ixplac.GetMsgType() == FeegrantQueryGrantsByGranterMsgType:
-		return "", util.LogErr(errors.ErrNotSupport, "unsupported querying feegrant state(grants by granter) by using LCD")
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "unsupported querying feegrant state(grants by granter) by using LCD"))
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
 		i.Ixplac.GetHttpMutex().Unlock()
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	i.Ixplac.GetHttpMutex().Unlock()
 

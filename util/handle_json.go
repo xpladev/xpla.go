@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-
-	"github.com/xpladev/xpla.go/types/errors"
 )
 
 func JsonMarshalData(jsonData interface{}) ([]byte, error) {
@@ -27,10 +25,13 @@ func JsonMarshalDataIndent(jsonData interface{}) ([]byte, error) {
 	return byteData, nil
 }
 
-func JsonUnmarshalData(jsonStruct interface{}, byteValue []byte) interface{} {
-	json.Unmarshal(byteValue, &jsonStruct)
+func JsonUnmarshalData(jsonStruct interface{}, byteValue []byte) (interface{}, error) {
+	err := json.Unmarshal(byteValue, &jsonStruct)
+	if err != nil {
+		return nil, err
+	}
 
-	return jsonStruct
+	return jsonStruct, nil
 }
 
 func JsonUnmarshal(jsonStruct interface{}, jsonFilePath string) (interface{}, error) {
@@ -42,21 +43,20 @@ func JsonUnmarshal(jsonStruct interface{}, jsonFilePath string) (interface{}, er
 	if err != nil {
 		return nil, err
 	}
-	jsonStruct = JsonUnmarshalData(jsonStruct, byteValue)
 
-	return jsonStruct, nil
+	return JsonUnmarshalData(jsonStruct, byteValue)
 }
 
 func SaveJsonPretty(jsonByte []byte, saveTxPath string) error {
 	var prettyJson bytes.Buffer
 	err := json.Indent(&prettyJson, jsonByte, "", "    ")
 	if err != nil {
-		return LogErr(errors.ErrFailedToMarshal, err)
+		return err
 	}
 
 	err = os.WriteFile(saveTxPath, prettyJson.Bytes(), 0660)
 	if err != nil {
-		return LogErr(errors.ErrFailedToMarshal, err)
+		return err
 	}
 
 	return nil

@@ -2,8 +2,7 @@ package evm
 
 import (
 	"github.com/xpladev/xpla.go/core"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
+	"github.com/xpladev/xpla.go/types"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
 )
@@ -18,8 +17,8 @@ func (c *coreModule) Name() string {
 	return EvmModule
 }
 
-func (c *coreModule) NewTxRouter(_ cmclient.TxBuilder, _ string, _ interface{}) (cmclient.TxBuilder, error) {
-	return nil, util.LogErr(errors.ErrInvalidRequest, c.Name(), "module has not tx")
+func (c *coreModule) NewTxRouter(logger types.Logger, _ cmclient.TxBuilder, _ string, _ interface{}) (cmclient.TxBuilder, error) {
+	return nil, logger.Err(types.ErrWrap(types.ErrInvalidRequest, c.Name(), "module has not tx"))
 }
 
 func (c *coreModule) NewQueryRouter(q core.QueryClient) (string, error) {

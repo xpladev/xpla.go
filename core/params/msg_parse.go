@@ -2,7 +2,6 @@ package params
 
 import (
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +19,7 @@ func parseProposalParamChangeArgs(paramChangeMsg types.ParamChangeMsg, from sdk.
 	if paramChangeMsg.JsonFilePath != "" {
 		proposal, err = paramscutils.ParseParamChangeProposalJSON(encodingConfig.Amino, paramChangeMsg.JsonFilePath)
 		if err != nil {
-			return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+			return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 		}
 	} else {
 		proposal.Title = paramChangeMsg.Title
@@ -31,7 +30,7 @@ func parseProposalParamChangeArgs(paramChangeMsg types.ParamChangeMsg, from sdk.
 		for _, change := range paramChangeMsg.Changes {
 			var targetJson paramscutils.ParamChangeJSON
 			if err := encodingConfig.Amino.UnmarshalJSON([]byte(change), &targetJson); err != nil {
-				return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrFailedToUnmarshal, err)
+				return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrFailedToUnmarshal, err)
 			}
 			paramChangeJsons = append(paramChangeJsons, targetJson)
 		}
@@ -41,7 +40,7 @@ func parseProposalParamChangeArgs(paramChangeMsg types.ParamChangeMsg, from sdk.
 
 	deposit, err := sdk.ParseCoinsNormalized(util.DenomAdd(proposal.Deposit))
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	content := paramsproposal.NewParameterChangeProposal(
@@ -50,7 +49,7 @@ func parseProposalParamChangeArgs(paramChangeMsg types.ParamChangeMsg, from sdk.
 
 	msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrInvalidRequest, err)
 	}
 
 	return *msg, nil

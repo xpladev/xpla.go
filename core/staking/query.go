@@ -4,7 +4,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
@@ -36,7 +35,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking validators
@@ -47,7 +46,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking delegation
@@ -58,7 +57,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking delegations
@@ -69,7 +68,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking delegations to
@@ -80,7 +79,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking unbonding delegation
@@ -91,7 +90,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking unbonding delegations
@@ -102,7 +101,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking unbonding delegations from
@@ -113,7 +112,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking redelegations
@@ -126,7 +125,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking historical information
@@ -137,7 +136,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking pool
@@ -148,7 +147,7 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Staking params
@@ -159,16 +158,16 @@ func queryByGrpcStaking(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	out, err = core.PrintProto(i, res)
 	if err != nil {
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 
 	return string(out), nil
@@ -240,7 +239,7 @@ func queryByLcdStaking(i core.QueryClient) (string, error) {
 	case i.Ixplac.GetMsgType() == StakingQueryRedelegationMsgType ||
 		i.Ixplac.GetMsgType() == StakingQueryRedelegationsFromMsgType:
 
-		return "", util.LogErr(errors.ErrNotSupport, "unsupported querying delegations by using LCD. query delegations of a delegator")
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "unsupported querying delegations by using LCD. query delegations of a delegator"))
 
 	// Staking redelegations
 	case i.Ixplac.GetMsgType() == StakingQueryRedelegationsMsgType:
@@ -263,14 +262,14 @@ func queryByLcdStaking(i core.QueryClient) (string, error) {
 		url = url + stakingParamsLabel
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
 		i.Ixplac.GetHttpMutex().Unlock()
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	i.Ixplac.GetHttpMutex().Unlock()
 

@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/xpladev/xpla.go/types/errors"
 )
 
 func FromBigIntToString(v *big.Int) string {
@@ -19,7 +18,7 @@ func FromStringToBigInt(v string) (*big.Int, error) {
 	n := big.NewInt(0)
 	n, ok := n.SetString(v, 10)
 	if !ok {
-		return nil, LogErr(errors.ErrInvalidRequest, "convert string to big int err")
+		return nil, fmt.Errorf("convert string to big int err")
 	}
 	return n, nil
 }
@@ -119,16 +118,5 @@ func ToString(value interface{}, defaultValue string) string {
 		return defaultValue
 	} else {
 		return s
-	}
-}
-
-func ToStringTrim(value interface{}, defaultValue string) string {
-	s := fmt.Sprintf("%v", value)
-	s = s[1 : len(s)-1]
-	str := strings.TrimSpace(s)
-	if str == "" {
-		return defaultValue
-	} else {
-		return str
 	}
 }

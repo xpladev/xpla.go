@@ -52,8 +52,10 @@ func TestEncryptDecryptPrivKeyArmor(t *testing.T) {
 	PrivateKey, err := NewPrivKey(mnemonic)
 	assert.NoError(t, err)
 
-	armor1 := EncryptArmorPrivKey(PrivateKey, DefaultEncryptPassphrase)
-	armor2 := EncryptArmorPrivKeyWithoutPassphrase(PrivateKey)
+	armor1, err := EncryptArmorPrivKey(PrivateKey, DefaultEncryptPassphrase)
+	assert.NoError(t, err)
+	armor2, err := EncryptArmorPrivKeyWithoutPassphrase(PrivateKey)
+	assert.NoError(t, err)
 
 	pk1, algo1, err := UnarmorDecryptPrivKey(armor1, DefaultEncryptPassphrase)
 	assert.NoError(t, err)

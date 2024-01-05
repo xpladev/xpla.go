@@ -8,7 +8,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -39,7 +38,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm list code
@@ -50,7 +49,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm list contract by code
@@ -61,7 +60,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm download
@@ -76,7 +75,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 		os.WriteFile(downloadFileName, res.Data, 0o600)
 		return "download complete", nil
@@ -89,7 +88,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm contract info
@@ -100,7 +99,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm contract state all
@@ -111,7 +110,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm contract history
@@ -122,7 +121,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm pinned
@@ -133,7 +132,7 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Wasm libwasmvm version
@@ -142,12 +141,12 @@ func queryByGrpcWasm(i core.QueryClient) (string, error) {
 		return convertMsg, nil
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	out, err = core.PrintProto(i, res)
 	if err != nil {
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 
 	return string(out), nil
@@ -186,7 +185,7 @@ func queryByLcdWasm(i core.QueryClient) (string, error) {
 
 	// Wasm download
 	case i.Ixplac.GetMsgType() == WasmDownloadMsgType:
-		return "", util.LogErr(errors.ErrNotSupport, "unsupported download wasm file by using LCD")
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "unsupported download wasm file by using LCD"))
 
 	// Wasm code info
 	case i.Ixplac.GetMsgType() == WasmCodeInfoMsgType:
@@ -223,14 +222,14 @@ func queryByLcdWasm(i core.QueryClient) (string, error) {
 		return convertMsg, nil
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
 		i.Ixplac.GetHttpMutex().Unlock()
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	i.Ixplac.GetHttpMutex().Unlock()
 

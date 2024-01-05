@@ -1,19 +1,38 @@
 package ibc
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &IbcExternal{}
 
 type IbcExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewIbcExternal(xplac provider.XplaClient) (e IbcExternal) {
+func NewExternal(xplac provider.XplaClient) (e IbcExternal) {
 	e.Xplac = xplac
+	e.Name = IbcModule
 	return e
+}
+
+func (e IbcExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e IbcExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Query
@@ -22,344 +41,301 @@ func NewIbcExternal(xplac provider.XplaClient) (e IbcExternal) {
 func (e IbcExternal) IbcClientStates() provider.XplaClient {
 	msg, err := MakeIbcClientStatesMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientStatesMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientStatesMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientStatesMsgType, msg)
 }
 
 // Query IBC light client state by client ID
 func (e IbcExternal) IbcClientState(ibcClientStateMsg types.IbcClientStateMsg) provider.XplaClient {
 	msg, err := MakeIbcClientStateMsg(ibcClientStateMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientStateMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientStateMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientStateMsgType, msg)
 }
 
 // Query IBC light client status by client ID
 func (e IbcExternal) IbcClientStatus(ibcClientStatusMsg types.IbcClientStatusMsg) provider.XplaClient {
 	msg, err := MakeIbcClientStatusMsg(ibcClientStatusMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientStatusMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientStatusMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientStatusMsgType, msg)
 }
 
 // Query IBC client consensus states
 func (e IbcExternal) IbcClientConsensusStates(ibcClientConsensusStatesMsg types.IbcClientConsensusStatesMsg) provider.XplaClient {
 	msg, err := MakeIbcClientConsensusStatesMsg(ibcClientConsensusStatesMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientConsensusStatesMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientConsensusStatesMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientConsensusStatesMsgType, msg)
 }
 
 // Query IBC client consensus state heights
 func (e IbcExternal) IbcClientConsensusStateHeights(ibcClientConsensusStateHeightsMsg types.IbcClientConsensusStateHeightsMsg) provider.XplaClient {
 	msg, err := MakeIbcClientConsensusStateHeightsMsg(ibcClientConsensusStateHeightsMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientConsensusStateHeightsMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientConsensusStateHeightsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientConsensusStateHeightsMsgType, msg)
 }
 
 // Query IBC client consensus state
 func (e IbcExternal) IbcClientConsensusState(ibcClientConsensusStateMsg types.IbcClientConsensusStateMsg) provider.XplaClient {
 	msg, err := MakeIbcClientConsensusStateMsg(ibcClientConsensusStateMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientConsensusStateMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientConsensusStateMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientConsensusStateMsgType, msg)
 }
 
 // Query IBC client tendermint header
 func (e IbcExternal) IbcClientHeader() provider.XplaClient {
 	msg, err := MakeIbcClientHeaderMsg(e.Xplac.GetRpc())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientHeaderMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientHeaderMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientHeaderMsgType, msg)
 }
 
 // Query IBC client self consensus state
 func (e IbcExternal) IbcClientSelfConsensusState() provider.XplaClient {
 	msg, err := MakeIbcClientSelfConsensusStateMsg(e.Xplac.GetRpc())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientSelfConsensusStateMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientSelfConsensusStateMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientSelfConsensusStateMsgType, msg)
 }
 
 // Query IBC client params
 func (e IbcExternal) IbcClientParams() provider.XplaClient {
 	msg, err := MakeIbcClientParamsMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcClientParamsMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcClientParamsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcClientParamsMsgType, msg)
 }
 
 // Query IBC connections
 func (e IbcExternal) IbcConnections(ibcConnectionMsg ...types.IbcConnectionMsg) provider.XplaClient {
-	if len(ibcConnectionMsg) == 0 {
+	switch {
+	case len(ibcConnectionMsg) == 0:
 		msg, err := MakeIbcConnectionConnectionsMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcConnectionConnectionsMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcConnectionConnectionsMsgType).
-			WithMsg(msg)
-	} else if len(ibcConnectionMsg) == 1 {
+
+		return e.ToExternal(IbcConnectionConnectionsMsgType, msg)
+
+	case len(ibcConnectionMsg) == 1:
 		msg, err := MakeIbcConnectionConnectionMsg(ibcConnectionMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcConnectionConnectionMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcConnectionConnectionMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+		return e.ToExternal(IbcConnectionConnectionMsgType, msg)
+
+	default:
+		return e.Err(IbcConnectionConnectionMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }
 
 // Query IBC client connections
 func (e IbcExternal) IbcClientConnections(ibcClientConnectionsMsg types.IbcClientConnectionsMsg) provider.XplaClient {
 	msg, err := MakeIbcConnectionClientConnectionsMsg(ibcClientConnectionsMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcConnectionClientConnectionsMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcConnectionClientConnectionsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcConnectionClientConnectionsMsgType, msg)
 }
 
 // Query IBC channels
 func (e IbcExternal) IbcChannels(ibcChannelMsg ...types.IbcChannelMsg) provider.XplaClient {
-	if len(ibcChannelMsg) == 0 {
+	switch {
+	case len(ibcChannelMsg) == 0:
 		msg, err := MakeIbcChannelChannelsMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcChannelChannelsMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcChannelChannelsMsgType).
-			WithMsg(msg)
-	} else if len(ibcChannelMsg) == 1 {
+
+		return e.ToExternal(IbcChannelChannelsMsgType, msg)
+
+	case len(ibcChannelMsg) == 1:
 		msg, err := MakeIbcChannelChannelMsg(ibcChannelMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcChannelChannelMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcChannelChannelMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+		return e.ToExternal(IbcChannelChannelMsgType, msg)
+
+	default:
+		return e.Err(IbcChannelChannelMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }
 
 // Query IBC channel connections
 func (e IbcExternal) IbcChannelConnections(ibcChannelConnectionsMsg types.IbcChannelConnectionsMsg) provider.XplaClient {
 	msg, err := MakeIbcChannelConnectionsMsg(ibcChannelConnectionsMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcChannelConnectionsMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcChannelConnectionsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcChannelConnectionsMsgType, msg)
 }
 
 // Query IBC channel client state
 func (e IbcExternal) IbcChannelClientState(ibcChannelClientStateMsg types.IbcChannelClientStateMsg) provider.XplaClient {
 	msg, err := MakeIbcChannelClientStateMsg(ibcChannelClientStateMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcChannelClientStateMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcChannelClientStateMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcChannelClientStateMsgType, msg)
 }
 
 // Query IBC channel packet commitments
 func (e IbcExternal) IbcChannelPacketCommitments(ibcChannelPacketCommitmentsMsg types.IbcChannelPacketCommitmentsMsg) provider.XplaClient {
-	if ibcChannelPacketCommitmentsMsg.Sequence == "" {
+	switch {
+	case ibcChannelPacketCommitmentsMsg.Sequence == "":
 		msg, err := MakeIbcChannelPacketCommitmentsMsg(ibcChannelPacketCommitmentsMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcChannelPacketCommitmentsMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcChannelPacketCommitmentsMsgType).
-			WithMsg(msg)
-	} else {
+
+		return e.ToExternal(IbcChannelPacketCommitmentsMsgType, msg)
+
+	default:
 		msg, err := MakeIbcChannelPacketCommitmentMsg(ibcChannelPacketCommitmentsMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcChannelPacketCommitmentMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcChannelPacketCommitmentMsgType).
-			WithMsg(msg)
+
+		return e.ToExternal(IbcChannelPacketCommitmentMsgType, msg)
 	}
-	return e.Xplac
 }
 
 // Query IBC packet receipt
 func (e IbcExternal) IbcChannelPacketReceipt(ibcChannelPacketReceiptMsg types.IbcChannelPacketReceiptMsg) provider.XplaClient {
 	msg, err := MakeIbcChannelPacketReceiptMsg(ibcChannelPacketReceiptMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcChannelPacketReceiptMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcChannelPacketReceiptMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcChannelPacketReceiptMsgType, msg)
 }
 
 // Query IBC packet ack
 func (e IbcExternal) IbcChannelPacketAck(ibcChannelPacketAckMsg types.IbcChannelPacketAckMsg) provider.XplaClient {
 	msg, err := MakeIbcChannelPacketAckMsg(ibcChannelPacketAckMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcChannelPacketAckMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcChannelPacketAckMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcChannelPacketAckMsgType, msg)
 }
 
 // Query IBC unreceived packets
 func (e IbcExternal) IbcChannelUnreceivedPackets(ibcChannelUnreceivedPacketsMsg types.IbcChannelUnreceivedPacketsMsg) provider.XplaClient {
 	msg, err := MakeIbcChannelPacketUnreceivedPacketsMsg(ibcChannelUnreceivedPacketsMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcChannelUnreceivedPacketsMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcChannelUnreceivedPacketsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcChannelUnreceivedPacketsMsgType, msg)
 }
 
 // Query IBC unreceived acks
 func (e IbcExternal) IbcChannelUnreceivedAcks(ibcChannelUnreceivedAcksMsg types.IbcChannelUnreceivedAcksMsg) provider.XplaClient {
 	msg, err := MakeIbcChannelPacketUnreceivedAcksMsg(ibcChannelUnreceivedAcksMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcChannelUnreceivedAcksMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcChannelUnreceivedAcksMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcChannelUnreceivedAcksMsgType, msg)
 }
 
 // Query IBC next sequence receive
 func (e IbcExternal) IbcChannelNextSequence(ibcChannelNextSequenceMsg types.IbcChannelNextSequenceMsg) provider.XplaClient {
 	msg, err := MakeIbcChannelNextSequenceReceiveMsg(ibcChannelNextSequenceMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcChannelNextSequenceMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcChannelNextSequenceMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcChannelNextSequenceMsgType, msg)
 }
 
 // Query IBC transfer denom traces
 func (e IbcExternal) IbcDenomTraces(ibcDenomTraceMsg ...types.IbcDenomTraceMsg) provider.XplaClient {
-	if len(ibcDenomTraceMsg) == 0 {
+	switch {
+	case len(ibcDenomTraceMsg) == 0:
 		msg, err := MakeIbcTransferDenomTracesMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcTransferDenomTracesMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcTransferDenomTracesMsgType).
-			WithMsg(msg)
-	} else if len(ibcDenomTraceMsg) == 1 {
+
+		return e.ToExternal(IbcTransferDenomTracesMsgType, msg)
+
+	case len(ibcDenomTraceMsg) == 1:
 		msg, err := MakeIbcTransferDenomTraceMsg(ibcDenomTraceMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(IbcTransferDenomTraceMsgType, err)
 		}
-		e.Xplac.WithModule(IbcModule).
-			WithMsgType(IbcTransferDenomTraceMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+		return e.ToExternal(IbcTransferDenomTraceMsgType, msg)
+
+	default:
+		return e.Err(IbcTransferDenomTraceMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }
 
 // Query IBC transfer denom trace
 func (e IbcExternal) IbcDenomTrace(ibcDenomTraceMsg types.IbcDenomTraceMsg) provider.XplaClient {
 	msg, err := MakeIbcTransferDenomTraceMsg(ibcDenomTraceMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcTransferDenomTraceMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcTransferDenomTraceMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcTransferDenomTraceMsgType, msg)
 }
 
 // Query IBC transfer denom hash
 func (e IbcExternal) IbcDenomHash(ibcDenomHashMsg types.IbcDenomHashMsg) provider.XplaClient {
 	msg, err := MakeIbcTransferDenomHashMsg(ibcDenomHashMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcTransferDenomHashMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcTransferDenomHashMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcTransferDenomHashMsgType, msg)
 }
 
 // Query IBC transfer denom hash
 func (e IbcExternal) IbcEscrowAddress(ibcEscrowAddressMsg types.IbcEscrowAddressMsg) provider.XplaClient {
 	msg, err := MakeIbcTransferEscrowAddressMsg(ibcEscrowAddressMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcTransferEscrowAddressMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcTransferEscrowAddressMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcTransferEscrowAddressMsgType, msg)
 }
 
 // Query IBC transfer params
 func (e IbcExternal) IbcTransferParams() provider.XplaClient {
 	msg, err := MakeIbcTransferParamsMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(IbcTransferParamsMsgType, err)
 	}
-	e.Xplac.WithModule(IbcModule).
-		WithMsgType(IbcTransferParamsMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(IbcTransferParamsMsgType, msg)
 }

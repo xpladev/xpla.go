@@ -1,19 +1,38 @@
 package authz
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &AuthzExternal{}
 
 type AuthzExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewAuthzExternal(xplac provider.XplaClient) (e AuthzExternal) {
+func NewExternal(xplac provider.XplaClient) (e AuthzExternal) {
 	e.Xplac = xplac
+	e.Name = AuthzModule
 	return e
+}
+
+func (e AuthzExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e AuthzExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Tx
@@ -22,36 +41,30 @@ func NewAuthzExternal(xplac provider.XplaClient) (e AuthzExternal) {
 func (e AuthzExternal) AuthzGrant(authzGrantMsg types.AuthzGrantMsg) provider.XplaClient {
 	msg, err := MakeAuthzGrantMsg(authzGrantMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthzGrantMsgType, err)
 	}
-	e.Xplac.WithModule(AuthzModule).
-		WithMsgType(AuthzGrantMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthzGrantMsgType, msg)
 }
 
 // Revoke authorization.
 func (e AuthzExternal) AuthzRevoke(authzRevokeMsg types.AuthzRevokeMsg) provider.XplaClient {
 	msg, err := MakeAuthzRevokeMsg(authzRevokeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthzRevokeMsgType, err)
 	}
-	e.Xplac.WithModule(AuthzModule).
-		WithMsgType(AuthzRevokeMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthzRevokeMsgType, msg)
 }
 
 // Execute transaction on behalf of granter account.
 func (e AuthzExternal) AuthzExec(authzExecMsg types.AuthzExecMsg) provider.XplaClient {
 	msg, err := MakeAuthzExecMsg(authzExecMsg, e.Xplac.GetEncoding())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(AuthzExecMsgType, err)
 	}
-	e.Xplac.WithModule(AuthzModule).
-		WithMsgType(AuthzExecMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(AuthzExecMsgType, msg)
 }
 
 // Query
@@ -59,32 +72,32 @@ func (e AuthzExternal) AuthzExec(authzExecMsg types.AuthzExecMsg) provider.XplaC
 // Query grants for granter-grantee pair and optionally a msg-type-url.
 // Also, it is able to support querying grants granted by granter and granted to a grantee.
 func (e AuthzExternal) QueryAuthzGrants(queryAuthzGrantMsg types.QueryAuthzGrantMsg) provider.XplaClient {
-	if queryAuthzGrantMsg.Grantee != "" && queryAuthzGrantMsg.Granter != "" {
+	switch {
+	case queryAuthzGrantMsg.Grantee != "" && queryAuthzGrantMsg.Granter != "":
 		msg, err := MakeQueryAuthzGrantsMsg(queryAuthzGrantMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(AuthzQueryGrantMsgType, err)
 		}
-		e.Xplac.WithModule(AuthzModule).
-			WithMsgType(AuthzQueryGrantMsgType).
-			WithMsg(msg)
-	} else if queryAuthzGrantMsg.Grantee != "" && queryAuthzGrantMsg.Granter == "" {
+
+		return e.ToExternal(AuthzQueryGrantMsgType, msg)
+
+	case queryAuthzGrantMsg.Grantee != "" && queryAuthzGrantMsg.Granter == "":
 		msg, err := MakeQueryAuthzGrantsByGranteeMsg(queryAuthzGrantMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(AuthzQueryGrantsByGranteeMsgType, err)
 		}
-		e.Xplac.WithModule(AuthzModule).
-			WithMsgType(AuthzQueryGrantsByGranteeMsgType).
-			WithMsg(msg)
-	} else if queryAuthzGrantMsg.Grantee == "" && queryAuthzGrantMsg.Granter != "" {
+
+		return e.ToExternal(AuthzQueryGrantsByGranteeMsgType, msg)
+
+	case queryAuthzGrantMsg.Grantee == "" && queryAuthzGrantMsg.Granter != "":
 		msg, err := MakeQueryAuthzGrantsByGranterMsg(queryAuthzGrantMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(AuthzQueryGrantsByGranterMsgType, err)
 		}
-		e.Xplac.WithModule(AuthzModule).
-			WithMsgType(AuthzQueryGrantsByGranterMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInsufficientParams, "No query grants parameters"))
+
+		return e.ToExternal(AuthzQueryGrantsByGranterMsgType, msg)
+
+	default:
+		return e.Err(AuthzQueryGrantMsgType, types.ErrWrap(types.ErrInsufficientParams, "No query grants parameters"))
 	}
-	return e.Xplac
 }

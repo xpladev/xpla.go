@@ -2,8 +2,6 @@ package slashing
 
 import (
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +22,7 @@ func parseQuerySigingInfoArgs(signingInfoMsg types.SigningInfoMsg, xplacEncoding
 		var pk cryptotypes.PubKey
 		err := xplacEncodingConfig.Codec.UnmarshalInterfaceJSON([]byte(signingInfoMsg.ConsPubKey), &pk)
 		if err != nil {
-			return slashingtypes.QuerySigningInfoRequest{}, util.LogErr(errors.ErrFailedToUnmarshal, err)
+			return slashingtypes.QuerySigningInfoRequest{}, types.ErrWrap(types.ErrFailedToUnmarshal, err)
 		}
 
 		return slashingtypes.QuerySigningInfoRequest{
@@ -35,6 +33,6 @@ func parseQuerySigingInfoArgs(signingInfoMsg types.SigningInfoMsg, xplacEncoding
 			ConsAddress: signingInfoMsg.ConsAddr,
 		}, nil
 	} else {
-		return slashingtypes.QuerySigningInfoRequest{}, util.LogErr(errors.ErrInsufficientParams, "need at least one input")
+		return slashingtypes.QuerySigningInfoRequest{}, types.ErrWrap(types.ErrInsufficientParams, "need at least one input")
 	}
 }

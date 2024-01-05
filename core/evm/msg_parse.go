@@ -2,7 +2,6 @@ package evm
 
 import (
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	"github.com/ethereum/go-ethereum"
@@ -23,7 +22,7 @@ func parseDeploySolContractArgs(deploySolContractMsg types.DeploySolContractMsg)
 	if deploySolContractMsg.BytecodeJsonFilePath != "" {
 		bytecode, err = util.BytecodeParsing(deploySolContractMsg.BytecodeJsonFilePath)
 		if err != nil {
-			return ContractInfo{}, util.LogErr(errors.ErrParse, err)
+			return ContractInfo{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
@@ -31,7 +30,7 @@ func parseDeploySolContractArgs(deploySolContractMsg types.DeploySolContractMsg)
 	if deploySolContractMsg.ABIJsonFilePath != "" {
 		abi, err = util.AbiParsing(deploySolContractMsg.ABIJsonFilePath)
 		if err != nil {
-			return ContractInfo{}, util.LogErr(errors.ErrParse, err)
+			return ContractInfo{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
@@ -53,14 +52,14 @@ func parseInvokeSolContractArgs(invokeSolContractMsg types.InvokeSolContractMsg)
 	if invokeSolContractMsg.BytecodeJsonFilePath != "" {
 		invokeSolContractMsg.Bytecode, err = util.BytecodeParsing(invokeSolContractMsg.BytecodeJsonFilePath)
 		if err != nil {
-			return types.InvokeSolContractMsg{}, util.LogErr(errors.ErrParse, err)
+			return types.InvokeSolContractMsg{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
 	if invokeSolContractMsg.ABIJsonFilePath != "" {
 		invokeSolContractMsg.ABI, err = util.AbiParsing(invokeSolContractMsg.ABIJsonFilePath)
 		if err != nil {
-			return types.InvokeSolContractMsg{}, util.LogErr(errors.ErrParse, err)
+			return types.InvokeSolContractMsg{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 	if invokeSolContractMsg.Args == nil || len(invokeSolContractMsg.Args) == 0 {
@@ -81,7 +80,7 @@ func parseCallSolContractArgs(callSolContractMsg types.CallSolContractMsg) (Call
 	if callSolContractMsg.BytecodeJsonFilePath != "" {
 		bytecode, err = util.BytecodeParsing(callSolContractMsg.BytecodeJsonFilePath)
 		if err != nil {
-			return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+			return CallSolContractParseMsg{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
@@ -89,7 +88,7 @@ func parseCallSolContractArgs(callSolContractMsg types.CallSolContractMsg) (Call
 	if callSolContractMsg.ABIJsonFilePath != "" {
 		abi, err = util.AbiParsing(callSolContractMsg.ABIJsonFilePath)
 		if err != nil {
-			return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+			return CallSolContractParseMsg{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
@@ -100,14 +99,14 @@ func parseCallSolContractArgs(callSolContractMsg types.CallSolContractMsg) (Call
 	}
 	callByteData, err := util.GetAbiPack(callSolContractMsg.ContractFuncCallName, abi, bytecode, Args...)
 	if err != nil {
-		return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+		return CallSolContractParseMsg{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	fromAddr := util.FromStringToByte20Address(callSolContractMsg.FromByteAddress)
 	toAddr := util.FromStringToByte20Address(callSolContractMsg.ContractAddress)
 	value, err := util.FromStringToBigInt("0")
 	if err != nil {
-		return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+		return CallSolContractParseMsg{}, types.ErrWrap(types.ErrConvert, err)
 	}
 
 	msg := ethereum.CallMsg{
@@ -138,7 +137,7 @@ func parseEthGetBlockTransactionCountArgs(ethGetBlockTransactionCountMsg types.E
 // Parsing - block by hash or height
 func parseGetBlockByHashHeightArgs(getBlockByHashHeightMsg types.GetBlockByHashHeightMsg) (types.GetBlockByHashHeightMsg, error) {
 	if getBlockByHashHeightMsg.BlockHash != "" && getBlockByHashHeightMsg.BlockHeight != "" {
-		return types.GetBlockByHashHeightMsg{}, util.LogErr(errors.ErrInvalidRequest, "need only one parameter, hash or height")
+		return types.GetBlockByHashHeightMsg{}, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter, hash or height")
 	}
 
 	return getBlockByHashHeightMsg, nil
@@ -151,7 +150,7 @@ func parseEstimateGasSolArgs(invokeSolContractMsg types.InvokeSolContractMsg) (C
 	if invokeSolContractMsg.BytecodeJsonFilePath != "" {
 		bytecode, err = util.BytecodeParsing(invokeSolContractMsg.BytecodeJsonFilePath)
 		if err != nil {
-			return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+			return CallSolContractParseMsg{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
@@ -159,7 +158,7 @@ func parseEstimateGasSolArgs(invokeSolContractMsg types.InvokeSolContractMsg) (C
 	if invokeSolContractMsg.ABIJsonFilePath != "" {
 		abi, err = util.AbiParsing(invokeSolContractMsg.ABIJsonFilePath)
 		if err != nil {
-			return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+			return CallSolContractParseMsg{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 	invokeSolContractMsg.ContractAddress = util.FromStringToTypeHexString(invokeSolContractMsg.ContractAddress)
@@ -172,14 +171,14 @@ func parseEstimateGasSolArgs(invokeSolContractMsg types.InvokeSolContractMsg) (C
 	}
 
 	if err != nil {
-		return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+		return CallSolContractParseMsg{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	fromAddr := util.FromStringToByte20Address(invokeSolContractMsg.FromByteAddress)
 	toAddr := util.FromStringToByte20Address(invokeSolContractMsg.ContractAddress)
 	value, err := util.FromStringToBigInt("0")
 	if err != nil {
-		return CallSolContractParseMsg{}, util.LogErr(errors.ErrParse, err)
+		return CallSolContractParseMsg{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	msg := ethereum.CallMsg{
@@ -215,7 +214,7 @@ func parseEthNewFilterArgs(ethNewFilterMsg types.EthNewFilterMsg) (EthNewFilterP
 		fromBlock = rpc.PendingBlockNumber
 
 	} else {
-		return EthNewFilterParseMsg{}, util.LogErr(errors.ErrInvalidMsgType, "invalid from/to block type, (latest/earliest/pending)")
+		return EthNewFilterParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "invalid from/to block type, (latest/earliest/pending)")
 	}
 
 	if ethNewFilterMsg.ToBlock == "latest" ||
@@ -229,7 +228,7 @@ func parseEthNewFilterArgs(ethNewFilterMsg types.EthNewFilterMsg) (EthNewFilterP
 		toBlock = rpc.PendingBlockNumber
 
 	} else {
-		return EthNewFilterParseMsg{}, util.LogErr(errors.ErrInvalidMsgType, "invalid from/to block type, (latest/earliest/pending)")
+		return EthNewFilterParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "invalid from/to block type, (latest/earliest/pending)")
 	}
 
 	if len(ethNewFilterMsg.Address) != 0 {
@@ -272,7 +271,7 @@ func parseEthGetLogsArgs(ethGetLogsMsg types.EthGetLogsMsg) (EthNewFilterParseMs
 
 	if (ethGetLogsMsg.FromBlock != "" || ethGetLogsMsg.ToBlock != "") &&
 		ethGetLogsMsg.BlockHash != "" {
-		return EthNewFilterParseMsg{}, util.LogErr(errors.ErrInvalidRequest, "cannot specify both BlockHash and FromBlock/ToBlock, choose one or the other")
+		return EthNewFilterParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "cannot specify both BlockHash and FromBlock/ToBlock, choose one or the other")
 	}
 
 	if ethGetLogsMsg.FromBlock == "latest" ||
@@ -286,7 +285,7 @@ func parseEthGetLogsArgs(ethGetLogsMsg types.EthGetLogsMsg) (EthNewFilterParseMs
 		fromBlock = rpc.PendingBlockNumber
 
 	} else {
-		return EthNewFilterParseMsg{}, util.LogErr(errors.ErrInvalidMsgType, "invalid from/to block type, (latest/earliest/pending)")
+		return EthNewFilterParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "invalid from/to block type, (latest/earliest/pending)")
 	}
 
 	if ethGetLogsMsg.ToBlock == "latest" ||
@@ -300,7 +299,7 @@ func parseEthGetLogsArgs(ethGetLogsMsg types.EthGetLogsMsg) (EthNewFilterParseMs
 		toBlock = rpc.PendingBlockNumber
 
 	} else {
-		return EthNewFilterParseMsg{}, util.LogErr(errors.ErrInvalidMsgType, "invalid from/to block type, (latest/earliest/pending)")
+		return EthNewFilterParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "invalid from/to block type, (latest/earliest/pending)")
 	}
 
 	if len(ethGetLogsMsg.Address) != 0 {

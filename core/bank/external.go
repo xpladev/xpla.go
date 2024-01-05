@@ -1,19 +1,38 @@
 package bank
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &BankExternal{}
 
 type BankExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewBankExternal(xplac provider.XplaClient) (e BankExternal) {
+func NewExternal(xplac provider.XplaClient) (e BankExternal) {
 	e.Xplac = xplac
+	e.Name = BankModule
 	return e
+}
+
+func (e BankExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e BankExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Tx
@@ -22,61 +41,57 @@ func NewBankExternal(xplac provider.XplaClient) (e BankExternal) {
 func (e BankExternal) BankSend(bankSendMsg types.BankSendMsg) provider.XplaClient {
 	msg, err := MakeBankSendMsg(bankSendMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(BankSendMsgType, err)
 	}
-	e.Xplac.WithModule(BankModule).
-		WithMsgType(BankSendMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(BankSendMsgType, msg)
 }
 
 // Query
 
 // Query for account balances by address
 func (e BankExternal) BankBalances(bankBalancesMsg types.BankBalancesMsg) provider.XplaClient {
-	if bankBalancesMsg.Denom == "" {
+	switch {
+	case bankBalancesMsg.Denom == "":
 		msg, err := MakeBankAllBalancesMsg(bankBalancesMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(BankAllBalancesMsgType, err)
 		}
-		e.Xplac.WithModule(BankModule).
-			WithMsgType(BankAllBalancesMsgType).
-			WithMsg(msg)
-	} else {
+
+		return e.ToExternal(BankAllBalancesMsgType, msg)
+
+	default:
 		msg, err := MakeBankBalanceMsg(bankBalancesMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(BankBalanceMsgType, err)
 		}
-		e.Xplac.WithModule(BankModule).
-			WithMsgType(BankBalanceMsgType).
-			WithMsg(msg)
-	}
-	return e.Xplac
 
+		return e.ToExternal(BankBalanceMsgType, msg)
+	}
 }
 
 // Query the client metadata for coin denominations.
 func (e BankExternal) DenomMetadata(denomMetadataMsg ...types.DenomMetadataMsg) provider.XplaClient {
-	if len(denomMetadataMsg) == 0 {
+	switch {
+	case len(denomMetadataMsg) == 0:
 		msg, err := MakeDenomsMetaDataMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(BankDenomsMetadataMsgType, err)
 		}
-		e.Xplac.WithModule(BankModule).
-			WithMsgType(BankDenomsMetadataMsgType).
-			WithMsg(msg)
-	} else if len(denomMetadataMsg) == 1 {
+
+		return e.ToExternal(BankDenomsMetadataMsgType, msg)
+
+	case len(denomMetadataMsg) == 1:
 		msg, err := MakeDenomMetaDataMsg(denomMetadataMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(BankDenomMetadataMsgType, err)
 		}
-		e.Xplac.WithModule(BankModule).
-			WithMsgType(BankDenomMetadataMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+		return e.ToExternal(BankDenomMetadataMsgType, msg)
+
+	default:
+		return e.Err(BankDenomMetadataMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }
 
 // Query the total supply of coins of the chain.
@@ -84,21 +99,20 @@ func (e BankExternal) Total(totalMsg ...types.TotalMsg) provider.XplaClient {
 	if len(totalMsg) == 0 {
 		msg, err := MakeTotalSupplyMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(BankTotalMsgType, err)
 		}
-		e.Xplac.WithModule(BankModule).
-			WithMsgType(BankTotalMsgType).
-			WithMsg(msg)
+
+		return e.ToExternal(BankTotalMsgType, msg)
+
 	} else if len(totalMsg) == 1 {
 		msg, err := MakeSupplyOfMsg(totalMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(BankTotalSupplyOfMsgType, err)
 		}
-		e.Xplac.WithModule(BankModule).
-			WithMsgType(BankTotalSupplyOfMsgType).
-			WithMsg(msg)
+
+		return e.ToExternal(BankTotalSupplyOfMsgType, msg)
+
 	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+		return e.Err(BankTotalSupplyOfMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }

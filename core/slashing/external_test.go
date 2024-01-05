@@ -22,7 +22,7 @@ func (s *IntegrationTestSuite) TestSlashingTx() {
 
 	s.Require().Equal(makeUnjailMsg, s.xplac.GetMsg())
 	s.Require().Equal(mslashing.SlashingModule, s.xplac.GetModule())
-	s.Require().Equal(mslashing.SlahsingUnjailMsgType, s.xplac.GetMsgType())
+	s.Require().Equal(mslashing.SlashingUnjailMsgType, s.xplac.GetMsgType())
 
 	slashingUnjailTxbytes, err := s.xplac.Unjail().CreateAndSignTx()
 	s.Require().NoError(err)

@@ -80,6 +80,7 @@ type Options struct {
 	Pagination     types.Pagination
 	OutputDocument string
 	FromAddress    sdk.AccAddress
+	Verbose        int
 }
 
 // Methods set params of client.xplaClient.
@@ -108,6 +109,7 @@ type WithProvider interface {
 	WithPagination(types.Pagination) XplaClient
 	WithOutputDocument(string) XplaClient
 	WithFromAddress(sdk.AccAddress) XplaClient
+	WithVerbose(int) XplaClient
 	WithModule(string) XplaClient
 	WithMsgType(string) XplaClient
 	WithMsg(interface{}) XplaClient
@@ -140,6 +142,7 @@ type GetProvider interface {
 	GetOutputDocument() string
 	GetFromAddress() sdk.AccAddress
 	GetHttpMutex() *sync.Mutex
+	GetLogger() types.Logger
 	GetModule() string
 	GetMsg() interface{}
 	GetMsgType() string

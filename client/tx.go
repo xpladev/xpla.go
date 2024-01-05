@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 
 	mevm "github.com/xpladev/xpla.go/core/evm"
 	"github.com/xpladev/xpla.go/key"
+	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -33,7 +34,7 @@ func (xplac *xplaClient) CreateAndSignTx() ([]byte, error) {
 		return nil, xplac.GetErr()
 	}
 
-	xplac, err = GetAccNumAndSeq(xplac)
+	xplac, err = getAccNumAndSeq(xplac)
 	if err != nil {
 		return nil, err
 	}
@@ -74,11 +75,11 @@ func (xplac *xplaClient) CreateAndSignTx() ([]byte, error) {
 
 		accNumU64, err := util.FromStringToUint64(xplac.GetAccountNumber())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 		accSeqU64, err := util.FromStringToUint64(xplac.GetSequence())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 		accNums := []uint64{accNumU64}
 		accSeqs := []uint64{accSeqU64}
@@ -93,17 +94,17 @@ func (xplac *xplaClient) CreateAndSignTx() ([]byte, error) {
 		sdkTx := builder.GetTx()
 		txBytes, err := xplac.GetEncoding().TxConfig.TxEncoder()(sdkTx)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		if xplac.GetOutputDocument() != "" {
 			jsonTx, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(sdkTx)
 			if err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 			err = util.SaveJsonPretty(jsonTx, xplac.GetOutputDocument())
 			if err != nil {
-				return nil, err
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 
 			return jsonTx, nil
@@ -148,17 +149,17 @@ func (xplac *xplaClient) CreateUnsignedTx() ([]byte, error) {
 	sdkTx := builder.GetTx()
 	txBytes, err := xplac.GetEncoding().TxConfig.TxEncoder()(sdkTx)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	if xplac.GetOutputDocument() != "" {
 		jsonTx, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(sdkTx)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 		err = util.SaveJsonPretty(jsonTx, xplac.GetOutputDocument())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		return jsonTx, nil
@@ -169,18 +170,16 @@ func (xplac *xplaClient) CreateUnsignedTx() ([]byte, error) {
 
 // Sign created unsigned transaction.
 func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
-	var err error
+	provider.ResetModuleAndMsgXplac(xplac)
 
-	if xplac.GetErr() != nil {
-		return nil, xplac.GetErr()
-	}
+	var err error
 	var emptySignTxMsg types.SignTxMsg
 	if signTxMsg == emptySignTxMsg {
-		return nil, util.LogErr(errors.ErrNotSatisfiedOptions, "need sign tx message of xpla client's option")
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "need sign tx message of xpla client's option"))
 	}
 
 	if !signTxMsg.Offline {
-		xplac, err = GetAccNumAndSeq(xplac)
+		xplac, err = getAccNumAndSeq(xplac)
 		if err != nil {
 			return nil, err
 		}
@@ -188,18 +187,23 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 
 	clientCtx, err := util.NewClient()
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(err)
 	}
 
 	fromName := types.XplaToolDefaultName
-	err = clientCtx.Keyring.ImportPrivKey(fromName, key.EncryptArmorPrivKey(xplac.GetPrivateKey(), key.DefaultEncryptPassphrase), key.DefaultEncryptPassphrase)
+	armor, err := key.EncryptArmorPrivKey(xplac.GetPrivateKey(), key.DefaultEncryptPassphrase)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrKeyNotFound, err)
+		return nil, xplac.GetLogger().Err(err)
+	}
+
+	err = clientCtx.Keyring.ImportPrivKey(fromName, armor, key.DefaultEncryptPassphrase)
+	if err != nil {
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrKeyNotFound, err))
 	}
 
 	clientCtx.WithSignModeStr("direct")
 
-	clientCtx, txFactory, newTx, err := readTxAndInitContexts(clientCtx, signTxMsg.UnsignedFileName)
+	clientCtx, txFactory, newTx, err := readTxAndInitContexts(xplac.GetLogger(), clientCtx, signTxMsg.UnsignedFileName)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +211,7 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 	txCfg := clientCtx.TxConfig
 	txBuilder, err := txCfg.WrapTxBuilder(newTx)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	signatureOnly := signTxMsg.SignatureOnly
@@ -215,18 +219,18 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 	if multisig != "" {
 		multisigAddr, err := sdk.AccAddressFromBech32(multisig)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		multisigAccNum := uint64(types.DefaultAccNum)
 		multisigAccSeq := uint64(types.DefaultAccSeq)
 		if !signTxMsg.Offline {
 			if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
-				return nil, util.LogErr(errors.ErrInvalidRequest, "need LCD or gRPC URL when not offline mode")
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "need LCD or gRPC URL when not offline mode"))
 			}
 			signerAcc, err := xplac.LoadAccount(multisigAddr)
 			if err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, err
 			}
 			multisigAccNum = signerAcc.GetAccountNumber()
 			multisigAccSeq = signerAcc.GetSequence()
@@ -238,12 +242,12 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 			WithSequence(multisigAccSeq)
 
 		if !isTxSigner(multisigAddr, txBuilder.GetTx().GetSigners()) {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidRequest, "invalid signer"))
 		}
 
 		err = tx.Sign(txFactory, fromName, txBuilder, signTxMsg.Overwrite)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 		signatureOnly = true
 	} else {
@@ -254,11 +258,11 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 
 		accNumU64, err := util.FromStringToUint64(xplac.GetAccountNumber())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 		accSeqU64, err := util.FromStringToUint64(xplac.GetSequence())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		privs := []cryptotypes.PrivKey{xplac.GetPrivateKey()}
@@ -277,7 +281,7 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 	if signTxMsg.Amino {
 		stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 		req := authcli.BroadcastReq{
 			Tx:   stdTx,
@@ -285,10 +289,10 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 		}
 		json, err = clientCtx.LegacyAmino.MarshalJSON(req)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrFailedToMarshal, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrFailedToMarshal, err))
 		}
 	} else {
-		json, err = marshalSignatureJSON(txCfg, txBuilder, signatureOnly)
+		json, err = marshalSignatureJSON(xplac, txCfg, txBuilder, signatureOnly)
 		if err != nil {
 			return nil, err
 		}
@@ -297,7 +301,7 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 	if xplac.GetOutputDocument() != "" {
 		err = util.SaveJsonPretty(json, xplac.GetOutputDocument())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		return json, nil
@@ -308,19 +312,17 @@ func (xplac *xplaClient) SignTx(signTxMsg types.SignTxMsg) ([]byte, error) {
 
 // Sign created unsigned transaction with multi signatures.
 func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte, error) {
-	if xplac.GetErr() != nil {
-		return nil, xplac.GetErr()
-	}
+	provider.ResetModuleAndMsgXplac(xplac)
 
 	clientCtx, err := util.NewClient()
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(err)
 	}
 
 	if txMultiSignMsg.KeyringBackend != keyring.BackendFile &&
 		txMultiSignMsg.KeyringBackend != keyring.BackendMemory &&
 		txMultiSignMsg.KeyringBackend != keyring.BackendTest {
-		return nil, util.LogErr(errors.ErrParse, "invalid keyring backend, must be "+util.BackendFile+", "+util.BackendTest+" or "+util.BackendMemory)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidRequest, "invalid keyring backend, must be "+util.BackendFile+", "+util.BackendTest+" or "+util.BackendMemory))
 	}
 
 	keyringPath := txMultiSignMsg.KeyringPath
@@ -328,7 +330,7 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 		txMultiSignMsg.KeyringBackend == keyring.BackendTest) && txMultiSignMsg.KeyringPath == "" {
 		userHomeDir, err := os.UserHomeDir()
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		keyringPath = filepath.Join(userHomeDir, ".xpla")
@@ -336,14 +338,14 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 
 	newKeyring, err := util.NewKeyring(txMultiSignMsg.KeyringBackend, keyringPath)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(err)
 	}
 
 	clientCtx = clientCtx.WithKeyring(newKeyring)
 
 	parseTx, err := authclient.ReadTxFromFile(clientCtx, txMultiSignMsg.FileName)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrCannotRead, err))
 	}
 
 	txFactory := util.NewFactory(clientCtx)
@@ -358,10 +360,10 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 	txCfg := clientCtx.TxConfig
 	txBuilder, err := txCfg.WrapTxBuilder(parseTx)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
-	multisigInfo, err := getMultisigInfo(clientCtx, txMultiSignMsg.FromName)
+	multisigInfo, err := getMultisigInfo(xplac, clientCtx, txMultiSignMsg.FromName)
 	if err != nil {
 		return nil, err
 	}
@@ -370,11 +372,11 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 	multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 	if !txMultiSignMsg.Offline {
 		if xplac.GetLcdURL() == "" && xplac.GetGrpcUrl() == "" {
-			return nil, util.LogErr(errors.ErrInvalidRequest, "need LCD or gRPC URL when not offline mode")
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrNotSatisfiedOptions, "need LCD or gRPC URL when not offline mode"))
 		}
 		multisigAccount, err := xplac.LoadAccount(multisigInfo.GetAddress())
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, err
 		}
 		txFactory = txFactory.
 			WithAccountNumber(multisigAccount.GetAccountNumber()).
@@ -382,15 +384,15 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 	}
 
 	for _, sigFile := range txMultiSignMsg.SignatureFiles {
-		sigs, err := unmarshalSignatureJSON(clientCtx, sigFile)
+		sigs, err := unmarshalSignatureJSON(xplac, clientCtx, sigFile)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrFailedToUnmarshal, err)
+			return nil, err
 		}
 
 		for _, sig := range sigs {
 			data, ok := sig.Data.(*signing.SingleSignatureData)
 			if !ok {
-				return nil, util.LogErr(errors.ErrParse, "signature data is not single signature")
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, "signature data is not single signature"))
 			}
 
 			if data.SignMode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
@@ -399,7 +401,7 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 
 			addr, err := sdk.AccAddressFromHex(sig.PubKey.Address().String())
 			if err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 
 			signingData := authsigning.SignerData{
@@ -411,11 +413,11 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 			err = authsigning.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 			if err != nil {
 
-				return nil, util.LogErr(errors.ErrInvalidRequest, "couldn't verify signature for address", addr.String())
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidRequest, "couldn't verify signature for address", addr.String()))
 			}
 
 			if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.GetPubKeys()); err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 		}
 	}
@@ -428,7 +430,7 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 
 	err = txBuilder.SetSignatures(sigV2)
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	sigOnly := txMultiSignMsg.SignatureOnly
@@ -438,7 +440,7 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 	if aminoJson {
 		stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		req := authcli.BroadcastReq{
@@ -448,10 +450,10 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 
 		json, err = clientCtx.LegacyAmino.MarshalJSON(req)
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrFailedToMarshal, err))
 		}
 	} else {
-		json, err = marshalSignatureJSON(txCfg, txBuilder, sigOnly)
+		json, err = marshalSignatureJSON(xplac, txCfg, txBuilder, sigOnly)
 		if err != nil {
 			return nil, err
 		}
@@ -460,7 +462,7 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 	if xplac.GetOutputDocument() != "" {
 		err = util.SaveJsonPretty(json, xplac.GetOutputDocument())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 	}
 
@@ -471,21 +473,21 @@ func (xplac *xplaClient) MultiSign(txMultiSignMsg types.TxMultiSignMsg) ([]byte,
 func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 	ethPrivKey, err := toECDSA(xplac.GetPrivateKey())
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	chainId, err := util.ConvertEvmChainId(xplac.GetChainId())
 	if err != nil {
-		return nil, util.LogErr(errors.ErrParse, err)
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	if xplac.GetOutputDocument() != "" {
-		util.LogInfo("no create output document as tx of evm")
+		xplac.GetLogger().Info("no create output document as tx of evm")
 	}
 
 	gasPrice, err := util.FromStringToBigInt(xplac.GetGasPrice())
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 	}
 
 	switch {
@@ -494,23 +496,23 @@ func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 		if gasLimit == "" {
 			gasLimitU64, err := util.FromStringToUint64(util.DefaultEvmGasLimit)
 			if err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 			}
 			gasLimitAdjustment, err := util.GasLimitAdjustment(gasLimitU64, xplac.GetGasAdjustment())
 			if err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 			gasLimit = gasLimitAdjustment
 		}
 
 		convertMsg, ok := xplac.GetMsg().(types.SendCoinMsg)
 		if !ok {
-			return nil, util.LogErr(errors.ErrParse, "invalid msg")
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, "invalid msg"))
 		}
 		toAddr := util.FromStringToByte20Address(convertMsg.ToAddress)
 		amount, err := util.FromStringToBigInt(convertMsg.Amount)
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		return evmTxSignRound(xplac, toAddr, gasPrice, gasLimit, amount, nil, chainId, ethPrivKey)
@@ -523,21 +525,21 @@ func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 
 		convertMsg, ok := xplac.GetMsg().(mevm.ContractInfo)
 		if !ok {
-			return nil, util.LogErr(errors.ErrParse, "invalid msg")
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, "invalid msg"))
 		}
 		nonce, err := util.FromStringToBigInt(xplac.GetSequence())
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		value, err := util.FromStringToBigInt(util.DefaultSolidityValue)
 		if err != nil {
-			return nil, err
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		gasLimitU64, err := util.FromStringToUint64(gasLimit)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		tx := mevm.DeploySolTx{
@@ -552,7 +554,7 @@ func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 
 		txbytes, err := util.JsonMarshalData(tx)
 		if err != nil {
-			return nil, util.LogErr(errors.ErrFailedToMarshal, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrFailedToMarshal, err))
 		}
 
 		return txbytes, nil
@@ -560,19 +562,19 @@ func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 	case xplac.GetMsgType() == mevm.EvmInvokeSolContractMsgType:
 		convertMsg, ok := xplac.GetMsg().(types.InvokeSolContractMsg)
 		if !ok {
-			return nil, util.LogErr(errors.ErrParse, "invalid msg")
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, "invalid msg"))
 		}
 		var invokeByteData []byte
 		invokeByteData, err = util.GetAbiPack(convertMsg.ContractFuncCallName, convertMsg.ABI, convertMsg.Bytecode, mevm.Args...)
 		mevm.Args = nil
 		if err != nil {
-			return nil, util.LogErr(errors.ErrParse, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 		}
 
 		toAddr := util.FromStringToByte20Address(convertMsg.ContractAddress)
 		amount, err := util.FromStringToBigInt("0")
 		if err != nil {
-			return nil, util.LogErr(errors.ErrEvmRpcRequest, err)
+			return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrConvert, err))
 		}
 
 		gasLimit := xplac.GetGasLimit()
@@ -587,7 +589,7 @@ func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 
 			gasLimitAdjustment, err := util.GasLimitAdjustment(estimateGasResponse.EstimateGas, xplac.GetGasAdjustment())
 			if err != nil {
-				return nil, util.LogErr(errors.ErrParse, err)
+				return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 			gasLimit = gasLimitAdjustment
 		}
@@ -595,28 +597,27 @@ func (xplac *xplaClient) createAndSignEvmTx() ([]byte, error) {
 		return evmTxSignRound(xplac, toAddr, gasPrice, gasLimit, amount, invokeByteData, chainId, ethPrivKey)
 
 	default:
-		return nil, util.LogErr(errors.ErrInvalidMsgType, "invalid EVM message type")
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, "invalid EVM message type"))
 	}
 }
 
 // Encode transaction by using base64.
 func (xplac *xplaClient) EncodeTx(encodeTxMsg types.EncodeTxMsg) (string, error) {
-	if xplac.GetErr() != nil {
-		return "", xplac.GetErr()
-	}
+	provider.ResetModuleAndMsgXplac(xplac)
+
 	clientCtx, err := util.NewClient()
 	if err != nil {
-		return "", err
+		return "", xplac.GetLogger().Err(err)
 	}
 
 	tx, err := authclient.ReadTxFromFile(clientCtx, encodeTxMsg.FileName)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrCannotRead, err))
 	}
 
 	txbytes, err := xplac.GetEncoding().TxConfig.TxEncoder()(tx)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	txbytesBase64 := base64.StdEncoding.EncodeToString(txbytes)
@@ -626,22 +627,21 @@ func (xplac *xplaClient) EncodeTx(encodeTxMsg types.EncodeTxMsg) (string, error)
 
 // Decode transaction which encoded by base64
 func (xplac *xplaClient) DecodeTx(decodeTxMsg types.DecodeTxMsg) (string, error) {
-	if xplac.GetErr() != nil {
-		return "", xplac.GetErr()
-	}
+	provider.ResetModuleAndMsgXplac(xplac)
+
 	txbytes, err := base64.StdEncoding.DecodeString(decodeTxMsg.EncodedByteString)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	tx, err := xplac.GetEncoding().TxConfig.TxDecoder()(txbytes)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	json, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(tx)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	return string(json), nil
@@ -649,17 +649,16 @@ func (xplac *xplaClient) DecodeTx(decodeTxMsg types.DecodeTxMsg) (string, error)
 
 // Validate signature
 func (xplac *xplaClient) ValidateSignatures(validateSignaturesMsg types.ValidateSignaturesMsg) (string, error) {
-	if xplac.GetErr() != nil {
-		return "", xplac.GetErr()
-	}
+	provider.ResetModuleAndMsgXplac(xplac)
+
 	resBool := true
 	clientCtx, err := util.NewClient()
 	if err != nil {
-		return "", err
+		return "", xplac.GetLogger().Err(err)
 	}
 	stdTx, err := authclient.ReadTxFromFile(clientCtx, validateSignaturesMsg.FileName)
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrCannotRead, err))
 	}
 
 	sigTx := stdTx.(authsigning.SigVerifiableTx)
@@ -669,7 +668,7 @@ func (xplac *xplaClient) ValidateSignatures(validateSignaturesMsg types.Validate
 
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return "", util.LogErr(errors.ErrParse, err)
+		return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 
 	if len(sigs) != len(signers) {
@@ -693,7 +692,7 @@ func (xplac *xplaClient) ValidateSignatures(validateSignaturesMsg types.Validate
 		if !validateSignaturesMsg.Offline && resBool {
 			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, sigAddr)
 			if err != nil {
-				return "", util.LogErr(errors.ErrSdkClient, err)
+				return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrSdkClient, err))
 			}
 
 			signingData := authsigning.SignerData{
@@ -703,11 +702,11 @@ func (xplac *xplaClient) ValidateSignatures(validateSignaturesMsg types.Validate
 			}
 			err = authsigning.VerifySignature(PubKey, signingData, sig.Data, signModeHandler, sigTx)
 			if err != nil {
-				return "", util.LogErr(errors.ErrParse, err)
+				return "", xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 			}
 		}
 
-		util.LogInfo(i, ":", sigAddr.String(), "[", sigSanity, "]", multisigHeader, multiSigMsg)
+		xplac.GetLogger().Info(strings.Join([]string{util.FromIntToString(i), ":", sigAddr.String(), "[", sigSanity, "]", multisigHeader, multiSigMsg}, " "))
 	}
 
 	if resBool {
@@ -719,13 +718,15 @@ func (xplac *xplaClient) ValidateSignatures(validateSignaturesMsg types.Validate
 
 // Convert type from encoded transaction bytes to json encoded byte
 func (xplac *xplaClient) EncodedTxbytesToJsonTx(txbytes []byte) ([]byte, error) {
+	provider.ResetModuleAndMsgXplac(xplac)
+
 	sdkTx, err := xplac.GetEncoding().TxConfig.TxDecoder()(txbytes)
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 	jsonTx, err := xplac.GetEncoding().TxConfig.TxJSONEncoder()(sdkTx)
 	if err != nil {
-		return nil, err
+		return nil, xplac.GetLogger().Err(types.ErrWrap(types.ErrParse, err))
 	}
 	return jsonTx, nil
 }

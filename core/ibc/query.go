@@ -4,7 +4,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
@@ -44,7 +43,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC client state
@@ -56,7 +55,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC client status
@@ -68,7 +67,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC client consensus states
@@ -80,7 +79,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC client consensus state heights
@@ -92,7 +91,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC client consensus state
@@ -104,7 +103,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC client tendermint header
@@ -113,7 +112,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 		convertMsg := i.Ixplac.GetMsg().(cmclient.Context)
 		header, _, err := ibcclientutils.QueryTendermintHeader(convertMsg)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 		res = &header
@@ -124,7 +123,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 		convertMsg := i.Ixplac.GetMsg().(cmclient.Context)
 		state, _, err := ibcclientutils.QuerySelfConsensusState(convertMsg)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 		res = state
@@ -138,7 +137,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC connection connections
@@ -150,7 +149,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC connection connection
@@ -162,7 +161,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC connection a client connections
@@ -174,7 +173,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channels
@@ -186,7 +185,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC a channel
@@ -198,7 +197,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel connections
@@ -210,7 +209,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel client state
@@ -222,7 +221,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel packet commitments
@@ -234,7 +233,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel packet commitment by sequece
@@ -246,7 +245,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel packet receipt
@@ -258,7 +257,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel packet ack
@@ -270,7 +269,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel unreceived packets
@@ -282,7 +281,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel unreceived acks
@@ -294,7 +293,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC channel next sequence receive
@@ -306,7 +305,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC transfer denom traces
@@ -318,7 +317,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC transfer denom trace
@@ -330,7 +329,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC transfer denom hash
@@ -341,7 +340,7 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// IBC transfer escrow address
@@ -359,16 +358,16 @@ func queryByGrpcIbc(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	out, err = core.PrintProto(i, res)
 	if err != nil {
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 
 	return string(out), nil
@@ -451,11 +450,11 @@ func queryByLcdIbc(i core.QueryClient) (string, error) {
 
 	// IBC client tendermint header
 	case i.Ixplac.GetMsgType() == IbcClientHeaderMsgType:
-		return "", util.LogErr(errors.ErrNotSupport, "unsupported querying IBC client tendermint header by using LCD")
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "unsupported querying IBC client tendermint header by using LCD"))
 
 	// IBC client self consensus state
 	case i.Ixplac.GetMsgType() == IbcClientSelfConsensusStateMsgType:
-		return "", util.LogErr(errors.ErrNotSupport, "unsupported querying IBC client self consensus state by using LCD")
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "unsupported querying IBC client self consensus state by using LCD"))
 
 	// IBC client params
 	case i.Ixplac.GetMsgType() == IbcClientParamsMsgType:
@@ -569,7 +568,7 @@ func queryByLcdIbc(i core.QueryClient) (string, error) {
 
 	// IBC transfer denom hash
 	case i.Ixplac.GetMsgType() == IbcTransferDenomHashMsgType:
-		return "", util.LogErr(errors.ErrNotSupport, "unsupported querying denom hash by using LCD")
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrNotSupport, "unsupported querying denom hash by using LCD"))
 
 	// IBC transfer escrow address
 	case i.Ixplac.GetMsgType() == IbcTransferEscrowAddressMsgType:
@@ -582,14 +581,14 @@ func queryByLcdIbc(i core.QueryClient) (string, error) {
 		url = ibctransferUrl + "/params"
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
 		i.Ixplac.GetHttpMutex().Unlock()
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	i.Ixplac.GetHttpMutex().Unlock()
 

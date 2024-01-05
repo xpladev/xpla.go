@@ -6,7 +6,6 @@ import (
 
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	govv1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
@@ -20,7 +19,7 @@ import (
 func parseSubmitProposalArgs(submitProposalMsg types.SubmitProposalMsg, proposer sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
 	amount, err := sdk.ParseCoinsNormalized(util.DenomAdd(submitProposalMsg.Deposit))
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	content := govtypes.ContentFromProposalType(
@@ -31,7 +30,7 @@ func parseSubmitProposalArgs(submitProposalMsg types.SubmitProposalMsg, proposer
 
 	msg, err := govtypes.NewMsgSubmitProposal(content, amount, proposer)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrInvalidRequest, err)
 	}
 
 	return *msg, nil
@@ -41,12 +40,12 @@ func parseSubmitProposalArgs(submitProposalMsg types.SubmitProposalMsg, proposer
 func parseGovDepositArgs(govDepositMsg types.GovDepositMsg, from sdk.AccAddress) (govtypes.MsgDeposit, error) {
 	proposalId, err := util.FromStringToUint64(govDepositMsg.ProposalID)
 	if err != nil {
-		return govtypes.MsgDeposit{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgDeposit{}, types.ErrWrap(types.ErrConvert, err)
 	}
 
 	amount, err := sdk.ParseCoinsNormalized(util.DenomAdd(govDepositMsg.Deposit))
 	if err != nil {
-		return govtypes.MsgDeposit{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgDeposit{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	msg := govtypes.NewMsgDeposit(from, proposalId, amount)
@@ -58,12 +57,12 @@ func parseGovDepositArgs(govDepositMsg types.GovDepositMsg, from sdk.AccAddress)
 func parseVoteArgs(voteMsg types.VoteMsg, from sdk.AccAddress) (govtypes.MsgVote, error) {
 	proposalId, err := util.FromStringToUint64(voteMsg.ProposalID)
 	if err != nil {
-		return govtypes.MsgVote{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgVote{}, types.ErrWrap(types.ErrConvert, err)
 	}
 
 	byteVoteOption, err := govtypes.VoteOptionFromString(govutils.NormalizeVoteOption(voteMsg.Option))
 	if err != nil {
-		return govtypes.MsgVote{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgVote{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	msg := govtypes.NewMsgVote(from, proposalId, byteVoteOption)
@@ -74,7 +73,7 @@ func parseVoteArgs(voteMsg types.VoteMsg, from sdk.AccAddress) (govtypes.MsgVote
 func parseWeightedVoteArgs(weightedVoteMsg types.WeightedVoteMsg, from sdk.AccAddress) (govtypes.MsgVoteWeighted, error) {
 	proposalId, err := util.FromStringToUint64(weightedVoteMsg.ProposalID)
 	if err != nil {
-		return govtypes.MsgVoteWeighted{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgVoteWeighted{}, types.ErrWrap(types.ErrConvert, err)
 	}
 
 	options := weightedVoteOptionConverting(weightedVoteMsg)
@@ -82,7 +81,7 @@ func parseWeightedVoteArgs(weightedVoteMsg types.WeightedVoteMsg, from sdk.AccAd
 	msg := govtypes.NewMsgVoteWeighted(from, proposalId, options)
 	err = msg.ValidateBasic()
 	if err != nil {
-		return govtypes.MsgVoteWeighted{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgVoteWeighted{}, types.ErrWrap(types.ErrInvalidRequest, err)
 	}
 
 	return *msg, nil
@@ -99,14 +98,14 @@ func parseQueryProposalsArgs(queryProposalsMsg types.QueryProposalsMsg) (govtype
 	if len(depositorAddr) != 0 {
 		_, err := sdk.AccAddressFromBech32(depositorAddr)
 		if err != nil {
-			return govtypes.QueryProposalsRequest{}, util.LogErr(errors.ErrParse, err)
+			return govtypes.QueryProposalsRequest{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
 	if len(voterAddr) != 0 {
 		_, err := sdk.AccAddressFromBech32(voterAddr)
 		if err != nil {
-			return govtypes.QueryProposalsRequest{}, util.LogErr(errors.ErrParse, err)
+			return govtypes.QueryProposalsRequest{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
@@ -114,7 +113,7 @@ func parseQueryProposalsArgs(queryProposalsMsg types.QueryProposalsMsg) (govtype
 		proposalStatus1, err := govtypes.ProposalStatusFromString(govutils.NormalizeProposalStatus(strProposalStatus))
 		proposalStatus = proposalStatus1
 		if err != nil {
-			return govtypes.QueryProposalsRequest{}, util.LogErr(errors.ErrParse, err)
+			return govtypes.QueryProposalsRequest{}, types.ErrWrap(types.ErrParse, err)
 		}
 	}
 
@@ -132,11 +131,11 @@ func parseQueryDepositArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *syn
 
 	proposalId, err := util.FromStringToUint64(queryDepositMsg.ProposalID)
 	if err != nil {
-		return nil, "", util.LogErr(errors.ErrParse, err)
+		return nil, "", types.ErrWrap(types.ErrConvert, err)
 	}
 	depositorAddr, err := sdk.AccAddressFromBech32(queryDepositMsg.Depositor)
 	if err != nil {
-		return nil, "", util.LogErr(errors.ErrParse, err)
+		return nil, "", types.ErrWrap(types.ErrParse, err)
 	}
 
 	if queryType == types.QueryGrpc {
@@ -147,7 +146,7 @@ func parseQueryDepositArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *syn
 			&govtypes.QueryProposalRequest{ProposalId: proposalId},
 		)
 		if err != nil {
-			return nil, "", util.LogErr(errors.ErrGrpcRequest, err)
+			return nil, "", types.ErrWrap(types.ErrGrpcRequest, err)
 		}
 
 		propStatus = proposalRes.Proposal.Status
@@ -165,7 +164,10 @@ func parseQueryDepositArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *syn
 		httpMutex.Unlock()
 
 		var response govtypes.QueryProposalResponse
-		responseData := util.JsonUnmarshalData(response, out)
+		responseData, err := util.JsonUnmarshalData(response, out)
+		if err != nil {
+			return nil, "", types.ErrWrap(types.ErrFailedToUnmarshal, err)
+		}
 		propStatusString := responseData.(map[string]interface{})["proposal"].(map[string]interface{})["status"].(string)
 
 		propStatus = govtypes.ProposalStatus(govtypes.ProposalStatus_value[propStatusString])
@@ -187,7 +189,7 @@ func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *sy
 	var propStatus govtypes.ProposalStatus
 	proposalId, err := util.FromStringToUint64(queryDepositMsg.ProposalID)
 	if err != nil {
-		return nil, "", util.LogErr(errors.ErrParse, err)
+		return nil, "", types.ErrWrap(types.ErrConvert, err)
 	}
 
 	if queryType == types.QueryGrpc {
@@ -198,7 +200,7 @@ func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *sy
 			&govtypes.QueryProposalRequest{ProposalId: proposalId},
 		)
 		if err != nil {
-			return nil, "", util.LogErr(errors.ErrGrpcRequest, err)
+			return nil, "", types.ErrWrap(types.ErrGrpcRequest, err)
 		}
 
 		propStatus = proposalRes.Proposal.Status
@@ -216,7 +218,11 @@ func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *sy
 		httpMutex.Unlock()
 
 		var response govtypes.QueryProposalResponse
-		responseData := util.JsonUnmarshalData(response, out)
+		responseData, err := util.JsonUnmarshalData(response, out)
+		if err != nil {
+			return nil, "", types.ErrWrap(types.ErrFailedToUnmarshal, err)
+		}
+
 		propStatusString := responseData.(map[string]interface{})["proposal"].(map[string]interface{})["status"].(string)
 
 		propStatus = govtypes.ProposalStatus(govtypes.ProposalStatus_value[propStatusString])
@@ -237,7 +243,7 @@ func parseQueryDepositsArgs(queryDepositMsg types.QueryDepositMsg, httpMutex *sy
 func parseGovTallyArgs(tallyMsg types.TallyMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryTallyResultRequest, error) {
 	proposalId, err := util.FromStringToUint64(tallyMsg.ProposalID)
 	if err != nil {
-		return govtypes.QueryTallyResultRequest{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.QueryTallyResultRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 
 	if queryType == types.QueryGrpc {
@@ -248,7 +254,7 @@ func parseGovTallyArgs(tallyMsg types.TallyMsg, httpMutex *sync.Mutex, grpcConn 
 			&govtypes.QueryProposalRequest{ProposalId: proposalId},
 		)
 		if err != nil {
-			return govtypes.QueryTallyResultRequest{}, util.LogErr(errors.ErrInvalidRequest, "failed to fetch proposal-id", proposalId, " : ", err)
+			return govtypes.QueryTallyResultRequest{}, types.ErrWrap(types.ErrInvalidRequest, "failed to fetch proposal-id", proposalId, " : ", err)
 		}
 
 	} else {
@@ -278,7 +284,7 @@ func parseGovParamArgs(govParamsMsg types.GovParamsMsg) (govtypes.QueryParamsReq
 			ParamsType: govParamsMsg.ParamType,
 		}, nil
 	} else {
-		return govtypes.QueryParamsRequest{}, util.LogErr(errors.ErrInvalidMsgType, "argument must be one of (voting|tallying|deposit), was ", govParamsMsg.ParamType)
+		return govtypes.QueryParamsRequest{}, types.ErrWrap(types.ErrInvalidRequest, "argument must be one of (voting|tallying|deposit), was ", govParamsMsg.ParamType)
 	}
 }
 
@@ -286,7 +292,7 @@ func parseGovParamArgs(govParamsMsg types.GovParamsMsg) (govtypes.QueryParamsReq
 func parseQueryVoteArgs(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex, grpcConn grpc.ClientConn, ctx context.Context, lcdUrl string, queryType int) (govtypes.QueryVoteRequest, error) {
 	proposalId, err := util.FromStringToUint64(queryVoteMsg.ProposalID)
 	if err != nil {
-		return govtypes.QueryVoteRequest{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.QueryVoteRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 
 	if queryType == types.QueryGrpc {
@@ -297,7 +303,7 @@ func parseQueryVoteArgs(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex, 
 			&govtypes.QueryProposalRequest{ProposalId: proposalId},
 		)
 		if err != nil {
-			return govtypes.QueryVoteRequest{}, util.LogErr(errors.ErrGrpcRequest, err)
+			return govtypes.QueryVoteRequest{}, types.ErrWrap(types.ErrGrpcRequest, err)
 		}
 
 	} else {
@@ -324,7 +330,7 @@ func parseQueryVotesArgs(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex,
 	var propStatus govtypes.ProposalStatus
 	proposalId, err := util.FromStringToUint64(queryVoteMsg.ProposalID)
 	if err != nil {
-		return nil, "", util.LogErr(errors.ErrParse, err)
+		return nil, "", types.ErrWrap(types.ErrConvert, err)
 	}
 
 	if queryType == types.QueryGrpc {
@@ -335,7 +341,7 @@ func parseQueryVotesArgs(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex,
 			&govtypes.QueryProposalRequest{ProposalId: proposalId},
 		)
 		if err != nil {
-			return nil, "", util.LogErr(errors.ErrGrpcRequest, err)
+			return nil, "", types.ErrWrap(types.ErrGrpcRequest, err)
 		}
 
 		propStatus = proposalRes.Proposal.Status
@@ -353,7 +359,11 @@ func parseQueryVotesArgs(queryVoteMsg types.QueryVoteMsg, httpMutex *sync.Mutex,
 		httpMutex.Unlock()
 
 		var response govtypes.QueryProposalResponse
-		responseData := util.JsonUnmarshalData(response, out)
+		responseData, err := util.JsonUnmarshalData(response, out)
+		if err != nil {
+			return nil, "", types.ErrWrap(types.ErrFailedToUnmarshal, err)
+		}
+
 		propStatusString := responseData.(map[string]interface{})["proposal"].(map[string]interface{})["status"].(string)
 
 		propStatus = govtypes.ProposalStatus(govtypes.ProposalStatus_value[propStatusString])

@@ -1,19 +1,38 @@
 package upgrade
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &UpgradeExternal{}
 
 type UpgradeExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewUpgradeExternal(xplac provider.XplaClient) (e UpgradeExternal) {
+func NewExternal(xplac provider.XplaClient) (e UpgradeExternal) {
 	e.Xplac = xplac
+	e.Name = UpgradeModule
 	return e
+}
+
+func (e UpgradeExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e UpgradeExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Tx
@@ -22,24 +41,20 @@ func NewUpgradeExternal(xplac provider.XplaClient) (e UpgradeExternal) {
 func (e UpgradeExternal) SoftwareUpgrade(softwareUpgradeMsg types.SoftwareUpgradeMsg) provider.XplaClient {
 	msg, err := MakeProposalSoftwareUpgradeMsg(softwareUpgradeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(UpgradeProposalSoftwareUpgradeMsgType, err)
 	}
-	e.Xplac.WithModule(UpgradeModule).
-		WithMsgType(UpgradeProposalSoftwareUpgradeMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(UpgradeProposalSoftwareUpgradeMsgType, msg)
 }
 
 // Cancel the current software upgrade proposal.
 func (e UpgradeExternal) CancelSoftwareUpgrade(cancelSoftwareUpgradeMsg types.CancelSoftwareUpgradeMsg) provider.XplaClient {
 	msg, err := MakeCancelSoftwareUpgradeMsg(cancelSoftwareUpgradeMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(UpgradeCancelSoftwareUpgradeMsgType, err)
 	}
-	e.Xplac.WithModule(UpgradeModule).
-		WithMsgType(UpgradeCancelSoftwareUpgradeMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(UpgradeCancelSoftwareUpgradeMsgType, msg)
 }
 
 // Query
@@ -48,46 +63,42 @@ func (e UpgradeExternal) CancelSoftwareUpgrade(cancelSoftwareUpgradeMsg types.Ca
 func (e UpgradeExternal) UpgradeApplied(appliedMsg types.AppliedMsg) provider.XplaClient {
 	msg, err := MakeAppliedMsg(appliedMsg)
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(UpgradeAppliedMsgType, err)
 	}
-	e.Xplac.WithModule(UpgradeModule).
-		WithMsgType(UpgradeAppliedMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(UpgradeAppliedMsgType, msg)
 }
 
 // Query the list of module versions.
 func (e UpgradeExternal) ModulesVersion(queryModulesVersionMsg ...types.QueryModulesVersionMsg) provider.XplaClient {
-	if len(queryModulesVersionMsg) == 0 {
+	switch {
+	case len(queryModulesVersionMsg) == 0:
 		msg, err := MakeQueryAllModuleVersionMsg()
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(UpgradeQueryAllModuleVersionsMsgType, err)
 		}
-		e.Xplac.WithModule(UpgradeModule).
-			WithMsgType(UpgradeQueryAllModuleVersionsMsgType).
-			WithMsg(msg)
-	} else if len(queryModulesVersionMsg) == 1 {
+
+		return e.ToExternal(UpgradeQueryAllModuleVersionsMsgType, msg)
+
+	case len(queryModulesVersionMsg) == 1:
 		msg, err := MakeQueryModuleVersionMsg(queryModulesVersionMsg[0])
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(UpgradeQueryModuleVersionsMsgType, err)
 		}
-		e.Xplac.WithModule(UpgradeModule).
-			WithMsgType(UpgradeQueryModuleVersionsMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInvalidRequest, "need only one parameter"))
+
+		return e.ToExternal(UpgradeQueryModuleVersionsMsgType, msg)
+
+	default:
+		return e.Err(UpgradeQueryModuleVersionsMsgType, types.ErrWrap(types.ErrInvalidRequest, "need only one parameter"))
 	}
-	return e.Xplac
 }
 
 // Query upgrade plan(if one exists).
 func (e UpgradeExternal) Plan() provider.XplaClient {
 	msg, err := MakePlanMsg()
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(UpgradePlanMsgType, err)
 	}
-	e.Xplac.WithModule(UpgradeModule).
-		WithMsgType(UpgradePlanMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(UpgradePlanMsgType, msg)
 }

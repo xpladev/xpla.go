@@ -25,7 +25,7 @@ func MakeBaseLatestBlockMsg() (tmservice.GetLatestBlockRequest, error) {
 func MakeBaseBlockByHeightMsg(blockMsg types.BlockMsg) (tmservice.GetBlockByHeightRequest, error) {
 	heighti64, err := util.FromStringToInt64(blockMsg.Height)
 	if err != nil {
-		return tmservice.GetBlockByHeightRequest{}, err
+		return tmservice.GetBlockByHeightRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return tmservice.GetBlockByHeightRequest{
 		Height: heighti64,
@@ -41,7 +41,7 @@ func MakeLatestValidatorSetMsg() (tmservice.GetLatestValidatorSetRequest, error)
 func MakeValidatorSetByHeightMsg(validatorSetMsg types.ValidatorSetMsg) (tmservice.GetValidatorSetByHeightRequest, error) {
 	heighti64, err := util.FromStringToInt64(validatorSetMsg.Height)
 	if err != nil {
-		return tmservice.GetValidatorSetByHeightRequest{}, err
+		return tmservice.GetValidatorSetByHeightRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return tmservice.GetValidatorSetByHeightRequest{
 		Height: heighti64,

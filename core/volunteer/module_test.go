@@ -44,7 +44,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeRegisterVolunteerValidatorMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, volunteer.VolunteerRegisterVolunteerValidatorMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, volunteer.VolunteerRegisterVolunteerValidatorMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeRegisterVolunteerValidatorMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeUnregisterVolunteerValidatorMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, volunteer.VolunteerUnregisterVolunteerValidatorMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, volunteer.VolunteerUnregisterVolunteerValidatorMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeUnregisterVolunteerValidatorMsg, txBuilder.GetTx().GetMsgs()[0])
 

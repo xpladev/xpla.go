@@ -3,7 +3,6 @@ package ibc
 import (
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	cmclient "github.com/cosmos/cosmos-sdk/client"
@@ -135,7 +134,7 @@ func MakeIbcChannelPacketCommitmentsMsg(ibcChannelPacketCommitmentsMsg types.Ibc
 func MakeIbcChannelPacketCommitmentMsg(ibcChannelPacketCommitmentsMsg types.IbcChannelPacketCommitmentsMsg) (ibcchannel.QueryPacketCommitmentRequest, error) {
 	seq, err := util.FromStringToUint64(ibcChannelPacketCommitmentsMsg.Sequence)
 	if err != nil {
-		return ibcchannel.QueryPacketCommitmentRequest{}, util.LogErr(errors.ErrParse, err)
+		return ibcchannel.QueryPacketCommitmentRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return ibcchannel.QueryPacketCommitmentRequest{
 		ChannelId: ibcChannelPacketCommitmentsMsg.ChannelId,
@@ -148,7 +147,7 @@ func MakeIbcChannelPacketCommitmentMsg(ibcChannelPacketCommitmentsMsg types.IbcC
 func MakeIbcChannelPacketReceiptMsg(ibcChannelPacketReceiptMsg types.IbcChannelPacketReceiptMsg) (ibcchannel.QueryPacketReceiptRequest, error) {
 	seq, err := util.FromStringToUint64(ibcChannelPacketReceiptMsg.Sequence)
 	if err != nil {
-		return ibcchannel.QueryPacketReceiptRequest{}, util.LogErr(errors.ErrParse, err)
+		return ibcchannel.QueryPacketReceiptRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return ibcchannel.QueryPacketReceiptRequest{
 		ChannelId: ibcChannelPacketReceiptMsg.ChannelId,
@@ -161,7 +160,7 @@ func MakeIbcChannelPacketReceiptMsg(ibcChannelPacketReceiptMsg types.IbcChannelP
 func MakeIbcChannelPacketAckMsg(ibcChannelPacketAckMsg types.IbcChannelPacketAckMsg) (ibcchannel.QueryPacketAcknowledgementRequest, error) {
 	seq, err := util.FromStringToUint64(ibcChannelPacketAckMsg.Sequence)
 	if err != nil {
-		return ibcchannel.QueryPacketAcknowledgementRequest{}, util.LogErr(errors.ErrParse, err)
+		return ibcchannel.QueryPacketAcknowledgementRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return ibcchannel.QueryPacketAcknowledgementRequest{
 		ChannelId: ibcChannelPacketAckMsg.ChannelId,
@@ -174,7 +173,7 @@ func MakeIbcChannelPacketAckMsg(ibcChannelPacketAckMsg types.IbcChannelPacketAck
 func MakeIbcChannelPacketUnreceivedPacketsMsg(ibcChannelUnreceivedPacketsMsg types.IbcChannelUnreceivedPacketsMsg) (ibcchannel.QueryUnreceivedPacketsRequest, error) {
 	seq, err := util.FromStringToUint64(ibcChannelUnreceivedPacketsMsg.Sequence)
 	if err != nil {
-		return ibcchannel.QueryUnreceivedPacketsRequest{}, util.LogErr(errors.ErrParse, err)
+		return ibcchannel.QueryUnreceivedPacketsRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return ibcchannel.QueryUnreceivedPacketsRequest{
 		ChannelId:                 ibcChannelUnreceivedPacketsMsg.ChannelId,
@@ -187,7 +186,7 @@ func MakeIbcChannelPacketUnreceivedPacketsMsg(ibcChannelUnreceivedPacketsMsg typ
 func MakeIbcChannelPacketUnreceivedAcksMsg(ibcChannelUnreceivedAcksMsg types.IbcChannelUnreceivedAcksMsg) (ibcchannel.QueryUnreceivedAcksRequest, error) {
 	seq, err := util.FromStringToUint64(ibcChannelUnreceivedAcksMsg.Sequence)
 	if err != nil {
-		return ibcchannel.QueryUnreceivedAcksRequest{}, util.LogErr(errors.ErrParse, err)
+		return ibcchannel.QueryUnreceivedAcksRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return ibcchannel.QueryUnreceivedAcksRequest{
 		ChannelId:          ibcChannelUnreceivedAcksMsg.ChannelId,

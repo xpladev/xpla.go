@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,9 +36,9 @@ func parseTxsByEventsArgs(txsByEventsMsg types.QueryTxsByEventsMsg) (QueryTxsByE
 
 	for _, event := range events {
 		if !strings.Contains(event, "=") {
-			return QueryTxsByEventParseMsg{}, util.LogErr(errors.ErrInvalidRequest, "invalid event; event", event, "should be of the format:", eventFormat)
+			return QueryTxsByEventParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "invalid event; event", event, "should be of the format:", eventFormat)
 		} else if strings.Count(event, "=") > 1 {
-			return QueryTxsByEventParseMsg{}, util.LogErr(errors.ErrInvalidRequest, "invalid event; event", event, "should be of the format:", eventFormat)
+			return QueryTxsByEventParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "invalid event; event", event, "should be of the format:", eventFormat)
 		}
 
 		tokens := strings.Split(event, "=")
@@ -54,11 +53,11 @@ func parseTxsByEventsArgs(txsByEventsMsg types.QueryTxsByEventsMsg) (QueryTxsByE
 
 	pageInt, err := util.FromStringToInt(txsByEventsMsg.Page)
 	if err != nil {
-		return QueryTxsByEventParseMsg{}, err
+		return QueryTxsByEventParseMsg{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	limitInt, err := util.FromStringToInt(txsByEventsMsg.Limit)
 	if err != nil {
-		return QueryTxsByEventParseMsg{}, err
+		return QueryTxsByEventParseMsg{}, types.ErrWrap(types.ErrConvert, err)
 	}
 
 	queryTxsByEventParseMsg := QueryTxsByEventParseMsg{
@@ -76,7 +75,7 @@ func parseQueryTxArgs(queryTxMsg types.QueryTxMsg) (QueryTxParseMsg, error) {
 
 	if queryTxMsg.Type == "" || queryTxMsg.Type == "hash" {
 		if queryTxMsg.Value == "" {
-			return QueryTxParseMsg{}, util.LogErr(errors.ErrInvalidRequest, "argument should be a tx hash")
+			return QueryTxParseMsg{}, types.ErrWrap(types.ErrInsufficientParams, "argument should be a tx hash")
 		}
 
 		queryTxParseMsg.TmEvents = []string{queryTxMsg.Value}
@@ -86,7 +85,7 @@ func parseQueryTxArgs(queryTxMsg types.QueryTxMsg) (QueryTxParseMsg, error) {
 
 	} else if queryTxMsg.Type == "signature" {
 		if queryTxMsg.Value == "" {
-			return QueryTxParseMsg{}, fmt.Errorf("argument should be comma-separated signatures")
+			return QueryTxParseMsg{}, types.ErrWrap(types.ErrInsufficientParams, "argument should be comma-separated signatures")
 		}
 		sigParts := strings.Split(queryTxMsg.Value, ",")
 
@@ -102,7 +101,7 @@ func parseQueryTxArgs(queryTxMsg types.QueryTxMsg) (QueryTxParseMsg, error) {
 
 	} else if queryTxMsg.Type == "acc_seq" {
 		if queryTxMsg.Value == "" {
-			return QueryTxParseMsg{}, util.LogErr(errors.ErrInvalidRequest, "`acc_seq` type takes an argument '<addr>/<seq>'")
+			return QueryTxParseMsg{}, types.ErrWrap(types.ErrInsufficientParams, "`acc_seq` type takes an argument '<addr>/<seq>'")
 		}
 
 		tmEvents := []string{
@@ -115,6 +114,6 @@ func parseQueryTxArgs(queryTxMsg types.QueryTxMsg) (QueryTxParseMsg, error) {
 		return queryTxParseMsg, nil
 
 	} else {
-		return QueryTxParseMsg{}, util.LogErr(errors.ErrInvalidMsgType, "unknown type (hash|signature|acc_seq)")
+		return QueryTxParseMsg{}, types.ErrWrap(types.ErrInvalidRequest, "unknown type (hash|signature|acc_seq)")
 	}
 }

@@ -13,5 +13,6 @@ func ResetModuleAndMsgXplac(xplac XplaClient) XplaClient {
 	return xplac.
 		WithModule("").
 		WithMsgType("").
-		WithMsg(nil)
+		WithMsg(nil).
+		WithErr(nil)
 }

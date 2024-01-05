@@ -4,7 +4,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	tmv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
@@ -38,7 +37,7 @@ func queryByGrpcBase(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Syncing
@@ -49,7 +48,7 @@ func queryByGrpcBase(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Latest block
@@ -65,7 +64,7 @@ func queryByGrpcBase(i core.QueryClient) (string, error) {
 				&convertMsg,
 			)
 			if err != nil {
-				return "", util.LogErr(errors.ErrGrpcRequest, err)
+				return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 			}
 		}
 
@@ -82,7 +81,7 @@ func queryByGrpcBase(i core.QueryClient) (string, error) {
 				&convertMsg,
 			)
 			if err != nil {
-				return "", util.LogErr(errors.ErrGrpcRequest, err)
+				return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 			}
 		}
 
@@ -94,7 +93,7 @@ func queryByGrpcBase(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	// Validator set by height
@@ -105,16 +104,16 @@ func queryByGrpcBase(i core.QueryClient) (string, error) {
 			&convertMsg,
 		)
 		if err != nil {
-			return "", util.LogErr(errors.ErrGrpcRequest, err)
+			return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 		}
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	out, err = core.PrintProto(i, res)
 	if err != nil {
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 
 	return string(out), nil
@@ -159,14 +158,14 @@ func queryByLcdBase(i core.QueryClient) (string, error) {
 		url = url + util.MakeQueryLabels(baseValidatorsetsLabel, util.FromInt64ToString(convertMsg.Height))
 
 	default:
-		return "", util.LogErr(errors.ErrInvalidMsgType, i.Ixplac.GetMsgType())
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrInvalidMsgType, i.Ixplac.GetMsgType()))
 	}
 
 	i.Ixplac.GetHttpMutex().Lock()
 	out, err := util.CtxHttpClient("GET", i.Ixplac.GetLcdURL()+url, nil, i.Ixplac.GetContext())
 	if err != nil {
 		i.Ixplac.GetHttpMutex().Unlock()
-		return "", err
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	i.Ixplac.GetHttpMutex().Unlock()
 
@@ -176,15 +175,15 @@ func queryByLcdBase(i core.QueryClient) (string, error) {
 func queryBlockByRpc(i core.QueryClient, height *int64) (string, error) {
 	client, err := cmclient.NewClientFromNode(i.Ixplac.GetRpc())
 	if err != nil {
-		return "", util.LogErr(errors.ErrGrpcRequest, err)
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 	}
 	res, err := client.Block(i.Ixplac.GetContext(), height)
 	if err != nil {
-		return "", util.LogErr(errors.ErrGrpcRequest, err)
+		return "", i.Ixplac.GetLogger().Err(types.ErrWrap(types.ErrGrpcRequest, err))
 	}
 	out, err := core.PrintObjectLegacy(i, res)
 	if err != nil {
-		return "", util.LogErr(errors.ErrGrpcRequest, err)
+		return "", i.Ixplac.GetLogger().Err(err)
 	}
 	return string(out), nil
 }

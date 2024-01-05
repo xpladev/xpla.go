@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +36,7 @@ func MakeWeightedVoteMsg(weightedVoteMsg types.WeightedVoteMsg, from sdk.AccAddr
 func MakeQueryProposalMsg(queryProposalMsg types.QueryProposalMsg) (govtypes.QueryProposalRequest, error) {
 	proposalId, err := util.FromStringToUint64(queryProposalMsg.ProposalID)
 	if err != nil {
-		return govtypes.QueryProposalRequest{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.QueryProposalRequest{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	return govtypes.QueryProposalRequest{
 		ProposalId: proposalId,

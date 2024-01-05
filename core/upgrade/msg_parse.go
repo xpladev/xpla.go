@@ -2,7 +2,6 @@ package upgrade
 
 import (
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
 	"github.com/xpladev/xpla.go/util"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,7 @@ import (
 func parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg types.SoftwareUpgradeMsg, from sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
 	heightI64, err := util.FromStringToInt64(softwareUpgradeMsg.UpgradeHeight)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrConvert, err)
 	}
 	plan := upgradetypes.Plan{
 		Name:   softwareUpgradeMsg.UpgradeName,
@@ -29,12 +28,12 @@ func parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg types.SoftwareUpgradeMs
 
 	deposit, err := sdk.ParseCoinsNormalized(util.DenomAdd(softwareUpgradeMsg.Deposit))
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 
 	msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrInvalidRequest, err)
 	}
 
 	return *msg, nil
@@ -44,7 +43,7 @@ func parseProposalSoftwareUpgradeArgs(softwareUpgradeMsg types.SoftwareUpgradeMs
 func parseCancelSoftwareUpgradeArgs(cancelSoftwareUpgradeMsg types.CancelSoftwareUpgradeMsg, from sdk.AccAddress) (govtypes.MsgSubmitProposal, error) {
 	deposit, err := sdk.ParseCoinsNormalized(util.DenomAdd(cancelSoftwareUpgradeMsg.Deposit))
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrParse, err)
 	}
 	content := upgradetypes.NewCancelSoftwareUpgradeProposal(
 		cancelSoftwareUpgradeMsg.Deposit,
@@ -53,7 +52,7 @@ func parseCancelSoftwareUpgradeArgs(cancelSoftwareUpgradeMsg types.CancelSoftwar
 
 	msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 	if err != nil {
-		return govtypes.MsgSubmitProposal{}, util.LogErr(errors.ErrParse, err)
+		return govtypes.MsgSubmitProposal{}, types.ErrWrap(types.ErrInvalidRequest, err)
 	}
 
 	return *msg, nil

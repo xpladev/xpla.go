@@ -36,7 +36,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeAuthzGrantMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, authz.AuthzGrantMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, authz.AuthzGrantMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeAuthzGrantMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeAuthzRevokeMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, authz.AuthzRevokeMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, authz.AuthzRevokeMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeAuthzRevokeMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -78,12 +78,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeAuthzExecMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, authz.AuthzExecMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, authz.AuthzExecMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeAuthzExecMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

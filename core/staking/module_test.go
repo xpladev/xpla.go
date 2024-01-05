@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeCreateValidatorMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, staking.StakingCreateValidatorMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, staking.StakingCreateValidatorMsgType, testMsg)
 	s.Require().NoError(err)
 
 	// edit validator
@@ -65,7 +65,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeEditValidatorMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, staking.StakingEditValidatorMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, staking.StakingEditValidatorMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeEditValidatorMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -79,7 +79,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeDelegateMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, staking.StakingDelegateMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, staking.StakingDelegateMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeDelegateMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -93,7 +93,7 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeUnbondMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, staking.StakingUnbondMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, staking.StakingUnbondMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeUnbondMsg, txBuilder.GetTx().GetMsgs()[0])
 
@@ -108,12 +108,12 @@ func (s *IntegrationTestSuite) TestCoreModule() {
 	s.Require().NoError(err)
 
 	testMsg = makeRedelegateMsg
-	txBuilder, err = c.NewTxRouter(txBuilder, staking.StakingRedelegateMsgType, testMsg)
+	txBuilder, err = c.NewTxRouter(s.xplac.GetLogger(), txBuilder, staking.StakingRedelegateMsgType, testMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(&makeRedelegateMsg, txBuilder.GetTx().GetMsgs()[0])
 
 	// invalid tx msg type
-	_, err = c.NewTxRouter(nil, "invalid message type", nil)
+	_, err = c.NewTxRouter(s.xplac.GetLogger(), nil, "invalid message type", nil)
 	s.Require().Error(err)
 
 	s.xplac = provider.ResetXplac(s.xplac)

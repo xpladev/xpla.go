@@ -1,19 +1,38 @@
 package feegrant
 
 import (
+	"github.com/xpladev/xpla.go/core"
 	"github.com/xpladev/xpla.go/provider"
 	"github.com/xpladev/xpla.go/types"
-	"github.com/xpladev/xpla.go/types/errors"
-	"github.com/xpladev/xpla.go/util"
 )
+
+var _ core.External = &FeegrantExternal{}
 
 type FeegrantExternal struct {
 	Xplac provider.XplaClient
+	Name  string
 }
 
-func NewFeegrantExternal(xplac provider.XplaClient) (e FeegrantExternal) {
+func NewExternal(xplac provider.XplaClient) (e FeegrantExternal) {
 	e.Xplac = xplac
+	e.Name = FeegrantModule
 	return e
+}
+
+func (e FeegrantExternal) ToExternal(msgType string, msg interface{}) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithModule(e.Name).
+		WithMsgType(msgType).
+		WithMsg(msg)
+}
+
+func (e FeegrantExternal) Err(msgType string, err error) provider.XplaClient {
+	return provider.ResetModuleAndMsgXplac(e.Xplac).
+		WithErr(
+			e.Xplac.GetLogger().Err(err,
+				types.LogMsg("module", e.Name),
+				types.LogMsg("msg", msgType)),
+		)
 }
 
 // Tx
@@ -22,57 +41,52 @@ func NewFeegrantExternal(xplac provider.XplaClient) (e FeegrantExternal) {
 func (e FeegrantExternal) FeeGrant(grantMsg types.FeeGrantMsg) provider.XplaClient {
 	msg, err := MakeFeeGrantMsg(grantMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(FeegrantGrantMsgType, err)
 	}
-	e.Xplac.WithModule(FeegrantModule).
-		WithMsgType(FeegrantGrantMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(FeegrantGrantMsgType, msg)
 }
 
 // Revoke fee-grant.
 func (e FeegrantExternal) RevokeFeeGrant(revokeGrantMsg types.RevokeFeeGrantMsg) provider.XplaClient {
 	msg, err := MakeRevokeFeeGrantMsg(revokeGrantMsg, e.Xplac.GetFromAddress())
 	if err != nil {
-		return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+		return e.Err(FeegrantRevokeGrantMsgType, err)
 	}
-	e.Xplac.WithModule(FeegrantModule).
-		WithMsgType(FeegrantRevokeGrantMsgType).
-		WithMsg(msg)
-	return e.Xplac
+
+	return e.ToExternal(FeegrantRevokeGrantMsgType, msg)
 }
 
 // Query
 
 // Query details of fee grants.
 func (e FeegrantExternal) QueryFeeGrants(queryFeeGrantMsg types.QueryFeeGrantMsg) provider.XplaClient {
-	if queryFeeGrantMsg.Grantee != "" && queryFeeGrantMsg.Granter != "" {
+	switch {
+	case queryFeeGrantMsg.Grantee != "" && queryFeeGrantMsg.Granter != "":
 		msg, err := MakeQueryFeeGrantMsg(queryFeeGrantMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(FeegrantQueryGrantMsgType, err)
 		}
-		e.Xplac.WithModule(FeegrantModule).
-			WithMsgType(FeegrantQueryGrantMsgType).
-			WithMsg(msg)
-	} else if queryFeeGrantMsg.Grantee != "" && queryFeeGrantMsg.Granter == "" {
+
+		return e.ToExternal(FeegrantQueryGrantMsgType, msg)
+
+	case queryFeeGrantMsg.Grantee != "" && queryFeeGrantMsg.Granter == "":
 		msg, err := MakeQueryFeeGrantsByGranteeMsg(queryFeeGrantMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(FeegrantQueryGrantsByGranteeMsgType, err)
 		}
-		e.Xplac.WithModule(FeegrantModule).
-			WithMsgType(FeegrantQueryGrantsByGranteeMsgType).
-			WithMsg(msg)
-	} else if queryFeeGrantMsg.Grantee == "" && queryFeeGrantMsg.Granter != "" {
+
+		return e.ToExternal(FeegrantQueryGrantsByGranteeMsgType, msg)
+
+	case queryFeeGrantMsg.Grantee == "" && queryFeeGrantMsg.Granter != "":
 		msg, err := MakeQueryFeeGrantsByGranterMsg(queryFeeGrantMsg)
 		if err != nil {
-			return provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(err)
+			return e.Err(FeegrantQueryGrantsByGranterMsgType, err)
 		}
-		e.Xplac.WithModule(FeegrantModule).
-			WithMsgType(FeegrantQueryGrantsByGranterMsgType).
-			WithMsg(msg)
-	} else {
-		provider.ResetModuleAndMsgXplac(e.Xplac).WithErr(util.LogErr(errors.ErrInsufficientParams, "no query grants parameters"))
-	}
 
-	return e.Xplac
+		return e.ToExternal(FeegrantQueryGrantsByGranterMsgType, msg)
+
+	default:
+		return e.Err(FeegrantQueryGrantsByGranterMsgType, types.ErrWrap(types.ErrInsufficientParams, "no query grants parameters"))
+	}
 }
